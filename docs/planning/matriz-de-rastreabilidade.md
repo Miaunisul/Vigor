@@ -1,40 +1,60 @@
-# VIGOR — Matriz de Rastreabilidade
+# Matriz de Rastreabilidade — VIGOR
 
 ## 1. Objetivo
 
-Relacionar os requisitos funcionais do VIGOR às regras de negócio, aos critérios de aceite e aos testes previstos, facilitando a verificação de que os requisitos foram implementados e testados.
+Relacionar os requisitos funcionais do VIGOR às regras de negócio, aos critérios de aceite e aos testes previstos, facilitando o acompanhamento do desenvolvimento e da validação do sistema.
 
-## 2. Matriz
+## 2. Matriz de rastreabilidade
 
-| Requisito | Regra relacionada | Critério de aceite | Teste previsto | Situação |
+| Requisito | Regra de negócio | Critério de aceite | Teste previsto | Prioridade |
 |---|---|---|---|---|
-| RF01 — Cadastrar aluno | RN01, RN04 | CA01, CA02 | Cadastro válido e campo obrigatório ausente | A implementar |
-| RF02 — Validar dados | RN01, RN02 | CA02, CA03 | Campos obrigatórios e CPF inválido | A implementar |
-| RF03 — Impedir duplicidade | RN03 | CA04 | Tentativa de cadastrar CPF repetido | A implementar |
-| RF04 — Consultar alunos | RN05, RN06 | CA05 | Consulta de aluno existente | A implementar |
-| RF05 — Persistir registros | RN04, RN06 | CA01, CA06 | Cadastro e consulta posterior | A implementar |
+| RF01 — Cadastrar membros | RN01, RN02, RN03, RN04 | CA01, CA02, CA03, CA04 | CT01, CT02, CT03, CT04 | Alta |
+| RF02 — Consultar membros | RN05 | CA05, CA06 | CT05, CT06 | Alta |
+| RF03 — Validar CPF | RN02 | CA03 | CT03 | Alta |
+| RF04 — Impedir CPF duplicado | RN03 | CA04 | CT04 | Alta |
+| RF05 — Atualizar membros | RN07 | CA07 | CT07 | Média |
+| RF06 — Excluir membros | RN08 | CA08 | CT08 | Média |
+| RF07 — Gerenciar treinos | RN09, RN10, RN11 | CA09, CA10 | CT09, CT10 | A definir |
+| RF08 — Registrar pagamentos | RN12, RN13, RN14 | CA11, CA12 | CT11, CT12 | A definir |
+| RF09 — Consultar histórico de atividades | RN15, RN16 | CA13, CA14 | CT13, CT14 | A definir |
+| RF10 — Login de funcionários | RN17, RN18, RN19 | CA15, CA16 | CT15, CT16 | A definir |
 
-## 3. Como atualizar a matriz
+## 3. Requisitos não funcionais
 
-- **A implementar:** funcionalidade ou teste ainda não implementado.
-- **Implementado:** código desenvolvido, mas ainda sem validação completa.
-- **Aprovado:** critério executado com resultado esperado e evidência registrada.
-- **Reprovado:** critério executado e o resultado não correspondeu ao esperado.
-- **Bloqueado:** não foi possível executar devido a uma dependência ou impedimento registrado.
+| Requisito | Forma de verificação | Situação |
+|---|---|---|
+| RNF01 — Segurança | Verificação das proteções de dados e credenciais implementadas. | A verificar |
+| RNF02 — Desempenho | Avaliação do tempo de resposta das operações relevantes. | A verificar |
+| RNF03 — Usabilidade | Testes de usabilidade com usuários ou participantes definidos pela equipe. | A verificar |
+| RNF04 — Integridade | Testes das validações, restrições e relacionamentos entre registros. | A verificar |
+| RNF05 — Manutenibilidade | Revisão da organização do código e da separação de responsabilidades. | A verificar |
+| RNF06 — Testabilidade | Execução dos testes automatizados e verificação dos resultados. | A verificar |
 
-## 4. Evidências esperadas
+## 4. Prioridade de implementação
 
-Para cada linha, registrar quando disponíveis:
+A primeira etapa do MVP deverá priorizar:
 
-- Identificação do teste automatizado ou caso de teste manual.
-- Resultado obtido.
-- Referência ao commit ou à issue relacionada.
-- Link ou caminho da evidência de execução.
+1. Cadastro de membros.
+2. Validação dos campos obrigatórios.
+3. Validação e unicidade do CPF.
+4. Consulta de membros.
+5. Persistência dos registros.
+6. Testes automatizados dessas funcionalidades.
 
-## 5. Observações
+As demais funcionalidades deverão ser planejadas conforme a divisão de responsabilidades da equipe e a evolução do projeto.
 
-A matriz deve ser atualizada conforme os requisitos, as regras e os testes evoluírem. Nenhum requisito deve ser marcado como aprovado sem verificação efetiva.
+## 5. Situação dos testes
 
-## 6. Situação do documento
+Os códigos CT01 a CT16 identificam testes previstos, não resultados já obtidos.
 
-Matriz inicial de planejamento. Os testes e os resultados serão preenchidos conforme a implementação e a validação do VIGOR.
+A equipe deverá criar ou ajustar os casos de teste correspondentes durante a implementação. Os resultados e as evidências deverão ser registrados em `docs/testing/evidencias.md`.
+
+A matriz deverá ser atualizada sempre que um requisito, uma regra, um critério de aceite ou um teste for alterado.
+
+## 6. Pendências
+
+- Confirmar as prioridades das funcionalidades além do MVP.
+- Criar os casos de teste correspondentes aos identificadores CT01 a CT16.
+- Relacionar os testes aos arquivos de implementação e de teste efetivamente criados.
+- Registrar os resultados das execuções.
+- Conferir a rastreabilidade dos requisitos não funcionais.
