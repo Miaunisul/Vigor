@@ -1,55 +1,100 @@
-# VIGOR — Modelo de Dados
+# Modelo de Dados — VIGOR
 
 ## 1. Objetivo
 
-Documentar a estrutura inicial dos dados utilizados no cadastro e na consulta de alunos do VIGOR.
+Este documento descreve o modelo de dados previsto para o VIGOR — Sistema de Cadastro de Academia, conforme as orientações específicas da A3 de Gestão e Qualidade de Software da UNISUL.
 
-Este modelo é preliminar e deverá ser atualizado quando os campos definitivos do cadastro forem confirmados.
+O modelo é preliminar e poderá ser ajustado durante a implementação, desde que as alterações sejam documentadas e mantenham os requisitos do projeto.
 
-## 2. Entidade Aluno
+## 2. Entidades e atributos
 
-A entidade `Aluno` representa uma pessoa cadastrada na academia.
+### 2.1. Membros
 
-| Campo | Tipo lógico sugerido | Obrigatório | Regra |
-|---|---|---|---|
-| id | Identificador numérico | Sim | Identificador único do registro |
-| nome | Texto | Sim | Não pode ficar vazio |
-| cpf | Texto | Sim | Deve ser válido e único |
-| email | Texto | A confirmar | Se adotado como obrigatório, deve ser validado |
-| telefone | Texto | A confirmar | Armazenado como texto para preservar DDD e zeros |
-| dataNascimento | Data | A confirmar | Deve representar uma data válida |
-| dataCadastro | Data e hora | Sim | Registra quando o aluno foi cadastrado |
+| Atributo | Descrição |
+|---|---|
+| ID | Identificador único do membro. |
+| Nome | Nome completo do membro. |
+| CPF | CPF do membro, sujeito a validação e unicidade. |
+| Telefone | Telefone de contato. |
+| Endereço | Endereço do membro. |
+| Data de cadastro | Data em que o membro foi cadastrado. |
 
-Os campos opcionais e seus formatos definitivos devem ser confirmados antes da implementação.
+### 2.2. Treinos
 
-## 3. Relacionamentos
+| Atributo | Descrição |
+|---|---|
+| ID | Identificador único do treino. |
+| ID_Membro | Referência ao membro associado. |
+| Tipo | Tipo de treino. |
+| Descrição | Descrição do treino. |
+| Duração | Duração prevista do treino. |
+| Data_Início | Data de início do treino. |
 
-Na versão inicial, a entidade `Aluno` não precisa de relacionamentos obrigatórios com outras entidades para permitir o cadastro e a consulta básicos.
+### 2.3. Pagamentos
 
-Novas entidades ou relacionamentos só deverão ser incluídos quando forem necessários ao escopo aprovado.
+| Atributo | Descrição |
+|---|---|
+| ID | Identificador único do pagamento. |
+| ID_Membro | Referência ao membro associado. |
+| Valor | Valor do pagamento. |
+| Data_Pagamento | Data do pagamento. |
+| Status | Situação do pagamento. |
 
-## 4. Restrições de integridade
+### 2.4. Histórico de Atividades
 
-- Cada aluno deve possuir um identificador único.
-- O CPF deve ser armazenado de maneira consistente.
-- Não podem existir dois alunos com o mesmo CPF.
-- Campos definidos como obrigatórios não podem ser nulos ou vazios.
-- A validação realizada pela aplicação deve ser complementada por restrições adequadas no banco de dados.
+| Atributo | Descrição |
+|---|---|
+| ID | Identificador único do registro de atividade. |
+| ID_Membro | Referência ao membro associado. |
+| Atividade | Descrição da atividade realizada. |
+| Data | Data da atividade. |
+| Tempo_Execução | Tempo de execução da atividade. |
 
-## 5. Persistência
+### 2.5. Funcionários
 
-A tecnologia de banco prevista para o projeto é PostgreSQL, com acesso aos dados por meio do Spring Data JPA.
+| Atributo | Descrição |
+|---|---|
+| ID | Identificador único do funcionário. |
+| Nome | Nome completo do funcionário. |
+| Cargo | Função exercida na academia. |
+| Login | Identificação utilizada para acessar o sistema. |
+| Senha | Credencial de acesso, que deverá ser armazenada de forma protegida. |
 
-A configuração efetiva, o mapeamento da entidade e as restrições serão documentados após a implementação e os testes.
+## 3. Relacionamentos previstos
 
-## 6. Pontos pendentes
+- **Membros e Treinos:** um membro pode possuir vários treinos. Cada treino está associado a um membro.
+- **Membros e Pagamentos:** um membro pode possuir vários pagamentos. Cada pagamento está associado a um membro.
+- **Membros e Histórico de Atividades:** um membro pode possuir vários registros de atividades. Cada registro está associado a um membro.
+- **Funcionários e atividades:** os funcionários podem estar relacionados às atividades que executam ou registram. A forma exata desse relacionamento ainda precisa ser definida pela equipe.
 
-- Confirmar todos os campos obrigatórios do cadastro.
-- Confirmar se email e telefone serão obrigatórios.
-- Definir o tratamento de CPFs com pontuação e sem pontuação.
-- Definir se haverá edição ou inativação de alunos no MVP.
-- Confirmar a estratégia de criação e atualização do schema do banco.
+## 4. Integridade dos dados
 
-## 7. Situação do documento
+O modelo deverá respeitar as seguintes condições:
 
-Modelo preliminar. A estrutura deve ser revisada antes de ser considerada definitiva e precisa corresponder à entidade implementada no código.
+- Cada entidade deverá possuir um identificador único.
+- As referências entre entidades deverão corresponder a registros existentes.
+- O CPF dos membros deverá ser válido e único.
+- Os campos obrigatórios deverão ser validados antes da persistência.
+- As operações de atualização e exclusão deverão preservar a integridade dos relacionamentos.
+- As senhas dos funcionários não deverão ser armazenadas em texto puro.
+
+## 5. Banco de dados e persistência
+
+O PostgreSQL está previsto como banco de dados do projeto, com persistência por meio do Spring Data JPA.
+
+A estrutura definitiva deverá ser validada durante a implementação. Os atributos, tipos de dados, restrições e chaves estrangeiras serão definidos no mapeamento das entidades.
+
+## 6. Escopo do MVP
+
+A primeira etapa prioriza a entidade Membros, incluindo cadastro, validação de CPF, prevenção de duplicidade e consulta dos registros.
+
+As demais entidades fazem parte do modelo previsto para o sistema e serão implementadas conforme a priorização e a divisão de responsabilidades da equipe.
+
+## 7. Pontos pendentes
+
+- Definir os tipos de dados e as restrições de cada atributo.
+- Definir como os funcionários serão associados às atividades.
+- Definir a política de exclusão de membros com registros relacionados.
+- Definir os estados possíveis para pagamentos.
+- Confirmar os atributos adicionais necessários durante a implementação.
+- Elaborar o diagrama de classes e o diagrama lógico do banco de dados.
