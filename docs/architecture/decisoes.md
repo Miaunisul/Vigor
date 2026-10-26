@@ -37,7 +37,7 @@ As tecnologias listadas representam as escolhas e o planejamento técnico atual.
 
 **Justificativa:** organizar a aplicação e facilitar a integração entre as camadas.
 
-**Situação:** estrutura inicial gerada; integração ao repositório e execução ainda precisam ser verificadas.
+**Situação:** estrutura inicial gerada e integrada ao repositório; teste de contexto executado com sucesso por meio de mvn clean test.
 
 ### DEC03 — Separação de responsabilidades
 **Decisão:** organizar a aplicação em camadas de controller, service e repository.
@@ -47,13 +47,21 @@ As tecnologias listadas representam as escolhas e o planejamento técnico atual.
 **Situação:** definida como diretriz; implementação pendente.
 
 ### DEC04 — Banco de dados
-**Decisão prevista:** utilizar PostgreSQL para persistência dos alunos.
+**Decisão:** utilizar PostgreSQL para persistência dos dados da academia.
 
 **Justificativa:** manter os registros disponíveis para consultas posteriores.
 
-**Situação:** tecnologia planejada; configuração e conexão ainda pendentes.
+**Situação:** PostgreSQL 18.6 instalado no ambiente local; banco vigor criado; driver JDBC incluído no projeto e conexão configurada por meio da variável de ambiente DB_PASSWORD. O teste de contexto passou. A persistência das entidades da aplicação ainda precisa ser implementada e validada.
 
-### DEC05 — Validação e integridade
+### DEC05 — Gerenciamento de credenciais
+
+**Decisão:** não armazenar senhas do banco de dados diretamente no código-fonte nem versioná-las no Git.
+
+**Justificativa:** reduzir o risco de exposição de credenciais e facilitar a configuração de diferentes ambientes.
+
+**Situação:** configuração local preparada com a variável de ambiente `DB_PASSWORD`; verificar a proteção de arquivos de configuração antes de publicar alterações no repositório.
+
+### DEC06 — Validação e integridade
 **Decisão:** validar os dados na aplicação e reforçar a unicidade do CPF no banco.
 
 **Justificativa:** impedir cadastros inválidos e duplicados.
@@ -69,11 +77,12 @@ As tecnologias listadas representam as escolhas e o planejamento técnico atual.
 
 ## 4. Pontos pendentes
 
-- Confirmar os campos definitivos da entidade Aluno.
-- Definir a configuração local e de teste do PostgreSQL.
+- Confirmar os campos definitivos da entidade Membro, conforme os requisitos da academia.
+- Implementar e testar a persistência das entidades no PostgreSQL.
 - Definir como serão gerenciadas as alterações do schema do banco.
 - Confirmar as versões e dependências definitivas após verificar a compatibilidade.
-- Configurar e executar os testes automatizados.
+- Ampliar os testes automatizados para regras de negócio, validação e persistência.
+- Configurar o JaCoCo e verificar a cobertura de testes.
 - Configurar o workflow de integração contínua e registrar seus resultados.
 
 ## 5. Histórico de atualização
