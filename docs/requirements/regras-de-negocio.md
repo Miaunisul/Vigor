@@ -1,67 +1,109 @@
-# VIGOR — Regras de Negócio
+# Regras de Negócio — VIGOR
 
 ## 1. Objetivo
 
-Este documento define as regras que o sistema VIGOR deve respeitar durante o cadastro e a consulta de alunos.
+Este documento define as regras de negócio do VIGOR — Sistema de Cadastro de Academia, desenvolvido para a A3 de Gestão e Qualidade de Software da UNISUL.
 
-As regras servem como referência para a implementação e para a elaboração dos testes automatizados.
+As regras orientam o desenvolvimento, a validação dos dados e a criação dos testes automatizados.
 
-## 2. Regras
+## 2. Regras de cadastro de membros
 
-### RN01 — Campos obrigatórios
+**RN01 — Campos obrigatórios**
 
-O sistema deve verificar se todos os campos definidos como obrigatórios foram preenchidos antes de aceitar um cadastro.
+O sistema deve exigir o preenchimento de todos os campos definidos como obrigatórios para o cadastro de um membro.
 
-**Resultado esperado:** se faltar algum campo obrigatório, o sistema deve rejeitar o cadastro e informar o usuário.
+**RN02 — Validação do CPF**
 
-### RN02 — Validação do CPF
+O CPF informado deve passar pela validação adotada pelo sistema. CPFs inválidos devem ser rejeitados.
 
-O CPF informado deve possuir formato válido e dígitos verificadores válidos.
+**RN03 — CPF único**
 
-**Resultado esperado:** um CPF inválido deve ser rejeitado, sem criação de registro.
+Não deve ser permitido cadastrar dois membros com o mesmo CPF.
 
-### RN03 — CPF único
+**RN04 — Não persistência de dados inválidos**
 
-Cada aluno deve possuir um CPF único no sistema.
+Cadastros que não atendam às regras de validação não devem ser salvos no banco de dados.
 
-**Resultado esperado:** se já existir um aluno com o CPF informado, o sistema deve impedir um segundo cadastro.
+**RN05 — Consulta de membros**
 
-### RN04 — Não persistir cadastros inválidos
+O sistema deve permitir consultar os membros cadastrados e apresentar as informações correspondentes aos registros existentes.
 
-Dados que não atendam às regras de validação não devem ser gravados como um novo aluno.
+**RN06 — Integridade dos dados**
 
-**Resultado esperado:** após uma tentativa inválida, não deve existir um novo registro correspondente à tentativa.
+As operações realizadas devem preservar a consistência das informações armazenadas.
 
-### RN05 — Consulta de alunos cadastrados
+**RN07 — Atualização de membros**
 
-Os alunos registrados devem poder ser consultados posteriormente.
+Quando a atualização estiver disponível, o sistema deverá validar os novos dados antes de salvá-los, respeitando as regras de campos obrigatórios e CPF único.
 
-**Resultado esperado:** ao consultar um aluno cadastrado, o sistema deve apresentar os dados armazenados de forma consistente.
+**RN08 — Exclusão de membros**
 
-### RN06 — Consistência dos dados
+Quando a exclusão estiver disponível, o sistema deverá tratar os vínculos com treinos, pagamentos e histórico de atividades de forma a preservar a integridade dos dados. A política definitiva de exclusão deverá ser definida pela equipe.
 
-Os dados apresentados na consulta devem corresponder aos dados efetivamente armazenados, respeitando as validações aplicadas no cadastro.
+## 3. Regras de treinos
 
-**Resultado esperado:** a consulta não deve apresentar informações diferentes das persistidas sem que exista uma operação autorizada que as altere.
+**RN09 — Vínculo com o membro**
 
-## 3. Relação com os testes
+Cada treino cadastrado deve estar associado a um membro existente.
 
-| Regra | Cenário mínimo de teste |
-|---|---|
-| RN01 | Tentar cadastrar um aluno sem preencher um campo obrigatório |
-| RN02 | Tentar cadastrar um aluno com CPF inválido |
-| RN03 | Tentar cadastrar dois alunos com o mesmo CPF |
-| RN04 | Verificar que uma tentativa inválida não cria registro |
-| RN05 | Cadastrar um aluno válido e consultá-lo posteriormente |
-| RN06 | Comparar os dados apresentados com os dados cadastrados |
+**RN10 — Dados do treino**
 
-## 4. Observações
+O cadastro de treino deve respeitar os campos definidos no modelo de dados, incluindo tipo, descrição, duração e data de início, conforme a implementação acordada pela equipe.
 
-- Os campos obrigatórios definitivos serão estabelecidos no modelo de dados.
-- A validação do CPF deve considerar os dígitos verificadores, e não apenas o formato.
-- A prevenção de duplicidade deve ser tratada na aplicação e reforçada no banco de dados.
-- As regras devem ser revisadas caso o escopo do MVP seja alterado.
+**RN11 — Integridade dos treinos**
 
-## 5. Situação do documento
+Um treino não deve ser associado a um membro inexistente.
 
-Documento inicial. As regras devem ser confirmadas com os requisitos do projeto e verificadas por meio dos testes automatizados.
+## 4. Regras de pagamentos
+
+**RN12 — Vínculo com o membro**
+
+Cada pagamento registrado deve estar associado a um membro existente.
+
+**RN13 — Valor do pagamento**
+
+O valor informado deve atender às validações definidas para o campo, não sendo aceitos valores inválidos.
+
+**RN14 — Status do pagamento**
+
+O pagamento deve possuir um status válido, conforme os estados que forem definidos pela equipe.
+
+## 5. Regras de histórico de atividades
+
+**RN15 — Vínculo com o membro**
+
+Cada registro de atividade deve estar associado a um membro existente.
+
+**RN16 — Dados da atividade**
+
+O registro deve conter as informações previstas no modelo de dados, incluindo atividade, data e tempo de execução, de acordo com as validações definidas.
+
+## 6. Regras de funcionários
+
+**RN17 — Dados obrigatórios**
+
+O cadastro de funcionários deve exigir os campos definidos como obrigatórios para essa entidade.
+
+**RN18 — Autenticação**
+
+Caso o login de funcionários seja implementado, o acesso deverá validar as credenciais informadas.
+
+**RN19 — Proteção das credenciais**
+
+As senhas não devem ser armazenadas em texto puro. A implementação deverá adotar um mecanismo apropriado de proteção das credenciais.
+
+## 7. Aplicação e validação das regras
+
+As regras devem ser verificadas por meio de testes automatizados, conforme o escopo de cada funcionalidade implementada.
+
+As regras de cadastro de membros, validação do CPF, unicidade do CPF e consulta de membros são prioritárias para o MVP inicial.
+
+As regras referentes a treinos, pagamentos, histórico, funcionários, atualização e exclusão deverão ser implementadas e testadas conforme a priorização e a divisão de responsabilidades da equipe.
+
+## 8. Pontos pendentes de definição
+
+- Definir todos os campos obrigatórios de cada entidade.
+- Definir os status possíveis para pagamentos.
+- Definir os critérios de atualização e exclusão de membros e registros relacionados.
+- Definir os detalhes da autenticação e das permissões dos funcionários.
+- Confirmar quais regras adicionais entrarão no MVP.
