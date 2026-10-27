@@ -11,6 +11,24 @@ jobs:
     name: Compilar e executar testes
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: vigor
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: vigor_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d vigor"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_PASSWORD: vigor_test_password
+
     steps:
       - name: Baixar o código
         uses: actions/checkout@v4
