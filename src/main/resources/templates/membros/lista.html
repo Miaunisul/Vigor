@@ -1,0 +1,43 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membros | VIGOR</title>
+</head>
+<body>
+    <main>
+        <h1>Membros cadastrados</h1>
+
+        <p th:if="${sucesso}" th:text="${sucesso}"></p>
+
+        <a th:href="@{/membros/novo}">Cadastrar novo membro</a>
+
+        <p th:if="${#lists.isEmpty(membros)}">
+            Nenhum membro cadastrado ainda.
+        </p>
+
+        <table th:unless="${#lists.isEmpty(membros)}">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Telefone</th>
+                    <th>Data de cadastro</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="membro : ${membros}">
+                    <td th:text="${membro.id}"></td>
+                    <td th:text="${membro.nome}"></td>
+                    <td th:text="${membro.cpf}"></td>
+                    <td th:text="${membro.telefone}"></td>
+                    <td th:text="${membro.dataCadastro}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+</body>
+</html>

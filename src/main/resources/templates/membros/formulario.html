@@ -1,0 +1,35 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar membro | VIGOR</title>
+</head>
+<body>
+    <main>
+        <h1>Cadastrar membro</h1>
+
+        <form th:action="@{/membros}" th:object="${membro}" method="post">
+            <label for="nome">Nome completo</label>
+            <input id="nome" type="text" th:field="*{nome}" required>
+            <small th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></small>
+
+            <label for="cpf">CPF (somente números)</label>
+            <input id="cpf" type="text" th:field="*{cpf}"
+                   inputmode="numeric" maxlength="11" required>
+            <small th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}"></small>
+
+            <label for="telefone">Telefone</label>
+            <input id="telefone" type="text" th:field="*{telefone}">
+
+            <label for="endereco">Endereço</label>
+            <input id="endereco" type="text" th:field="*{endereco}">
+
+            <button type="submit">Cadastrar membro</button>
+        </form>
+
+        <a th:href="@{/membros}">Voltar para a lista</a>
+    </main>
+</body>
+</html>
