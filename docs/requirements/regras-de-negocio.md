@@ -2,108 +2,96 @@
 
 ## 1. Objetivo
 
-Este documento define as regras de negócio do VIGOR — Sistema de Cadastro de Academia, desenvolvido para a A3 de Gestão e Qualidade de Software da UNISUL.
+Definir as regras aplicáveis ao escopo documentado em `requisitos.md`, orientando a implementação, os critérios de aceitação e os testes.
 
-As regras orientam o desenvolvimento, a validação dos dados e a criação dos testes automatizados.
+As regras descrevem o comportamento esperado e não indicam, por si só, que esse comportamento já esteja implementado ou testado.
 
-## 2. Regras de cadastro de membros
 
-**RN01 — Campos obrigatórios**
+## 2. Regras de membros
 
-O sistema deve exigir o preenchimento de todos os campos definidos como obrigatórios para o cadastro de um membro.
-
-**RN02 — Validação do CPF**
-
-O CPF informado deve passar pela validação adotada pelo sistema. CPFs inválidos devem ser rejeitados.
-
-**RN03 — CPF único**
-
-Não deve ser permitido cadastrar dois membros com o mesmo CPF.
-
-**RN04 — Não persistência de dados inválidos**
-
-Cadastros que não atendam às regras de validação não devem ser salvos no banco de dados.
-
-**RN05 — Consulta de membros**
-
-O sistema deve permitir consultar os membros cadastrados e apresentar as informações correspondentes aos registros existentes.
-
-**RN06 — Integridade dos dados**
-
-As operações realizadas devem preservar a consistência das informações armazenadas.
-
-**RN07 — Atualização de membros**
-
-Quando a atualização estiver disponível, o sistema deverá validar os novos dados antes de salvá-los, respeitando as regras de campos obrigatórios e CPF único.
-
-**RN08 — Exclusão de membros**
-
-Quando a exclusão estiver disponível, o sistema deverá tratar os vínculos com treinos, pagamentos e histórico de atividades de forma a preservar a integridade dos dados. A política definitiva de exclusão deverá ser definida pela equipe.
+| ID | Regra de negócio | Especificação |
+|---|---|---|
+| RN01 | Campos obrigatórios do membro | Nome, CPF, telefone e endereço são obrigatórios. Valores ausentes, vazios ou compostos apenas por espaços devem ser rejeitados. |
+| RN02 | Identificação e data de cadastro | O identificador do membro deve ser gerado automaticamente e ser único. A data de cadastro deve ser preenchida automaticamente no cadastro. Ambos devem ser preservados nas atualizações. |
+| RN03 | Validade do CPF | O CPF deve conter 11 dígitos e possuir dígitos verificadores válidos. Sequências com todos os dígitos iguais devem ser rejeitadas. Pontos e hífen de formatação devem ser desconsiderados na validação e na comparação. |
+| RN04 | CPF único | Não deve ser permitido cadastrar ou atualizar um membro utilizando o CPF de outro membro. Na atualização, manter o CPF do próprio registro deve ser permitido. A comparação deve utilizar o CPF normalizado, sem pontos ou hífen. |
+| RN05 | Atualização válida | A atualização deve respeitar as mesmas validações aplicáveis ao cadastro. Quando os novos dados forem inválidos, a alteração deve ser rejeitada e os dados anteriormente persistidos devem ser preservados. |
+| RN06 | Exclusão de membros | A exclusão somente deve ser permitida quando o membro não possuir treinos, pagamentos ou atividades vinculados. Caso existam vínculos, a exclusão deve ser bloqueada e o motivo deve ser informado, preservando todos os registros. |
 
 ## 3. Regras de treinos
 
-**RN09 — Vínculo com o membro**
-
-Cada treino cadastrado deve estar associado a um membro existente.
-
-**RN10 — Dados do treino**
-
-O cadastro de treino deve respeitar os campos definidos no modelo de dados, incluindo tipo, descrição, duração e data de início, conforme a implementação acordada pela equipe.
-
-**RN11 — Integridade dos treinos**
-
-Um treino não deve ser associado a um membro inexistente.
+| ID | Regra de negócio | Especificação |
+|---|---|---|
+| RN07 | Vínculo do treino | Cada treino deve estar associado a um membro existente. Não deve ser permitido gravar um treino sem membro ou com referência a um membro inexistente. |
+| RN08 | Dados obrigatórios do treino | O treino deve possuir identificador único gerado automaticamente, membro, tipo, descrição, duração e data de início. Tipo e descrição não podem ser vazios nem conter somente espaços. |
+| RN09 | Duração e data do treino | A duração deve ser um número inteiro positivo, expresso em minutos. A data de início deve ser uma data válida. |
 
 ## 4. Regras de pagamentos
 
-**RN12 — Vínculo com o membro**
-
-Cada pagamento registrado deve estar associado a um membro existente.
-
-**RN13 — Valor do pagamento**
-
-O valor informado deve atender às validações definidas para o campo, não sendo aceitos valores inválidos.
-
-**RN14 — Status do pagamento**
-
-O pagamento deve possuir um status válido, conforme os estados que forem definidos pela equipe.
+| ID | Regra de negócio | Especificação |
+|---|---|---|
+| RN10 | Vínculo do pagamento | Cada pagamento deve estar associado a um membro existente. Não deve ser permitido gravar um pagamento sem membro ou com referência a um membro inexistente. |
+| RN11 | Dados obrigatórios do pagamento | O pagamento deve possuir identificador único gerado automaticamente, membro, valor, data do pagamento e status. A data do pagamento é obrigatória e deve ser válida. |
+| RN12 | Valor do pagamento | O valor deve ser maior que zero e possuir, no máximo, duas casas decimais. Valores ausentes, não numéricos, iguais a zero, negativos ou com mais de duas casas decimais devem ser rejeitados. |
+| RN13 | Status do pagamento | Nesta entrega, o registro representa um pagamento já recebido. O sistema deve atribuir o status Pago e não aceitar outro status. Controle de pagamentos pendentes, vencidos ou cancelados não faz parte desta entrega. |
 
 ## 5. Regras de histórico de atividades
 
-**RN15 — Vínculo com o membro**
+| ID | Regra de negócio | Especificação |
+|---|---|---|
+| RN14 | Vínculos da atividade | Cada registro de atividade deve estar associado a um membro existente e a um funcionário responsável existente. |
+| RN15 | Dados obrigatórios da atividade | Cada registro deve possuir identificador único, membro, atividade, data, tempo de execução e funcionário responsável. O nome da atividade não pode ser vazio nem conter somente espaços. A data deve ser válida. |
+| RN16 | Tempo de execução | O tempo de execução deve ser um número inteiro positivo, expresso em minutos. |
+| RN17 | Consulta do histórico | A consulta deve apresentar somente as atividades vinculadas ao membro selecionado. Quando não houver registros, o sistema deve informar a ausência de atividades. |
 
-Cada registro de atividade deve estar associado a um membro existente.
+Nesta entrega, o histórico será disponibilizado por dados previamente carregados por procedimento técnico documentado. As regras RN14 a RN16 também se aplicam a esses dados.
 
-**RN16 — Dados da atividade**
+Não é prevista uma tela de registro, atualização ou exclusão de atividades nesta entrega.
 
-O registro deve conter as informações previstas no modelo de dados, incluindo atividade, data e tempo de execução, de acordo com as validações definidas.
+## 6. Regras de funcionários e autenticação
 
-## 6. Regras de funcionários
+| ID | Regra de negócio | Especificação |
+|---|---|---|
+| RN18 | Dados obrigatórios do funcionário | Cada funcionário deve possuir identificador único, nome, cargo, login e senha protegida por hash apropriado. Nome, cargo e login não podem ser vazios nem conter somente espaços. O endereço não é previsto para essa entidade. |
+| RN19 | Login único | Não deve existir mais de um funcionário com o mesmo login. |
+| RN20 | Validação das credenciais | A autenticação somente deve ser permitida quando o login identificar um funcionário existente e a senha informada corresponder à credencial armazenada. Login inexistente ou senha incorreta devem impedir o acesso. |
 
-**RN17 — Dados obrigatórios**
+Os funcionários serão previamente disponibilizados por procedimento técnico documentado. Não é prevista uma tela de cadastro ou gerenciamento de funcionários nesta entrega.
 
-O cadastro de funcionários deve exigir os campos definidos como obrigatórios para essa entidade.
+A proteção das senhas e a restrição de acesso às funcionalidades internas são detalhadas no RNF01 de `requisitos.md`.
 
-**RN18 — Autenticação**
+## 7. Regra geral de integridade
 
-Caso o login de funcionários seja implementado, o acesso deverá validar as credenciais informadas.
+| ID | Regra de negócio | Especificação |
+|---|---|---|
+| RN21 | Não persistência de dados inválidos | Operações que violem as validações definidas ou referenciem registros inexistentes não devem ser persistidas. Uma operação rejeitada deve preservar os dados válidos anteriormente armazenados. |
 
-**RN19 — Proteção das credenciais**
+## 8. Decisões de implementação para revisão da equipe
 
-As senhas não devem ser armazenadas em texto puro. A implementação deverá adotar um mecanismo apropriado de proteção das credenciais.
+As seguintes definições operacionalizam o escopo do projeto e não devem ser confundidas com exigências textuais do enunciado do professor:
 
-## 7. Aplicação e validação das regras
+- Concentrar a atualização e a exclusão nos membros.
+- Bloquear a exclusão de membros com registros vinculados.
+- Registrar somente pagamentos já recebidos, utilizando o status Pago.
+- Expressar duração de treinos e tempo de execução de atividades em minutos inteiros positivos.
+- Disponibilizar funcionários e histórico de atividades por carga técnica documentada, sem novas telas.
 
-As regras devem ser verificadas por meio de testes automatizados, conforme o escopo de cada funcionalidade implementada.
+Essas definições devem ser revisadas pela equipe no Pull Request desta atualização documental.
 
-As regras de cadastro de membros, validação do CPF, unicidade do CPF e consulta de membros são prioritárias para o MVP inicial.
+Se alguma dessas decisões mudar, os requisitos, as regras, os critérios de aceitação, o modelo de dados e os testes relacionados devem ser revisados em conjunto.
 
-As regras referentes a treinos, pagamentos, histórico, funcionários, atualização e exclusão deverão ser implementadas e testadas conforme a priorização e a divisão de responsabilidades da equipe.
+As funcionalidades futuras estão identificadas na seção 7 de `requisitos.md`. Sua inclusão futura exigirá a definição ou revisão das regras correspondentes.
 
-## 8. Pontos pendentes de definição
+## 9. Aplicação e verificação
 
-- Definir todos os campos obrigatórios de cada entidade.
-- Definir os status possíveis para pagamentos.
-- Definir os critérios de atualização e exclusão de membros e registros relacionados.
-- Definir os detalhes da autenticação e das permissões dos funcionários.
-- Confirmar quais regras adicionais entrarão no MVP.
+Os critérios de aceitação são mantidos em documento próprio. A associação entre requisitos, regras, critérios e testes deve ser registrada na matriz de rastreabilidade.
+
+Os testes automatizados devem ser implementados em `src/test/java`, conforme a funcionalidade correspondente for desenvolvida. O planejamento e as evidências de execução devem permanecer em `docs/testing`.
+
+As regras referentes a dados previamente carregados também devem ser verificadas, sem que isso exija criar telas fora do escopo.
+
+Não é necessário criar um teste isolado para cada regra. Os cenários devem cobrir os comportamentos relevantes, incluindo situações válidas, inválidas e preservação da integridade dos dados.
+
+Até a execução das verificações, os testes e critérios devem permanecer identificados como planejados, sem indicação de aprovação.
+
+Esta atualização documental não implementa funcionalidades nem comprova a execução de testes.
