@@ -66,21 +66,23 @@ A proteção das senhas e a restrição de acesso às funcionalidades internas s
 |---|---|---|
 | RN21 | Não persistência de dados inválidos | Operações que violem as validações definidas ou referenciem registros inexistentes não devem ser persistidas. Uma operação rejeitada deve preservar os dados válidos anteriormente armazenados. |
 
-## 8. Decisões de implementação para revisão da equipe
+## 8. Decisões de implementação para confirmação da equipe
 
-As seguintes definições operacionalizam o escopo do projeto e não devem ser confundidas com exigências textuais do enunciado do professor:
+Os requisitos, as regras e os critérios de aceite desta revisão adotam as seguintes definições:
 
-- Concentrar a atualização e a exclusão nos membros.
-- Bloquear a exclusão de membros com registros vinculados.
-- Registrar somente pagamentos já recebidos, utilizando o status Pago.
-- Expressar duração de treinos e tempo de execução de atividades em minutos inteiros positivos.
-- Disponibilizar funcionários e histórico de atividades por carga técnica documentada, sem novas telas.
+- Os funcionários serão cadastrados previamente por procedimento técnico documentado, sem tela de cadastro ou gerenciamento nesta entrega.
+- O histórico de atividades será inicialmente alimentado por carga técnica documentada, respeitando as regras de integridade e mantendo a consulta funcional.
+- Os pagamentos representarão valores já recebidos e serão registrados somente com o status Pago.
+- As operações de atualização e exclusão serão previstas somente para membros.
+- A gestão de treinos será atendida pelo cadastro e pela consulta.
+- A exclusão de membros será bloqueada quando existirem registros vinculados.
+- A duração dos treinos e o tempo de execução das atividades serão expressos em minutos inteiros positivos.
 
-Essas definições devem ser revisadas pela equipe no Pull Request desta atualização documental.
+Essas decisões estão propostas de forma consistente nos documentos e aguardam confirmação da equipe na revisão deste PR. Não representam, isoladamente, exigências textuais do enunciado do professor.
 
-Se alguma dessas decisões mudar, os requisitos, as regras, os critérios de aceitação, o modelo de dados e os testes relacionados devem ser revisados em conjunto.
+Caso alguma definição seja alterada, os requisitos, as regras de negócio, os critérios de aceite e os vínculos da matriz deverão ser atualizados em conjunto.
 
-As funcionalidades futuras estão identificadas na seção 7 de `requisitos.md`. Sua inclusão futura exigirá a definição ou revisão das regras correspondentes.
+As funcionalidades fora do escopo final estão identificadas na seção 7 de `requisitos.md`.
 
 ## 9. Aplicação e verificação
 

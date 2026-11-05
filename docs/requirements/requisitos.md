@@ -20,11 +20,17 @@ O escopo contempla:
 - Registro de pagamentos.
 - Consulta do histórico de atividades.
 
-Para a alternativa de atualização e exclusão de membros ou treinos, o projeto concentra essas operações nos membros.
+Todos os requisitos funcionais RF01 a RF09 integram a entrega final da A3. As etapas de implementação indicam somente a ordem de desenvolvimento; autenticação, exclusão de membros, treinos, pagamentos e consulta do histórico não estão fora do escopo final.
+
+A atualização e a exclusão são operações previstas para membros. Para treinos, as operações previstas são cadastro e consulta.
+
+O registro de atividades pela interface está fora desta entrega, conforme CA13. A consulta do histórico permanece obrigatória na entrega final, conforme RF09.
 
 A consulta do histórico utilizará registros previamente disponibilizados no banco de dados. Os funcionários também serão previamente cadastrados por procedimento técnico documentado. Esses procedimentos não exigem novas telas.
 
 As decisões de implementação estão explicitadas em `regras-de-negocio.md` e devem ser revisadas pela equipe no Pull Request.
+
+
 
 ## 3. Requisitos funcionais
 

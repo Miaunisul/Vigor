@@ -118,11 +118,11 @@ Nos fluxos internos, o usuário é o funcionário autenticado. Os critérios de 
 
 ### CA13 — Registro de atividade — Futuro
 
-Este critério está fora do escopo desta entrega e não integra seus critérios de conclusão.
+O registro de atividades por meio de uma tela não integra o escopo final desta entrega da A3. O identificador CA13 foi preservado para manter o histórico documental.
 
-O registro de atividades por meio de uma tela poderá ser considerado em uma versão futura. Nesta entrega, o histórico será disponibilizado por carga técnica documentada e acessado pela funcionalidade de consulta.
+Nesta entrega, os dados do histórico serão disponibilizados por carga técnica documentada, conforme as regras RN14 a RN16.
 
-O identificador CA13 foi preservado para manter o histórico documental.
+Essa exclusão se refere somente ao registro pela interface. A consulta do histórico permanece obrigatória na entrega final, conforme RF09, CA14 e CA22.
 
 ### CA14 — Consulta de histórico
 
@@ -248,7 +248,11 @@ O identificador CA13 foi preservado para manter o histórico documental.
 
 Os critérios de aceite devem orientar os testes unitários, de integração, de validação, de sistema e de usabilidade, conforme aplicável.
 
-Todos os critérios deste documento integram a entrega atual, exceto o CA13, identificado como futuro.
+Todos os critérios deste documento integram a entrega final da A3, exceto o CA13, identificado como futuro. A execução das verificações acompanhará as etapas de implementação.
+
+Os critérios CA17 a CA27 descrevem comportamentos esperados, mas sua presença neste documento não comprova a existência de testes correspondentes. A definição dos casos de teste, seus identificadores e as evidências de execução serão completadas pelo responsável pelos testes.
+
+O CA25 exige verificar a permanência dos dados após reiniciar a aplicação. Um teste que apenas salva e consulta dados sem reiniciar a aplicação não comprova, por si só, o atendimento integral desse critério.
 
 Cada situação inválida descrita em um critério deve ser verificada separadamente, para identificar qual comportamento está sendo avaliado.
 
