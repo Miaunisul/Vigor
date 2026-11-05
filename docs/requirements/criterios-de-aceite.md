@@ -2,15 +2,17 @@
 
 ## 1. Objetivo
 
-Este documento define os critérios que serão utilizados para verificar se as funcionalidades do VIGOR — Sistema de Cadastro de Academia atendem aos requisitos e às regras de negócio estabelecidos para o projeto.
+Este documento define os critérios utilizados para verificar se as funcionalidades do VIGOR — Sistema de Cadastro de Academia atendem aos requisitos e às regras de negócio estabelecidos para o projeto.
 
 Os critérios serão utilizados durante a implementação, os testes e a validação do sistema.
+
+Nos fluxos internos, o usuário é o funcionário autenticado. Os critérios de login e de acesso sem autenticação verificam as situações anteriores à autenticação.
 
 ## 2. Cadastro de membros
 
 ### CA01 — Cadastro válido
 
-**Dado** que o usuário preenche os campos obrigatórios com informações válidas e informa um CPF válido ainda não cadastrado,
+**Dado** que o funcionário preenche os campos obrigatórios com informações válidas e informa um CPF válido ainda não cadastrado,
 
 **Quando** solicita o cadastro do membro,
 
@@ -18,7 +20,7 @@ Os critérios serão utilizados durante a implementação, os testes e a valida�
 
 ### CA02 — Campos obrigatórios não preenchidos
 
-**Dado** que o usuário deixa um ou mais campos obrigatórios sem preenchimento,
+**Dado** que o funcionário deixa um ou mais campos obrigatórios ausentes, vazios ou compostos apenas por espaços,
 
 **Quando** solicita o cadastro,
 
@@ -26,17 +28,17 @@ Os critérios serão utilizados durante a implementação, os testes e a valida�
 
 ### CA03 — CPF inválido
 
-**Dado** que o usuário informa um CPF inválido,
+**Dado** que o funcionário informa um CPF inválido,
 
 **Quando** solicita o cadastro,
 
-**Então** o sistema deve rejeitar o cadastro e informar que o CPF precisa ser corrigido.
+**Então** o sistema deve rejeitar o cadastro, não salvar o registro e informar que o CPF precisa ser corrigido.
 
 ### CA04 — CPF duplicado
 
 **Dado** que já existe um membro cadastrado com determinado CPF,
 
-**Quando** o usuário tenta cadastrar outro membro com o mesmo CPF,
+**Quando** o funcionário tenta cadastrar outro membro com o mesmo CPF,
 
 **Então** o sistema deve rejeitar o novo cadastro e preservar o registro existente.
 
@@ -46,17 +48,17 @@ Os critérios serão utilizados durante a implementação, os testes e a valida�
 
 **Dado** que existem membros cadastrados no sistema,
 
-**Quando** o usuário acessa a funcionalidade de consulta,
+**Quando** o funcionário acessa a listagem de membros,
 
-**Então** o sistema deve apresentar os registros existentes de acordo com os filtros e critérios de consulta implementados.
+**Então** o sistema deve apresentar os registros existentes com suas informações cadastrais.
 
 ### CA06 — Consulta sem resultados
 
-**Dado** que não existem membros correspondentes à consulta realizada,
+**Dado** que não existem membros cadastrados no sistema,
 
-**Quando** o usuário pesquisa por esses registros,
+**Quando** o funcionário acessa a listagem de membros,
 
-**Então** o sistema deve informar que nenhum resultado foi encontrado.
+**Então** o sistema deve informar que não existem membros cadastrados.
 
 ## 4. Atualização e exclusão de membros
 
@@ -64,17 +66,17 @@ Os critérios serão utilizados durante a implementação, os testes e a valida�
 
 **Dado** que existe um membro cadastrado,
 
-**Quando** o usuário atualiza suas informações com dados válidos,
+**Quando** o funcionário atualiza suas informações com dados válidos,
 
 **Então** o sistema deve salvar as alterações, respeitando a validação dos campos e a unicidade do CPF.
 
-### CA08 — Exclusão de membro
+### CA08 — Exclusão de membro sem vínculos
 
-**Dado** que existe um membro cadastrado,
+**Dado** que existe um membro sem treinos, pagamentos ou atividades vinculados,
 
-**Quando** o usuário solicita sua exclusão,
+**Quando** o funcionário solicita sua exclusão,
 
-**Então** o sistema deve aplicar a política de exclusão definida para o projeto e preservar a integridade dos registros relacionados.
+**Então** o sistema deve excluir o membro e apresentar a confirmação da operação.
 
 ## 5. Gerenciamento de treinos
 
@@ -82,80 +84,195 @@ Os critérios serão utilizados durante a implementação, os testes e a valida�
 
 **Dado** que existe um membro cadastrado,
 
-**Quando** o usuário registra um treino com os dados obrigatórios válidos,
+**Quando** o funcionário registra um treino com os dados obrigatórios válidos,
 
-**Então** o sistema deve associar o treino ao membro correspondente e salvar o registro.
+**Então** o sistema deve associar o treino ao membro correspondente e salvar o registro com um identificador único gerado automaticamente.
 
 ### CA10 — Treino associado a membro inexistente
 
 **Dado** que o identificador informado não corresponde a um membro cadastrado,
 
-**Quando** o usuário tenta registrar um treino,
+**Quando** é solicitada a gravação de um treino associado a esse identificador,
 
-**Então** o sistema deve rejeitar a operação.
+**Então** o sistema deve rejeitar a operação e não persistir o treino.
 
 ## 6. Registro de pagamentos
 
 ### CA11 — Registro de pagamento válido
 
-**Dado** que existe um membro cadastrado e os dados do pagamento são válidos,
+**Dado** que existe um membro cadastrado e foram informados um valor maior que zero, com no máximo duas casas decimais, e uma data de pagamento válida,
 
-**Quando** o usuário registra o pagamento,
+**Quando** o funcionário registra o pagamento,
 
-**Então** o sistema deve salvar o pagamento associado ao membro e registrar o status definido para a operação.
+**Então** o sistema deve salvar o pagamento associado ao membro, gerar um identificador único, atribuir o status Pago e apresentar a confirmação da operação.
 
 ### CA12 — Dados de pagamento inválidos
 
 **Dado** que o pagamento possui dados inválidos,
 
-**Quando** o usuário tenta registrá-lo,
+**Quando** é solicitada sua gravação,
 
-**Então** o sistema deve rejeitar a operação e informar os dados que precisam ser corrigidos.
+**Então** o sistema deve rejeitar a operação, não persistir o pagamento e informar os dados que precisam ser corrigidos.
 
 ## 7. Histórico de atividades
 
-### CA13 — Registro de atividade
+### CA13 — Registro de atividade — Futuro
 
-**Dado** que existe um membro cadastrado,
+O registro de atividades por meio de uma tela não integra o escopo final desta entrega da A3. O identificador CA13 foi preservado para manter o histórico documental.
 
-**Quando** o usuário registra uma atividade com os dados obrigatórios válidos,
+Nesta entrega, os dados do histórico serão disponibilizados por carga técnica documentada, conforme as regras RN14 a RN16.
 
-**Então** o sistema deve salvar o registro associado ao membro.
+Essa exclusão se refere somente ao registro pela interface. A consulta do histórico permanece obrigatória na entrega final, conforme RF09, CA14 e CA22.
 
 ### CA14 — Consulta de histórico
 
 **Dado** que um membro possui atividades registradas,
 
-**Quando** o usuário consulta seu histórico,
+**Quando** o funcionário consulta seu histórico,
 
-**Então** o sistema deve apresentar os registros correspondentes ao membro consultado.
+**Então** o sistema deve apresentar somente os registros correspondentes ao membro consultado, incluindo atividade, data e tempo de execução.
 
 ## 8. Login de funcionários
 
 ### CA15 — Login válido
 
-**Dado** que existe um funcionário com credenciais válidas,
+**Dado** que existe um funcionário previamente cadastrado,
 
-**Quando** ele informa suas credenciais corretas,
+**Quando** ele informa seu login e sua senha corretamente,
 
-**Então** o sistema deve permitir o acesso conforme as permissões definidas para o funcionário.
+**Então** o sistema deve permitir o acesso às funcionalidades internas.
 
 ### CA16 — Login inválido
 
-**Dado** que as credenciais informadas são inválidas,
+**Dado** que o login informado não existe ou a senha está incorreta,
 
-**Quando** o funcionário tenta acessar o sistema,
+**Quando** o usuário tenta acessar o sistema,
 
 **Então** o sistema deve negar o acesso e apresentar uma mensagem apropriada, sem expor informações sensíveis.
 
-## 9. Validação e testes
+## 9. Verificações complementares da entrega
 
-Os critérios de aceite devem orientar a criação de testes unitários, de integração e de usabilidade, conforme aplicável a cada funcionalidade.
+### CA17 — Atualização inválida
 
-Os critérios CA01 a CA06 são prioritários para a primeira etapa do MVP. Os demais deverão ser validados conforme as funcionalidades forem implementadas.
+**Dado** que existe um membro cadastrado,
 
-## 10. Status dos critérios
+**Quando** o funcionário tenta atualizar seus dados com campos obrigatórios ausentes, vazios ou compostos apenas por espaços, CPF inválido ou CPF pertencente a outro membro,
 
-Os critérios descritos representam os resultados esperados do sistema. Eles não significam que as funcionalidades já estejam implementadas ou aprovadas.
+**Então** o sistema deve rejeitar a alteração, informar o problema e preservar os dados anteriormente armazenados.
 
-A equipe deverá registrar os resultados dos testes e as evidências correspondentes no documento `docs/testing/evidencias.md`.
+### CA18 — Manutenção do CPF do próprio membro
+
+**Dado** que existe um membro cadastrado,
+
+**Quando** o funcionário atualiza seus dados mantendo o CPF do próprio registro e informa os demais campos corretamente,
+
+**Então** o sistema deve permitir a atualização sem apontar duplicidade de CPF.
+
+### CA19 — Exclusão bloqueada por vínculos
+
+**Dado** que existe um membro com pelo menos um treino, pagamento ou registro de atividade vinculado,
+
+**Quando** o funcionário solicita sua exclusão,
+
+**Então** o sistema deve bloquear a operação, explicar o motivo e preservar o membro e seus registros vinculados.
+
+### CA20 — Consulta de treinos
+
+**Dado** que um membro está selecionado para consulta,
+
+**Quando** o funcionário acessa seus treinos,
+
+**Então** o sistema deve apresentar somente os treinos associados a esse membro ou informar que não existem treinos cadastrados para ele.
+
+### CA21 — Dados de treino inválidos
+
+**Dado** que o cadastro de um treino possui campos obrigatórios ausentes, tipo ou descrição vazios ou compostos apenas por espaços, duração que não seja um número inteiro positivo ou data de início inválida,
+
+**Quando** é solicitada a gravação,
+
+**Então** o sistema deve rejeitar a operação, informar os dados que precisam ser corrigidos e não salvar o treino.
+
+### CA22 — Histórico sem atividades
+
+**Dado** que um membro não possui atividades registradas,
+
+**Quando** o funcionário consulta seu histórico,
+
+**Então** o sistema deve informar a ausência de atividades para esse membro.
+
+### CA23 — Acesso sem autenticação
+
+**Dado** que o usuário não está autenticado,
+
+**Quando** tenta acessar diretamente uma funcionalidade interna,
+
+**Então** o sistema deve impedir o acesso e solicitar autenticação.
+
+### CA24 — Identificação e data de cadastro
+
+**Dado** que os dados de um novo membro são válidos,
+
+**Quando** o cadastro é concluído,
+
+**Então** o sistema deve gerar um identificador único e preencher automaticamente a data de cadastro.
+
+**E** esses dados devem permanecer inalterados nas atualizações posteriores.
+
+### CA25 — Persistência dos dados
+
+**Dado** que um cadastro ou uma atualização válida foi concluída,
+
+**Quando** a aplicação é reiniciada e o funcionário realiza uma nova consulta,
+
+**Então** os dados salvos devem continuar disponíveis.
+
+### CA26 — Normalização e validação do CPF
+
+**Dado** que o funcionário informa um CPF com ou sem pontos e hífen,
+
+**Quando** o sistema valida o CPF,
+
+**Então** deve considerar os mesmos dígitos para validar e verificar duplicidade, rejeitando sequências repetidas e dígitos verificadores incorretos.
+
+**E** um CPF válido e ainda não cadastrado deve ser aceito em ambas as formas, desde que os demais dados estejam válidos.
+
+### CA27 — Pagamento associado a membro inexistente
+
+**Dado** que a referência informada não corresponde a um membro existente,
+
+**Quando** é solicitada a gravação de um pagamento,
+
+**Então** o sistema deve rejeitar a operação e não persistir o pagamento.
+
+## 10. Validação e testes
+
+Os critérios de aceite devem orientar os testes unitários, de integração, de validação, de sistema e de usabilidade, conforme aplicável.
+
+Todos os critérios deste documento integram a entrega final da A3, exceto o CA13, identificado como futuro. A execução das verificações acompanhará as etapas de implementação.
+
+Os critérios CA17 a CA27 descrevem comportamentos esperados, mas sua presença neste documento não comprova a existência de testes correspondentes. A definição dos casos de teste, seus identificadores e as evidências de execução serão completadas pelo responsável pelos testes.
+
+O CA25 exige verificar a permanência dos dados após reiniciar a aplicação. Um teste que apenas salva e consulta dados sem reiniciar a aplicação não comprova, por si só, o atendimento integral desse critério.
+
+Cada situação inválida descrita em um critério deve ser verificada separadamente, para identificar qual comportamento está sendo avaliado.
+
+Os testes de pagamento inválido devem contemplar valor ausente, não numérico, zero, negativo ou com mais de duas casas decimais, data ausente ou inválida e tentativa de gravação com status diferente de Pago.
+
+A preparação dos dados de atividades deve respeitar as regras RN14 a RN16. A preparação dos dados de funcionários deve respeitar as regras RN18 e RN19.
+
+Os requisitos não funcionais também devem ser verificados:
+
+- RNF01: verificar a restrição de acesso e o armazenamento de senhas por hash apropriado, sem expor credenciais nas evidências.
+- RNF02: registrar ambiente, volume de dados, tempos de consulta e ocorrência de travamentos ou erros de tempo limite.
+- RNF03: realizar avaliação de usabilidade e registrar dificuldades e correções necessárias.
+- RNF04: verificar persistência, rejeição de dados inválidos e integridade dos relacionamentos.
+- RNF05: revisar a organização do código e registrar a análise estática e o resultado do quality gate.
+- RNF06: executar testes com Maven, gerar relatório de cobertura mínima de 75% com JaCoCo e verificar a execução na integração contínua.
+
+## 11. Status dos critérios
+
+Os critérios representam resultados esperados. Sua documentação não significa que as funcionalidades já estejam implementadas ou aprovadas.
+
+Os testes devem permanecer identificados como planejados até sua execução. Depois disso, a equipe deve registrar o resultado efetivamente observado.
+
+As evidências devem ser registradas em `docs/testing/evidencias.md`, com referências aos testes ou às verificações correspondentes.
