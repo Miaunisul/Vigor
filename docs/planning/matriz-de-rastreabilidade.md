@@ -8,16 +8,16 @@ Relacionar os requisitos funcionais do VIGOR às regras de negócio, aos critér
 
 | Requisito | Regra de negócio | Critério de aceite | Teste previsto | Prioridade |
 |---|---|---|---|---|
-| RF01 — Cadastrar membros | RN01, RN02, RN03, RN04 | CA01, CA02, CA03, CA04 | CT01, CT02, CT03, CT04 | Alta |
-| RF02 — Consultar membros | RN05 | CA05, CA06 | CT05, CT06 | Alta |
-| RF03 — Validar CPF | RN02 | CA03 | CT03 | Alta |
-| RF04 — Impedir CPF duplicado | RN03 | CA04 | CT04 | Alta |
-| RF05 — Atualizar membros | RN07 | CA07 | CT07 | Média |
-| RF06 — Excluir membros | RN08 | CA08 | CT08 | Média |
-| RF07 — Gerenciar treinos | RN09, RN10, RN11 | CA09, CA10 | CT09, CT10 | A definir |
-| RF08 — Registrar pagamentos | RN12, RN13, RN14 | CA11, CA12 | CT11, CT12 | A definir |
-| RF09 — Consultar histórico de atividades | RN15, RN16 | CA13, CA14 | CT13, CT14 | A definir |
-| RF10 — Login de funcionários | RN17, RN18, RN19 | CA15, CA16 | CT15, CT16 | A definir |
+| RF02 — Cadastrar membros | RN01, RN02, RN03, RN04, RN21 | CA01, CA02, CA03, CA04, CA24, CA26 | CT01, CT02, CT03, CT04 | Alta |
+| RF03 — Consultar membros | Não se aplica regra específica | CA05, CA06 | CT05, CT06 | Alta |
+| RF02 — Cadastrar membros; RF04 — Atualizar membros (validação do CPF) | RN03, RN05, RN21 | CA03, CA17, CA26 | CT03 | Alta |
+| RF02 — Cadastrar membros; RF04 — Atualizar membros (unicidade do CPF) | RN04, RN05, RN21 | CA04, CA17, CA18, CA26 | CT04 | Alta |
+| RF04 — Atualizar membros | RN01, RN02, RN03, RN04, RN05, RN21 | CA07, CA17, CA18, CA24, CA26 | CT07 | Média |
+| RF05 — Excluir membros | RN06, RN21 | CA08, CA19 | CT08 | Média |
+| RF06 — Cadastrar treinos; RF07 — Consultar treinos | RN07, RN08, RN09, RN21 | CA09, CA10, CA20, CA21 | CT09, CT10 | A definir |
+| RF08 — Registrar pagamentos | RN10, RN11, RN12, RN13, RN21 | CA11, CA12, CA27 | CT11, CT12 | A definir |
+| RF09 — Consultar histórico de atividades | RN14, RN15, RN16, RN17 | CA14, CA22 | CT13, CT14 | A definir |
+| RF01 — Autenticar funcionários | RN18, RN19, RN20 | CA15, CA16, CA23 | CT15, CT16 | A definir |
 
 ## 3. Requisitos não funcionais
 
@@ -26,7 +26,7 @@ Relacionar os requisitos funcionais do VIGOR às regras de negócio, aos critér
 | RNF01 — Segurança | Verificação das proteções de dados e credenciais implementadas. | A verificar |
 | RNF02 — Desempenho | Avaliação do tempo de resposta das operações relevantes. | A verificar |
 | RNF03 — Usabilidade | Testes de usabilidade com usuários ou participantes definidos pela equipe. | A verificar |
-| RNF04 — Integridade | Testes das validações, restrições e relacionamentos entre registros. | A verificar |
+| RNF04 — Integridade e persistência | Testes das validações, restrições e relacionamentos entre registros. | A verificar |
 | RNF05 — Manutenibilidade | Revisão da organização do código e da separação de responsabilidades. | A verificar |
 | RNF06 — Testabilidade | Execução dos testes automatizados e verificação dos resultados. | A verificar |
 
