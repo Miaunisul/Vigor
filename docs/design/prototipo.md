@@ -27,7 +27,7 @@ A navegação do protótipo simula o uso da aplicação e não comprova a implem
 - [Abrir a versão estendida no Figma](https://www.figma.com/design/BHnpvrVjH5vEswS6MgZNDu/VIGOR-extra?node-id=0-1&t=HIocQdgfXdCjZjjU-1).
 - Nome do arquivo: VIGOR-extra.
 - Localização das telas adicionais: página “Telas desktop” do arquivo de origem.
-- O link disponibilizado abre a aprentação das telas estáticas.
+- O link disponibilizado abre a apresentação das telas estáticas.
 
 A versão estendida preserva propostas adicionais de interface e funcionalidades para possíveis evoluções do produto. Ela não substitui o protótipo principal nem amplia o escopo da entrega final da A3.
 
@@ -123,7 +123,7 @@ A página “Fluxos do protótipo” do arquivo principal contém o “Mapa de f
 | Consulta do histórico de atividades | Atividades → Selecionar membro → Consultar histórico → Apresentação somente para leitura. | RF09 |
 | Navegação pela barra lateral | Acesso direto aos módulos Membros, Treinos, Pagamentos e Atividades. | RF02 a RF09 |
 
-O “Mapa de fluxos” é uma representação estática dos caminhos esperados. Suas setas documentam a sequência das operações. A navegação interativa está disponível na versão navegável do protótipo principal..
+O “Mapa de fluxos” é uma representação estática dos caminhos esperados. Suas setas documentam a sequência das operações. A navegação interativa está disponível na versão navegável do protótipo principal.
 
 A sequência apresentada para os treinos exemplifica um cadastro seguido de consulta. A consulta também deve estar disponível independentemente de um novo cadastro.
 
