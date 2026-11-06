@@ -190,8 +190,8 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 - **Status:** Planejado.
 - **RF/CA:** RF01; CA16, CA23. **RNF:** RNF01.
 - **Pré-condições:** Funcionário de teste previamente disponibilizado; sessão não autenticada para o acesso direto.
-- **Passos:** Tentar login com usuário inexistente e, separadamente, com senha incorreta; sem autenticação, acessar diretamente funcionalidade interna.
-- **Resultado esperado:** Login negado com mensagem apropriada, sem expor informação sensível; acesso direto impedido e autenticação solicitada.
+- **Passos:** 1. Tentar login com usuário inexistente. 2. Em outra tentativa, usar login existente com senha incorreta. 3. Sem possuir sessão autenticada, tentar acessar diretamente uma rota ou funcionalidade interna protegida.
+- **Resultado esperado:** As tentativas de login são negadas com mensagem apropriada, sem expor informação sensível. O acesso direto é negado, a funcionalidade protegida não pode ser visualizada nem utilizada e o sistema solicita autenticação.
 
 ### CT17 — Persistência após reinício da aplicação
 
