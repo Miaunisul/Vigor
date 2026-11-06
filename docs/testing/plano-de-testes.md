@@ -124,7 +124,7 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 ### CT08 — Exclusão de membro sem vínculos e bloqueio por vínculos
 
 - **Status:** Planejado.
-- **RF/CA:** RF05; CA08.
+- **RF/CA:** RF05; CA08, CA19.
 - **Pré-condições:** Funcionário autenticado; existe um membro sem vínculos e membros de teste com treino, pagamento ou atividade vinculados (um tipo de vínculo por cenário).
 - **Passos:** 1. Excluir o membro sem vínculos e consultar a listagem. 2. Para cada tipo de vínculo, solicitar separadamente a exclusão do membro correspondente e consultar o membro e seus registros.
 - **Resultado esperado:** O membro sem vínculos é excluído e a operação é confirmada. Cada exclusão com vínculo é bloqueada, o motivo é informado e o membro e os registros vinculados são preservados.
