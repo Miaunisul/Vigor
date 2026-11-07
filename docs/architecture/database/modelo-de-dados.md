@@ -12,12 +12,12 @@ O modelo é preliminar e poderá ser ajustado durante a implementação, desde q
 
 | Atributo | Descrição |
 |---|---|
-| ID | Identificador único do membro. |
+| ID | Identificador único do membro, gerado automaticamente e preservado nas atualizações. |
 | Nome | Nome completo do membro. |
-| CPF | CPF do membro, sujeito a validação e unicidade. |
+| CPF | CPF do membro, sujeito à validação dos dígitos verificadores, rejeição de sequências repetidas, normalização de pontos e hífen e unicidade. |
 | Telefone | Telefone de contato. |
 | Endereço | Endereço do membro. |
-| Data de cadastro | Data em que o membro foi cadastrado. |
+| Data de cadastro | Data preenchida automaticamente no cadastro e preservada nas atualizações. |
 
 ### 2.2. Treinos
 
@@ -38,7 +38,9 @@ O modelo é preliminar e poderá ser ajustado durante a implementação, desde q
 | ID_Membro | Referência ao membro associado. |
 | Valor | Valor do pagamento. |
 | Data_Pagamento | Data do pagamento. |
-| Status | Situação do pagamento. |
+| Status | Situação do pagamento; nesta entrega, somente `Pago`. |
+
+O módulo registra somente pagamentos efetivamente recebidos. Não contempla contas a receber, pagamentos pendentes ou um módulo financeiro.
 
 ### 2.4. Histórico de Atividades
 
@@ -50,6 +52,8 @@ O modelo é preliminar e poderá ser ajustado durante a implementação, desde q
 | Data | Data da atividade. |
 | Tempo_Execução | Tempo de execução da atividade. |
 
+Conforme RN14 e RN15, cada registro deve identificar o membro e o funcionário responsável existentes. O modelo atual ainda não define o atributo que representa o funcionário responsável, nem seu tipo ou mapeamento físico; esses detalhes dependem da consolidação do diagrama de domínio.
+
 ### 2.5. Funcionários
 
 | Atributo | Descrição |
@@ -58,14 +62,18 @@ O modelo é preliminar e poderá ser ajustado durante a implementação, desde q
 | Nome | Nome completo do funcionário. |
 | Cargo | Função exercida na academia. |
 | Login | Identificação utilizada para acessar o sistema. |
-| Senha | Credencial de acesso, que deverá ser armazenada de forma protegida. |
+| Senha | Credencial de acesso, que deverá ser armazenada por meio de hash apropriado. |
+
+Os funcionários são previamente cadastrados e utilizados para autenticação. Não está prevista uma tela de cadastro ou gerenciamento de funcionários nesta entrega.
 
 ## 3. Relacionamentos previstos
+
+As relações abaixo são descrições conceituais do modelo atual. Tipos, constraints definitivas, chaves estrangeiras e cardinalidades físicas dependem da consolidação do modelo e do diagrama de classes do domínio.
 
 - **Membros e Treinos:** um membro pode possuir vários treinos. Cada treino está associado a um membro.
 - **Membros e Pagamentos:** um membro pode possuir vários pagamentos. Cada pagamento está associado a um membro.
 - **Membros e Histórico de Atividades:** um membro pode possuir vários registros de atividades. Cada registro está associado a um membro.
-- **Funcionários e atividades:** os funcionários podem estar relacionados às atividades que executam ou registram. A forma exata desse relacionamento ainda precisa ser definida pela equipe.
+- **Funcionários e atividades:** cada registro de atividade deve identificar um funcionário responsável existente, conforme RN14 e RN15. A multiplicidade no lado do funcionário e a representação técnica desse relacionamento ainda dependem da consolidação do diagrama de domínio.
 
 ## 4. Integridade dos dados
 
@@ -73,28 +81,29 @@ O modelo deverá respeitar as seguintes condições:
 
 - Cada entidade deverá possuir um identificador único.
 - As referências entre entidades deverão corresponder a registros existentes.
-- O CPF dos membros deverá ser válido e único.
+- O CPF dos membros deverá conter 11 dígitos com dígitos verificadores válidos; sequências repetidas devem ser rejeitadas. Pontos e hífen devem ser desconsiderados na validação e comparação, e o CPF normalizado deve ser único.
 - Os campos obrigatórios deverão ser validados antes da persistência.
-- As operações de atualização e exclusão deverão preservar a integridade dos relacionamentos.
+- Nome, CPF, telefone e endereço são obrigatórios para Membro, conforme RN01.
+- A exclusão de membros com treinos, pagamentos ou atividades vinculados deverá ser bloqueada; quando uma exclusão permitida ocorrer, os registros relacionados devem ser preservados. Não se presume exclusão em cascata.
 - As senhas dos funcionários não deverão ser armazenadas em texto puro.
 
 ## 5. Banco de dados e persistência
 
 O PostgreSQL está previsto como banco de dados do projeto, com persistência por meio do Spring Data JPA.
 
-A estrutura definitiva deverá ser validada durante a implementação. Os atributos, tipos de dados, restrições e chaves estrangeiras serão definidos no mapeamento das entidades.
+A estrutura definitiva deverá ser validada durante a implementação. Os tipos de dados, constraints definitivas, chaves estrangeiras e cardinalidades físicas dependem da consolidação do modelo e do diagrama de classes do domínio. As relações descritas nesta seção são conceituais e não afirmam que já estejam implementadas no banco.
 
-## 6. Escopo do MVP
+## 6. Escopo funcional e implementação
 
-A primeira etapa prioriza a entidade Membros, incluindo cadastro, validação de CPF, prevenção de duplicidade e consulta dos registros.
+As entidades **Membros**, **Treinos**, **Pagamentos**, **Histórico de Atividades** e **Funcionários** fazem parte do escopo funcional previsto para a entrega, conforme os requisitos RF01–RF09. A implementação ocorre por etapas; a prioridade inicial em membros não retira as demais entidades do escopo final.
 
-As demais entidades fazem parte do modelo previsto para o sistema e serão implementadas conforme a priorização e a divisão de responsabilidades da equipe.
+No código consultado, somente a entidade `Membro` está implementada. As demais entidades e seus mapeamentos ainda pertencem ao modelo previsto, não à implementação atual.
+
+O registro de pagamentos limita-se a pagamentos recebidos, com status `Pago`, conforme RN13. Funcionários previamente cadastrados são usados na autenticação, sem tela para cadastrá-los. O histórico de atividades será consultado a partir de dados previamente disponibilizados por procedimento técnico documentado; não haverá tela de registro nesta entrega.
 
 ## 7. Pontos pendentes
 
-- Definir os tipos de dados e as restrições de cada atributo.
-- Definir como os funcionários serão associados às atividades.
-- Definir a política de exclusão de membros com registros relacionados.
-- Definir os estados possíveis para pagamentos.
-- Confirmar os atributos adicionais necessários durante a implementação.
-- Elaborar o diagrama de classes e o diagrama lógico do banco de dados.
+- Consolidar o diagrama de classes do domínio e o diagrama lógico do banco de dados.
+- Definir os tipos de dados, constraints definitivas, chaves estrangeiras e cardinalidades físicas durante a consolidação do modelo.
+- Definir como o funcionário responsável será representado no Histórico de Atividades, sem antecipar atributo ou mapeamento físico.
+- Definir e registrar a estratégia de gerenciamento de alterações do schema, conforme pendente em [migrations.md](migrations.md).
