@@ -23,18 +23,20 @@ O modelo é preliminar e poderá ser ajustado durante a implementação, desde q
 
 | Atributo | Descrição |
 |---|---|
-| ID | Identificador único do treino. |
+| ID | Identificador único do treino, gerado automaticamente. |
 | ID_Membro | Referência ao membro associado. |
 | Tipo | Tipo de treino. |
 | Descrição | Descrição do treino. |
 | Duração | Duração prevista do treino. |
 | Data_Início | Data de início do treino. |
 
+Conforme RN07–RN09, membro, tipo, descrição, duração e data de início são obrigatórios. Tipo e descrição não podem ser vazios nem conter somente espaços. A duração deve ser um número inteiro positivo em minutos, e a data de início deve ser válida.
+
 ### 2.3. Pagamentos
 
 | Atributo | Descrição |
 |---|---|
-| ID | Identificador único do pagamento. |
+| ID | Identificador único do pagamento, gerado automaticamente. |
 | ID_Membro | Referência ao membro associado. |
 | Valor | Valor do pagamento. |
 | Data_Pagamento | Data do pagamento. |
@@ -42,17 +44,21 @@ O modelo é preliminar e poderá ser ajustado durante a implementação, desde q
 
 O módulo registra somente pagamentos efetivamente recebidos. Não contempla contas a receber, pagamentos pendentes ou um módulo financeiro.
 
+Conforme RN10–RN13, membro, valor, data de pagamento e status são obrigatórios. A data deve ser válida; o valor deve ser maior que zero e possuir no máximo duas casas decimais. O sistema atribui `Pago` e não aceita outro status.
+
 ### 2.4. Histórico de Atividades
 
 | Atributo | Descrição |
 |---|---|
-| ID | Identificador único do registro de atividade. |
+| ID | Identificador único do registro de atividade, gerado automaticamente. |
 | ID_Membro | Referência ao membro associado. |
 | Atividade | Descrição da atividade realizada. |
 | Data | Data da atividade. |
 | Tempo_Execução | Tempo de execução da atividade. |
 
-Conforme RN14 e RN15, cada registro deve identificar o membro e o funcionário responsável existentes. O modelo atual ainda não define o atributo que representa o funcionário responsável, nem seu tipo ou mapeamento físico; esses detalhes dependem da consolidação do diagrama de domínio.
+Conforme RN14 e RN15, cada registro deve identificar o membro e o funcionário responsável existente; a associação com um funcionário responsável é obrigatória como regra de negócio. Sua representação física no modelo ainda está pendente de definição no diagrama de domínio.
+
+Conforme RN15–RN16, ID, membro, atividade, data, tempo de execução e funcionário responsável são dados obrigatórios. A atividade não pode ser vazia nem conter somente espaços, a data deve ser válida e o tempo de execução deve ser um número inteiro positivo em minutos.
 
 ### 2.5. Funcionários
 
@@ -65,6 +71,8 @@ Conforme RN14 e RN15, cada registro deve identificar o membro e o funcionário r
 | Senha | Credencial de acesso, que deverá ser armazenada por meio de hash apropriado. |
 
 Os funcionários são previamente cadastrados e utilizados para autenticação. Não está prevista uma tela de cadastro ou gerenciamento de funcionários nesta entrega.
+
+Conforme RN18–RN20, ID, nome, cargo, login e senha protegida por hash são necessários. Nome, cargo e login não podem ser vazios nem conter somente espaços; o login deve ser único. A autenticação requer funcionário existente e credenciais correspondentes.
 
 ## 3. Relacionamentos previstos
 
@@ -80,11 +88,16 @@ As relações abaixo são descrições conceituais do modelo atual. Tipos, const
 O modelo deverá respeitar as seguintes condições:
 
 - Cada entidade deverá possuir um identificador único.
+- Os identificadores de Membro, Treino, Pagamento e Histórico de Atividades devem ser gerados automaticamente conforme RN02, RN08, RN11 e RN15; a estratégia de geração no banco não está definida neste modelo.
 - As referências entre entidades deverão corresponder a registros existentes.
 - O CPF dos membros deverá conter 11 dígitos com dígitos verificadores válidos; sequências repetidas devem ser rejeitadas. Pontos e hífen devem ser desconsiderados na validação e comparação, e o CPF normalizado deve ser único.
 - Os campos obrigatórios deverão ser validados antes da persistência.
 - Nome, CPF, telefone e endereço são obrigatórios para Membro, conforme RN01.
+- Os campos obrigatórios de Treino, Pagamento, Histórico de Atividades e Funcionário devem seguir RN08, RN11, RN15 e RN18, conforme detalhado nas respectivas seções.
+- O login de Funcionário deve ser único, conforme RN19.
+- Pagamentos devem ter valor maior que zero e no máximo duas casas decimais (RN12); duração de Treino e tempo de execução de atividade devem ser inteiros positivos expressos em minutos (RN09 e RN16).
 - A exclusão de membros com treinos, pagamentos ou atividades vinculados deverá ser bloqueada; quando uma exclusão permitida ocorrer, os registros relacionados devem ser preservados. Não se presume exclusão em cascata.
+- Dados inválidos ou referências a registros inexistentes não devem ser persistidos; uma operação rejeitada deve preservar dados válidos previamente armazenados (RN21).
 - As senhas dos funcionários não deverão ser armazenadas em texto puro.
 
 ## 5. Banco de dados e persistência
