@@ -1,263 +1,233 @@
 # VIGOR — Sistema de Cadastro de Academia
 
-Projeto acadêmico desenvolvido para a A3 da disciplina de Gestão e Qualidade de Software (GQS), da UNISUL.
+Projeto acadêmico da A3 de Gestão e Qualidade de Software (GQS) da UNISUL.
 
-O VIGOR é uma aplicação web voltada ao cadastro e à consulta de membros de uma academia, com foco na organização das informações, na validação dos dados e na integridade dos registros.
+> **Situação:** o código contém um fluxo inicial de cadastro e listagem de membros. A execução local com PostgreSQL e a persistência funcional ainda precisam de comprovação. As demais funcionalidades permanecem previstas no escopo final e serão implementadas por etapas.
 
-> **Status do projeto:** em desenvolvimento e validação pela equipe. A execução da aplicação, os testes automatizados, a integração contínua e a cobertura de código devem ser confirmados na versão candidata à entrega.
+## Problema e objetivo
 
-## 1. Problema e objetivo
+Academias precisam manter informações cadastrais organizadas e consistentes. Dados incompletos, CPFs inválidos ou duplicados podem comprometer a qualidade dos registros e dificultar consultas.
 
-A gestão de uma academia exige que os dados dos membros sejam armazenados de forma organizada e consistente. Informações inválidas ou registros duplicados podem dificultar consultas e comprometer a qualidade dos dados.
+O VIGOR é uma aplicação web para apoiar o cadastro e o gerenciamento de membros, treinos, pagamentos recebidos e histórico de atividades, com acesso interno por funcionários autenticados.
 
-O objetivo do VIGOR é desenvolver uma aplicação web que permita cadastrar e consultar membros, aplicando regras de validação e persistindo os dados em um banco de dados relacional.
+## Atores
 
-## 2. Atores do sistema
+- **Funcionário:** usuário interno da aplicação; deve autenticar-se para acessar as funcionalidades.
+- **Membro:** pessoa cadastrada e associada a treinos, pagamentos e atividades; não acessa diretamente o sistema nesta entrega.
+- **Equipe de desenvolvimento:** implementa e mantém o sistema. A divisão de trabalho planejada está em [Plano de tasks](docs/planning/plano-de-tasks.md).
 
-- **Atendente ou funcionário:** realiza o cadastro e consulta os membros.
-- **Responsável pela gestão:** consulta os registros para apoiar a organização da academia.
-- **Equipe de desenvolvimento:** implementa, testa, documenta e mantém o sistema.
+Não há perfil de gestor com permissões próprias no escopo atual.
 
-As permissões específicas de cada perfil devem seguir os requisitos confirmados pela equipe.
+## Escopo funcional aprovado
 
-## 3. Escopo do MVP
-
-O primeiro incremento funcional prioriza:
-
-1. Cadastro de membros.
-2. Consulta e listagem de membros cadastrados.
-3. Validação dos campos obrigatórios.
-4. Validação do CPF.
-5. Prevenção de cadastros duplicados pelo CPF.
-6. Mensagens claras de sucesso e erro.
-7. Persistência dos dados no banco de dados.
-
-Funcionalidades como gerenciamento de planos de treino, pagamentos, histórico de atividades e autenticação de funcionários permanecem sujeitas à priorização e à confirmação dos requisitos da A3.
-
-**Regra central:** um cadastro inválido ou com CPF duplicado não deve ser persistido.
-
-## 4. Requisitos funcionais
+Todos os RF01–RF09 integram o escopo final da entrega. A ordem de desenvolvimento não remove funcionalidades do escopo. Os IDs e suas definições são os dos [Requisitos oficiais](docs/requirements/requisitos.md).
 
 | ID | Requisito |
 |---|---|
-| RF01 | Permitir o cadastro de membros com os campos obrigatórios preenchidos. |
-| RF02 | Rejeitar CPFs inválidos, sem persistir o cadastro. |
-| RF03 | Impedir o cadastro de membros com CPF já registrado. |
-| RF04 | Permitir a consulta e a listagem dos membros cadastrados. |
-| RF05 | Informar o resultado das operações por meio de mensagens compreensíveis. |
+| RF01 | Autenticar funcionários previamente cadastrados mediante login e senha e restringir funcionalidades internas a usuários autenticados. |
+| RF02 | Cadastrar membros com nome, CPF, telefone e endereço, gerando automaticamente o identificador e a data de cadastro. |
+| RF03 | Listar os membros cadastrados e consultar suas informações. |
+| RF04 | Atualizar nome, CPF, telefone e endereço de um membro, validando os novos dados antes de salvá-los. |
+| RF05 | Excluir membros sem registros vinculados e bloquear a exclusão quando houver treinos, pagamentos ou atividades associados. |
+| RF06 | Cadastrar treino associado a membro existente, informando tipo, descrição, duração em minutos e data de início. |
+| RF07 | Consultar os treinos associados a um membro. |
+| RF08 | Registrar pagamento recebido de membro existente, informando valor e data e atribuindo status Pago. |
+| RF09 | Consultar atividades registradas para um membro, apresentando atividade, data e tempo de execução. |
 
-Os requisitos detalhados e as regras de negócio estão documentados em [`docs/requirements/`](docs/requirements/).
+Funcionários serão previamente cadastrados por procedimento técnico. Os registros iniciais de atividades serão disponibilizados por carga técnica documentada; não haverá tela para registrar atividades nesta entrega. Contas a receber, pagamentos pendentes, atualização e exclusão de treinos, acesso de membros e gerenciamento de funcionários estão fora do escopo desta entrega. Consulte as [Regras de negócio](docs/requirements/regras-de-negocio.md) para os detalhes.
 
-## 5. Requisitos de qualidade
+## Estado da implementação
+
+| Área | Situação observada |
+|---|---|
+| Cadastro e listagem de membros | Há controller, serviço, repositório, entidade JPA e templates para formulário e listagem. O cadastro verifica duplicidade textual de CPF e a listagem consulta os registros. A execução local e a persistência real no PostgreSQL ainda não foram comprovadas. |
+| Validação de membros | Parcial. O código exige nome e CPF e restringe o CPF ao padrão de 11 dígitos. Não valida os dígitos verificadores, não rejeita sequências repetidas e não normaliza pontuação. Telefone e endereço não estão marcados como obrigatórios na entidade, apesar de RN01 exigir ambos. |
+| Autenticação, atualização e exclusão de membros | Planejadas; não há implementação correspondente identificada. |
+| Treinos, pagamentos e histórico de atividades | Planejados; não há entidades ou fluxos correspondentes identificados. |
+
+A presença de requisitos ou código não comprova que o comportamento foi executado ou aprovado. O estado das verificações deve ser acompanhado em [Evidências de testes](docs/testing/evidencias.md).
+
+## Requisitos de qualidade
+
+Os requisitos oficiais são detalhados em [requisitos.md](docs/requirements/requisitos.md). Seu estado deve ser comprovado por testes e evidências.
 
 | ID | Requisito |
 |---|---|
-| RQ01 | Implementar testes automatizados para as regras de negócio. |
-| RQ02 | Buscar a cobertura mínima de 75%, caso confirmada como exigência da avaliação, comprovada por relatório real do JaCoCo. |
-| RQ03 | Configurar a integração contínua para compilar e executar os testes em push e pull request, conforme o fluxo adotado pela equipe. |
-| RQ04 | Separar as responsabilidades de apresentação, lógica de negócio e persistência. |
-| RQ05 | Documentar os pré-requisitos e os procedimentos de execução. |
-| RQ06 | Validar os dados no servidor, sem depender exclusivamente das validações do navegador. |
+| RNF01 | Restringir o acesso às funcionalidades internas a funcionários autenticados e armazenar senhas por hash apropriado, sem persistência em texto puro. |
+| RNF02 | Concluir os fluxos previstos sem travamentos ou erros de tempo limite no ambiente de testes documentado e registrar os tempos observados nas consultas. |
+| RNF03 | Apresentar campos identificados, indicação de obrigatoriedade e mensagens claras de validação, sucesso e ausência de registros; avaliar a usabilidade dos fluxos principais. |
+| RNF04 | Persistir dados válidos no PostgreSQL, mantê-los disponíveis após reiniciar a aplicação e impedir gravações que violem regras de validação e relacionamentos. |
+| RNF05 | Separar responsabilidades de apresentação, regras de negócio e persistência, permitindo localizar e alterar cada responsabilidade e executar análise estática. |
+| RNF06 | Permitir testes automatizados com Maven para cenários válidos e inválidos, gerar relatório JaCoCo com cobertura mínima de 75% e executar testes na integração contínua. |
 
-Esses requisitos representam objetivos de qualidade. Seu atendimento deve ser comprovado por testes, configuração e evidências da versão avaliada.
+A cobertura mínima de 75% é requisito da avaliação. Não há relatório JaCoCo nem percentual medido neste repositório. A aprovação em testes, isoladamente, não comprova cobertura ou quality gate.
 
-## 6. Fluxo principal
+## Fluxo principal e critérios de aceitação
 
-1. O atendente acessa o formulário de cadastro.
-2. Preenche os dados solicitados.
-3. O sistema valida os campos obrigatórios e o CPF.
-4. O sistema verifica se o CPF já está registrado.
-5. Se os dados forem válidos, o cadastro é persistido e uma mensagem de sucesso é apresentada.
-6. O atendente acessa a listagem e verifica o membro cadastrado.
+O fluxo inicial implementado no código é:
 
-### Critérios de aceitação
+1. O funcionário abre o formulário de novo membro.
+2. Informa nome, CPF, telefone e endereço.
+3. O controller aplica as validações declaradas disponíveis e, se não houver erro, chama o serviço.
+4. O serviço consulta se já existe um CPF exatamente igual ao recebido e, se não houver duplicidade, solicita o salvamento ao repositório.
+5. Após o cadastro, a aplicação redireciona à listagem de membros.
 
-- **CA01 — Cadastro válido:** o membro é salvo e aparece na listagem.
-- **CA02 — CPF inválido:** o sistema rejeita o cadastro e não persiste o registro.
-- **CA03 — CPF duplicado:** o sistema rejeita a operação e preserva o registro original.
-- **CA04 — Consulta:** um membro previamente cadastrado aparece na listagem.
-- **CA05 — Campo obrigatório:** o sistema impede a persistência quando um campo obrigatório está vazio e apresenta uma validação adequada.
+A validação existente não implementa ainda todas as regras de CPF nem a obrigatoriedade completa dos campos. Para o fluxo de cadastro e consulta, os critérios oficiais são [CA01 — Cadastro válido, CA02 — Campos obrigatórios não preenchidos, CA03 — CPF inválido, CA04 — CPF duplicado, CA05 — Consulta de membros cadastrados e CA06 — Consulta sem resultados](docs/requirements/criterios-de-aceite.md). Também se aplicam [CA24 — Identificação e data de cadastro](docs/requirements/criterios-de-aceite.md) e [CA26 — Normalização e validação do CPF](docs/requirements/criterios-de-aceite.md). Os demais critérios permanecem aplicáveis conforme cada funcionalidade for desenvolvida.
 
-## 7. Tecnologias
+## Tecnologias e configuração
 
-As tecnologias identificadas na configuração atual do projeto incluem:
+Tecnologias encontradas em pom.xml e na configuração atual:
 
-- **Java 21** — linguagem de programação.
-- **Spring Boot** — estrutura principal da aplicação, com versão definida no `pom.xml`.
-- **Spring MVC** — suporte à camada web.
-- **Thymeleaf** — renderização de páginas HTML no servidor.
-- **Spring Data JPA** — persistência e acesso aos dados.
-- **PostgreSQL** — banco de dados relacional previsto para a aplicação.
-- **Maven** — gerenciamento de dependências e build.
-- **Spring Boot Test** — suporte aos testes.
-- **JUnit e Mockito** — ferramentas de teste disponibilizadas pela configuração de dependências.
+- **Java 21** — versão definida no projeto.
+- **Spring Boot 4.1.2** — framework principal.
+- **Spring Web MVC** — rotas e controllers web.
+- **Thymeleaf** — templates HTML renderizados no servidor.
+- **Spring Data JPA** — acesso a dados por JPA.
+- **PostgreSQL JDBC** — driver de conexão com o PostgreSQL.
+- **Jakarta Bean Validation** — validação declarativa de dados.
+- **Maven e Maven Wrapper** — build e gerenciamento de dependências.
+- **JUnit 5 e Mockito** — testes; as dependências de testes estão declaradas no pom.xml.
+- **GitHub Actions** — workflow de CI em .github/workflows/ci.yml.
 
-JaCoCo, H2, Bootstrap e GitHub Actions só devem ser apresentados como tecnologias efetivamente configuradas quando sua presença e utilização forem confirmadas no projeto.
+Bootstrap, H2 e JaCoCo não estão configurados no pom.xml ou nos recursos consultados. Não há Docker/Compose ou ferramenta de migrations configurada.
 
-## 8. Pré-requisitos
+## Pré-requisitos e execução local
 
-Para preparar o ambiente de desenvolvimento:
+- JDK 21.
+- PostgreSQL local disponível.
+- Banco chamado vigor, usuário postgres e permissões de conexão.
+- Variável de ambiente DB_PASSWORD definida no processo que inicia a aplicação.
 
-- JDK 21 instalado.
-- Git instalado.
-- Acesso ao repositório do VIGOR.
-- Acesso a um servidor PostgreSQL configurado para a aplicação.
-- Terminal compatível com o sistema operacional utilizado.
+A configuração em src/main/resources/application.properties usa jdbc:postgresql://localhost:5432/vigor, usuário postgres, driver org.postgresql.Driver e a senha fornecida por DB_PASSWORD. Não inclua senhas reais no repositório.
 
-O projeto contém o Maven Wrapper (`mvnw` e `mvnw.cmd`), que deve ser priorizado para executar os comandos Maven sem exigir uma instalação global do Maven.
+O Hibernate está configurado com spring.jpa.hibernate.ddl-auto=update, que pode atualizar o schema a partir das entidades ao iniciar. A configuração da conexão, por si só, não comprova leitura ou gravação funcional no banco.
 
-## 9. Como executar
+Os comandos do Maven Wrapper estão documentados abaixo. A aplicação e os testes não foram executados localmente nesta atualização: o teste de contexto inicializa a configuração JPA e o ddl-auto atual pode alterar o schema do banco local. Assim, o resultado dos comandos e a persistência local ainda precisam ser verificados em ambiente preparado para testes.
 
-Os comandos abaixo pressupõem que a configuração do banco de dados esteja correta. A inicialização completa deve ser validada no ambiente local antes da entrega.
+### Iniciar a aplicação
 
-### 9.1 Clonar o repositório
+Windows PowerShell, na raiz do repositório:
 
-```bash
-git clone https://github.com/Miaunisul/Vigor.git
-cd Vigor
-```
+    $env:DB_PASSWORD = "<senha-local>"
+    .\mvnw.cmd spring-boot:run
 
-### 9.2 Configurar o banco de dados
+Linux ou macOS:
 
-Configure o PostgreSQL conforme as propriedades utilizadas pela aplicação.
+    export DB_PASSWORD="<senha-local>"
+    ./mvnw spring-boot:run
 
-Antes de executar o projeto, confira:
+Após confirmar a inicialização, a aplicação Spring Boot usa a porta padrão 8080, salvo configuração diferente.
 
-- endereço e porta do servidor;
-- nome do banco;
-- usuário e senha;
-- propriedades de conexão configuradas no projeto;
-- existência do banco e permissões de acesso.
+### Executar os testes
 
-Não versione credenciais reais, senhas pessoais ou outros segredos.
+Windows PowerShell:
 
-> O procedimento definitivo de inicialização do banco deve ser documentado após a equipe confirmar a configuração efetivamente utilizada. Não presumir a existência de um arquivo Docker Compose.
+    $env:DB_PASSWORD = "<senha-local>"
+    .\mvnw.cmd clean test
 
-### 9.3 Executar a aplicação no Windows
+Linux ou macOS:
 
-Na raiz do projeto, execute:
+    export DB_PASSWORD="<senha-local>"
+    ./mvnw clean test
 
-```bat
-.\mvnw.cmd spring-boot:run
-```
+Os testes de contexto precisam de PostgreSQL acessível com a configuração correspondente. A CI fornece um PostgreSQL de teste e define DB_PASSWORD para o job.
 
-No Linux ou macOS:
+## Testes automatizados existentes
 
-```bash
-./mvnw spring-boot:run
-```
+Os arquivos atuais em src/test/java contêm dois testes unitários do serviço e um teste de inicialização do contexto Spring:
 
-Após confirmar a inicialização, acesse o endereço local informado pela aplicação. Se estiver utilizando a porta padrão do Spring Boot, o endereço normalmente será `http://localhost:8080`.
-
-### 9.4 Executar os testes
-
-No Windows:
-
-```bat
-.\mvnw.cmd clean test
-```
-
-No Linux ou macOS:
-
-```bash
-./mvnw clean test
-```
-
-Verifique o resultado final do Maven. Uma execução bem-sucedida deve terminar sem falhas de build ou testes.
-
-### 9.5 Verificar a cobertura de código
-
-Se o JaCoCo estiver configurado no `pom.xml`, execute o comando definido para gerar o relatório. Quando o projeto estiver configurado para gerar a cobertura durante o ciclo `verify`, o comando será:
-
-```bat
-.\mvnw.cmd clean verify
-```
-
-O relatório deve ser localizado no caminho configurado pelo plugin. `target/site/jacoco/index.html` é um caminho comum, mas precisa ser confirmado na configuração real.
-
-**Importante:** não declarar que a cobertura atingiu 75% sem consultar o relatório gerado pela versão testada.
-
-## 10. Estrutura do repositório
-
-Estrutura de referência dos diretórios atualmente utilizados:
-
-```text
-Vigor/
-├── .mvn/
-├── docs/
-│   ├── architecture/
-│   ├── planning/
-│   ├── requirements/
-│   └── testing/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   └── resources/
-│   └── test/
-│       └── java/
-├── .gitignore
-├── mvnw
-├── mvnw.cmd
-├── pom.xml
-├── HELP.md
-└── README.md
-```
-
-A estrutura acima resume os diretórios principais. Os pacotes Java, templates, arquivos de configuração e demais componentes devem ser conferidos diretamente no repositório.
-
-## 11. Estratégia de testes
-
-Os testes devem verificar tanto o comportamento esperado quanto a rejeição de entradas inválidas.
-
-| Cenário | Resultado esperado |
-|---|---|
-| Cadastro válido | O membro é persistido. |
-| CPF inválido | O cadastro é rejeitado. |
-| CPF duplicado | O registro duplicado é rejeitado. |
-| Consulta de membros | Os membros persistidos são retornados. |
-| Campo obrigatório vazio | A validação impede o cadastro. |
-
-Os cenários devem ser relacionados aos requisitos e aos critérios de aceitação.
-
-Os resultados precisam registrar o comando executado, a versão testada, o resultado observado e as falhas encontradas. Testes planejados não devem ser apresentados como testes já executados.
-
-## 12. Documentação do projeto
-
-A documentação complementar está organizada nos seguintes diretórios:
-
-- [`docs/requirements/`](docs/requirements/) — requisitos, regras de negócio e critérios de aceitação.
-- [`docs/architecture/`](docs/architecture/) — decisões técnicas e documentação da arquitetura.
-- [`docs/planning/`](docs/planning/) — planejamento e organização das atividades.
-- [`docs/testing/`](docs/testing/) — planejamento de testes e evidências.
-
-Os nomes exatos dos arquivos devem ser conferidos nos respectivos diretórios antes de serem adicionados como links individuais.
-
-## 13. Equipe e responsabilidades
-
-A divisão abaixo representa uma proposta de organização do trabalho. As contribuições efetivamente realizadas devem ser comprovadas pelo histórico do Git, pelos arquivos e pelos testes correspondentes.
-
-| Integrante | Frente de trabalho | Evidências esperadas |
+| Tipo | Arquivo e teste | O que verifica |
 |---|---|---|
-| Millena Ferreira Rodrigues | Aplicação web, persistência, integração e estrutura técnica, conforme as contribuições efetivamente realizadas. | Commits, pull requests, arquivos e testes próprios. |
-| Emely Santos da Silveira | Serviços, regras de negócio, testes automatizados e qualidade da integração. | Commits, testes, relatórios e execuções da CI, quando configurada. |
-| Maria Eduarda Souza dos Santos Ferreira | Revisão dos requisitos e regras existentes, testes de aceitação e validação funcional. | Revisões documentadas, cenários executados e evidências. |
-| Luan Milian Martins | Diagramas, rastreabilidade, documentação técnica e reprodução do ambiente. | Diagramas, matriz, documentação e evidências de reprodução. |
+| Teste de contexto Spring | [VigorApplicationTests.java](src/test/java/br/edu/unisul/vigor/VigorApplicationTests.java) — contextLoads | Inicializa o contexto com @SpringBootTest. Usa a configuração JPA e datasource da aplicação; requer PostgreSQL acessível e DB_PASSWORD conforme application.properties. Não testa cadastro, consulta nem persistência após reinício. |
+| Teste unitário com Mockito | [MembroServiceTest.java](src/test/java/br/edu/unisul/vigor/service/MembroServiceTest.java) — deveCadastrarMembroQuandoCpfAindaNaoExiste | Simula repositório sem CPF duplicado, verifica que o serviço retorna o membro e chama save. Não comprova validação completa do CPF nem gravação no PostgreSQL. |
+| Teste unitário com Mockito | [MembroServiceTest.java](src/test/java/br/edu/unisul/vigor/service/MembroServiceTest.java) — deveRejeitarCadastroQuandoCpfJaExiste | Simula repositório com CPF existente, verifica a exceção e que save não é chamado. Testa a rejeição por duplicidade textual no serviço. |
 
-A responsabilidade planejada não comprova autoria. Cada integrante deve registrar suas contribuições reais, e as atribuições históricas devem ser verificadas antes da entrega.
+Esses testes existem; isso não significa que foram executados nesta atualização. Testes para CPF válido/inválido conforme RN03, campos obrigatórios conforme RN01, controller, persistência real e os módulos planejados ainda precisam ser definidos e/ou implementados. O [Plano de testes](docs/testing/plano-de-testes.md) descreve cenários planejados; os resultados reais devem ser registrados em [evidencias.md](docs/testing/evidencias.md).
 
-## 14. Próximas etapas
+## Integração contínua, cobertura e quality gate
 
-Antes da entrega final, a equipe deve:
+O workflow [CI - VIGOR](.github/workflows/ci.yml):
 
-1. Confirmar o escopo definitivo do MVP com base nos requisitos da A3.
-2. Executar a aplicação em um ambiente local reproduzível.
-3. Validar o fluxo de cadastro e consulta.
-4. Executar e revisar os testes automatizados.
-5. Confirmar a configuração da integração contínua, se exigida.
-6. Gerar e verificar o relatório de cobertura, se o JaCoCo estiver configurado.
-7. Revisar requisitos, regras de negócio, diagramas e rastreabilidade.
-8. Consolidar as evidências da versão candidata à entrega.
+- executa em push para main e develop;
+- executa em pull requests destinados a main e develop;
+- configura Java 21 e um serviço PostgreSQL para testes;
+- executa Maven clean test.
 
-## 15. Licença
+O workflow executa testes, mas não configura JaCoCo, não publica relatório de cobertura e não contém configuração de análise estática ou quality gate. Portanto, ele não comprova a cobertura mínima exigida de 75% nem a aprovação em quality gate. O relatório e as evidências continuam pendentes.
 
-A licença do projeto deve seguir as orientações do enunciado oficial da A3. Até essa confirmação, não se deve declarar uma licença que ainda não tenha sido definida pela equipe.
+## Estrutura do repositório
+
+Estrutura resumida dos arquivos existentes:
+
+    Vigor/
+    ├── .github/
+    │   └── workflows/
+    │       └── ci.yml
+    ├── .mvn/
+    │   └── wrapper/
+    ├── docs/
+    │   ├── architecture/
+    │   │   ├── decisoes.md
+    │   │   └── database/
+    │   │       └── modelo-de-dados.md
+    │   ├── design/
+    │   │   └── prototipo.md
+    │   ├── planning/
+    │   │   ├── matriz-de-rastreabilidade.md
+    │   │   └── plano-de-tasks.md
+    │   ├── requirements/
+    │   │   ├── criterios-de-aceite.md
+    │   │   ├── regras-de-negocio.md
+    │   │   └── requisitos.md
+    │   └── testing/
+    │       ├── evidencias.md
+    │       └── plano-de-testes.md
+    ├── src/
+    │   ├── main/
+    │   │   ├── java/br/edu/unisul/vigor/
+    │   │   │   ├── controller/
+    │   │   │   ├── model/
+    │   │   │   ├── repository/
+    │   │   │   └── service/
+    │   │   └── resources/
+    │   │       └── templates/membros/
+    │   └── test/java/br/edu/unisul/vigor/
+    ├── CONTRIBUTING.md
+    ├── HELP.md
+    ├── mvnw
+    ├── mvnw.cmd
+    ├── pom.xml
+    └── README.md
+
+Na branch consultada, docs/architecture/database/ contém somente modelo-de-dados.md. Os arquivos ambientes.md e migrations.md não existem nesta estrutura e, por isso, não são listados nem linkados.
+
+## Equipe e responsabilidades
+
+As frentes abaixo são as planejadas no [plano de tasks](docs/planning/plano-de-tasks.md), não uma afirmação de autoria de código ou testes.
+
+| Integrante | Responsabilidade planejada |
+|---|---|
+| Millena Ferreira Rodrigues | Interface web, protótipo Figma e integração dos fluxos de cadastro e consulta. |
+| Maria Eduarda Souza dos Santos Ferreira | Requisitos, regras de negócio e validações do cadastro. |
+| Luan Milian Martins | Modelo de domínio, persistência e consultas. |
+| Emely Santos da Silveira | Testes de integração, CI, cobertura e evidências de qualidade. |
+
+**Observação:** As responsabilidades apresentadas são planejadas e não comprovam, por si só, a autoria individual de cada entrega.
+
+Os arquivos de teste existentes estão ligados acima, mas não há vínculo verificável no repositório que permita atribuí-los individualmente aos integrantes. Não associamos commits ou PRs a pessoas sem essa evidência. O histórico do Git e os pull requests podem ser usados pela equipe para completar essa rastreabilidade antes de responder à [Issue #1](https://github.com/Miaunisul/Vigor/issues/1).
+
+## Documentação, evidências e licença
+
+- [Requisitos funcionais e não funcionais](docs/requirements/requisitos.md)
+- [Regras de negócio](docs/requirements/regras-de-negocio.md)
+- [Critérios de aceitação](docs/requirements/criterios-de-aceite.md)
+- [Plano de testes](docs/testing/plano-de-testes.md)
+- [Registro de evidências](docs/testing/evidencias.md)
+- [Matriz de rastreabilidade](docs/planning/matriz-de-rastreabilidade.md)
+- [Plano de tasks e responsabilidades](docs/planning/plano-de-tasks.md)
+- [Decisões técnicas de arquitetura](docs/architecture/decisoes.md)
+- [Modelo de dados](docs/architecture/database/modelo-de-dados.md)
+- [Protótipo](docs/design/prototipo.md)
+- [Workflow de CI](.github/workflows/ci.yml)
+
+O projeto ainda não possui arquivo LICENSE. A licença depende da confirmação do enunciado oficial da A3 e da decisão da equipe; nenhuma licença é declarada neste README.
