@@ -4,7 +4,7 @@ Projeto acadêmico desenvolvido para a A3 da disciplina de Gestão e Qualidade d
 
 O VIGOR é uma aplicação web voltada ao cadastro e à consulta de membros de uma academia, com foco na organização das informações, na validação dos dados e na integridade dos registros.
 
-> **Verificação automatizada registrada em 10/11/2026:** `mvn clean verify` executou 37 testes, sem falhas, erros ou testes ignorados, e terminou com `BUILD SUCCESS`. JaCoCo 0.8.16 mediu 78% de cobertura de instruções e 73% de branches. Esses resultados não comprovam, por si só, a cobertura dos cenários funcionais planejados nem a execução da CI.
+> **Verificações automatizadas em 10/11/2026:** a execução local de `mvn clean verify` executou 37 testes sem falhas, erros ou ignorados; a medição local JaCoCo foi 78% de instruções e 73% de branches. A primeira CI bem-sucedida foi o run #27 do workflow `CI - VIGOR`, na branch `feat/postgres-persistencia`: 37 testes passaram, PostgreSQL 18.6 conectou, Flyway executou V1 e o gate de 75% de instruções foi aprovado. O percentual exato reportado pela CI não foi informado. A execução não comprova, por si só, a cobertura dos cenários funcionais planejados.
 
 ## 1. Problema e objetivo
 
@@ -93,7 +93,7 @@ As tecnologias identificadas na configuração atual do projeto incluem:
 - **JUnit e Mockito** — ferramentas de teste disponibilizadas pela configuração de dependências.
 - **JaCoCo 0.8.16** — instrumentação e geração dos relatórios HTML e XML de cobertura.
 
-H2 e Bootstrap não estão configurados como tecnologias da execução atual. O workflow do GitHub Actions está definido em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) e utiliza o segredo `CI_DB_PASSWORD`, que precisa ser cadastrado nas configurações de Actions do repositório. A existência do workflow não comprova uma execução bem-sucedida; a evidência de CI permanece pendente.
+H2 e Bootstrap não estão configurados como tecnologias da execução atual. O workflow do GitHub Actions está definido em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) e utiliza o segredo `CI_DB_PASSWORD`, que precisa ser cadastrado nas configurações de Actions do repositório. A primeira execução bem-sucedida foi o run #27, em 10/11/2026; o relatório JaCoCo foi publicado como artefato `relatorio-jacoco`.
 
 ## 8. Pré-requisitos
 
@@ -185,7 +185,7 @@ Uma execução aprovada deve terminar sem falhas de build ou testes. Os relatór
 
 ### 9.5 Resultado de cobertura registrado
 
-Na execução registrada em 10/11/2026, JaCoCo 0.8.16 analisou 6 classes e reportou:
+Na medição local registrada em 10/11/2026, JaCoCo 0.8.16 analisou 6 classes e reportou:
 
 - Instruções: **78%**.
 - Branches: **73%**.
@@ -193,7 +193,7 @@ Na execução registrada em 10/11/2026, JaCoCo 0.8.16 analisou 6 classes e repor
 - Métodos: **24 de 35**.
 - Classes: **6 de 6**.
 
-Assim, a cobertura de instruções ultrapassou a meta de 75%, enquanto branches ficou abaixo de 75%. Não há configuração de limite ou quality gate JaCoCo no POM; nenhum resultado deve ser interpretado como se todas as métricas tivessem atingido 75%. O registro detalhado está em [Evidências de testes](docs/testing/evidencias.md).
+Na medição local, a cobertura de instruções ultrapassou a meta de 75%, enquanto branches ficou abaixo desse valor. O POM configura um quality gate de pelo menos 75% de instruções, sem limite de branches. No GitHub Actions, o run #27 aprovou esse gate; a evidência disponível não informa o percentual exato da CI. Os resultados são detalhados em [Evidências de testes](docs/testing/evidencias.md).
 
 ## 10. Estrutura do repositório
 
@@ -271,7 +271,7 @@ Antes da entrega final, a equipe deve:
 2. Executar a aplicação em um ambiente local reproduzível.
 3. Validar o fluxo de cadastro e consulta.
 4. Executar e revisar os testes automatizados.
-5. Executar o workflow de integração contínua no GitHub e registrar a evidência correspondente.
+5. Acompanhar as próximas execuções da integração contínua e registrar suas evidências.
 6. Revisar o relatório JaCoCo gerado, incluindo os indicadores que ficaram abaixo de 75%.
 7. Revisar requisitos, regras de negócio, diagramas e rastreabilidade.
 8. Consolidar as evidências da versão candidata à entrega.

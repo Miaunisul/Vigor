@@ -6,18 +6,18 @@ Registrar as evidências de execução, testes, cobertura de código e integraç
 
 ## 2. Estado atual
 
-Em 10/11/2026 foi registrada uma execução real de `mvn clean verify`. Os resultados informados estão discriminados abaixo. Os relatórios HTML e XML do JaCoCo são artefatos gerados localmente em `target/site/jacoco/` e não são evidência versionada por este documento.
+Em 10/11/2026 foram registradas uma execução local de `mvn clean verify` e a primeira execução bem-sucedida da CI no GitHub Actions (run #27). Os resultados informados estão discriminados abaixo. Os relatórios HTML e XML do JaCoCo são gerados em `target/site/jacoco/`; na execução de CI, o relatório foi publicado como artefato `relatorio-jacoco`.
 
 ## 3. Evidências de execução
 
 | ID | Verificação | CT/VN e cenário a registrar | Evidência esperada | Situação |
 |---|---|---|---|---|
-| EV01 | Build do projeto | `mvn clean verify`, 10/11/2026 | Build `SUCCESS` | Executado com sucesso |
-| EV02 | Testes automatizados | `mvn clean verify`, 10/11/2026 | 37 executados; 0 falhas; 0 erros; 0 ignorados | Executado com sucesso |
-| EV03 | Teste de contexto Spring | `VigorApplicationTests.contextLoads`, incluído na execução de 10/11/2026 | Contexto da aplicação iniciado; isso não comprova testes funcionais de persistência CRUD | Executado com sucesso |
+| EV01 | Build do projeto | Execução local `mvn clean verify` e GitHub Actions — CI - VIGOR, run #27, branch `feat/postgres-persistencia`, 10/11/2026 | `BUILD SUCCESS` nas execuções registradas | Executado com sucesso |
+| EV02 | Testes automatizados | GitHub Actions — CI - VIGOR, run #27, branch `feat/postgres-persistencia`, 10/11/2026 | 37 executados; 0 falhas; 0 erros; 0 ignorados | Executado com sucesso |
+| EV03 | Teste de contexto Spring e banco | `VigorApplicationTests.contextLoads`, incluído no run #27 | Contexto iniciado; PostgreSQL 18.6 conectado e Flyway executou V1. Isso não comprova testes funcionais de persistência CRUD. | Executado com sucesso |
 | EV04 | Testes funcionais | CT/VN e cenário/variante efetivamente executados; pendente até execução | Capturas ou registro do teste de aceitação | Pendente |
-| EV05 | Cobertura de código | `mvn clean verify`, JaCoCo 0.8.16, 10/11/2026 | Instruções: 78%; branches: 73%; linhas: 98/117; métodos: 24/35; classes: 6/6. Relatórios: `target/site/jacoco/index.html` e `target/site/jacoco/jacoco.xml` | Relatório gerado; instruções acima de 75%, branches abaixo de 75% |
-| EV06 | Integração contínua | VN06 — execução do workflow; pendente até execução | Link da execução do GitHub Actions | Pendente |
+| EV05 | Cobertura de código | Medição local: `mvn clean verify`, JaCoCo 0.8.16, 10/11/2026; CI: run #27 | Medição local: instruções 78%; branches 73%; linhas 98/117; métodos 24/35; classes 6/6. Na CI, JaCoCo analisou 6 classes e o gate de instruções de 75% passou (`All coverage checks have been met.`); o percentual exato da CI não foi informado. Relatório publicado como artefato `relatorio-jacoco`. | Gate de instruções aprovado na CI; percentual exato da CI não disponível |
+| EV06 | Integração contínua | Workflow `CI - VIGOR`, execução #27, branch `feat/postgres-persistencia`, 10/11/2026 | `BUILD SUCCESS`; relatório JaCoCo publicado como artefato `relatorio-jacoco` | Executado com sucesso |
 
 ## 4. Como registrar uma evidência
 
@@ -40,14 +40,14 @@ Quando existirem evidências reais, organizar os arquivos de forma consistente. 
 - Capturas de tela dos testes de aceitação.
 - Relatórios de testes automatizados.
 - Relatório HTML de cobertura.
-- Links para execuções do GitHub Actions.
+- Links para execuções do GitHub Actions e artefatos publicados; para o run #27, o artefato foi identificado como `relatorio-jacoco`.
 - Registros de defeitos e respectivas verificações.
 
 Não adicionar capturas fictícias nem declarar resultados que ainda não foram verificados.
 
 ## 6. Critério de cobertura
 
-A meta definida para o projeto é de pelo menos 75% de cobertura. Na execução registrada, a cobertura de instruções foi 78% e a de branches foi 73%; portanto, não se deve afirmar que todas as métricas atingiram 75%. O POM configura geração de relatórios, mas não configura um limite ou quality gate JaCoCo.
+A meta definida para o projeto é de pelo menos 75% de cobertura de instruções. A medição local registrada foi 78% de instruções e 73% de branches. Separadamente, o quality gate JaCoCo da CI exige 75% de instruções e passou no run #27; o percentual exato reportado nessa execução não foi informado. Não se deve inferir que branches atingiu 75% na CI.
 
 ## 7. Histórico
 
@@ -55,9 +55,10 @@ A meta definida para o projeto é de pelo menos 75% de cobertura. Na execução 
 |---|---|---|
 | 26/10/2026 | Criação do modelo inicial de registro de evidências | Millena |
 | 10/11/2026 | Registro dos resultados de `mvn clean verify` e JaCoCo 0.8.16 | Execução informada pela equipe |
+| 10/11/2026 | Registro da primeira execução bem-sucedida do GitHub Actions, run #27, com PostgreSQL, Flyway, gate JaCoCo e artefato de cobertura | Execução informada pela equipe |
 
 Atualizar este histórico conforme novas evidências forem produzidas.
 
 ## 8. Situação do documento
 
-Os resultados do build, dos testes automatizados e da medição JaCoCo estão registrados. As evidências de execução dos CT/VN funcionais, usabilidade e CI continuam pendentes até que cada verificação seja executada e registrada individualmente.
+Os resultados do build, dos testes automatizados, da medição JaCoCo e da primeira execução da CI estão registrados. As evidências de execução dos CT/VN funcionais e de usabilidade continuam pendentes até que cada verificação seja executada e registrada individualmente.
