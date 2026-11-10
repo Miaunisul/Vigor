@@ -177,13 +177,14 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 - **Passos:** Consultar o histórico desse membro.
 - **Resultado esperado:** O sistema informa a ausência de atividades para o membro consultado.
 
-### CT15 — Login válido e senha protegida
+### CT15 — Login válido e proteção por hash da senha
 
-- **Status:** Planejado.
-- **RF/CA:** RF01; CA15. **RN:** RN18, RN19, RN20. **RNF:** RNF01.
-- **Pré-condições:** Conjunto de funcionários de teste previamente disponibilizado por procedimento técnico documentado; credenciais conhecidas de um funcionário de teste para autenticação.
-- **Passos:** 1. Conferir todos os funcionários disponibilizados: cada registro possui identificador único, nome, cargo e login não vazios nem compostos apenas por espaços, e senha armazenada por hash apropriado, sem estar em texto puro. 2. Comparar a quantidade total de funcionários com a quantidade de logins distintos para verificar que nenhum login se repete. 3. Autenticar com as credenciais corretas do funcionário de teste e acessar uma funcionalidade interna.
-- **Resultado esperado:** Todos os funcionários disponibilizados atendem aos campos e à proteção de senha definidos em RN18; todos os logins são únicos conforme RN19. Com credenciais corretas, o acesso interno é permitido. As evidências não expõem senhas nem outros dados sensíveis.
+- **Status:** Planejado; execução pendente da implementação de cadastro técnico de funcionários, autenticação e proteção de senha.
+- **RF/CA:** RF01; CA15. **Regras:** RN18, RN19 e RN20. **RNF:** RNF01.
+- **Pré-condições:** Ambiente de teste isolado; disponíveis valores fictícios para preparar um funcionário e uma senha de teste. O mecanismo de codificação e verificação de senhas deve estar implementado para executar as verificações de hash.
+- **Passos:** 1. Preparar tecnicamente um funcionário de teste com identificador, nome, cargo, login e uma senha fictícia, sem criar uma tela de cadastro. 2. Conferir nos funcionários disponibilizados que os identificadores são únicos e que nome, cargo e login estão preenchidos e não contêm somente espaços; comparar a quantidade de funcionários com a quantidade de logins distintos. 3. Em ambiente controlado, consultar o valor armazenado no campo de senha do funcionário de teste, sem registrar o valor nem credenciais nas evidências. 4. Verificar que o valor armazenado não é igual à senha original e que seu formato corresponde a um hash produzido pelo mecanismo de codificação de senhas adotado pelo projeto. 5. Usar o mecanismo de verificação correspondente para confirmar que a senha original corresponde ao valor armazenado; não tentar reverter ou decodificar o hash. 6. Autenticar com a senha original e acessar uma funcionalidade interna.
+- **Resultado esperado:** Dados obrigatórios do funcionário estão presentes, os identificadores e logins são únicos, o valor armazenado difere da senha original e corresponde ao formato e à verificação do mecanismo de hash adotado. A autenticação com a senha original permite o acesso interno. Nenhuma senha ou valor armazenado é exposto nas evidências.
+- **Situação da implementação:** Não foram encontrados no código uma entidade ou cadastro técnico de funcionário, componentes de autenticação, dependência de segurança ou mecanismo de codificação/verificação de senhas. O mecanismo efetivamente adotado ainda não pode ser identificado; portanto, este teste não pode ser executado nem considerado aprovado até que a implementação exista.
 
 ### CT16 — Login inválido e acesso sem autenticação
 
