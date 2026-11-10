@@ -2,65 +2,75 @@
 
 ## 1. Objetivo
 
-Este documento registra os relacionamentos previstos entre as entidades do VIGOR, suas regras de participação e as restrições de integridade aplicáveis. Distingue referências conceituais descritas nos requisitos de chaves estrangeiras efetivamente definidas no modelo físico ou mapeadas no código.
+Este documento descreve os relacionamentos definidos pelas migrations V1 a V5 e os mapeamentos JPA existentes para as tabelas `membros`, `funcionarios`, `treinos`, `pagamentos` e `historico_atividades`. Também registra as cardinalidades, regras de integridade e índices relacionados às consultas.
 
 ## 2. Visão geral
 
-O modelo de dados prevê as entidades **Membro**, **Treino**, **Pagamento**, **Histórico de Atividades** e **Funcionário**. Os documentos de requisitos e regras de negócio vinculam treinos, pagamentos e atividades a um membro existente. Os requisitos também exigem que cada registro de atividade tenha um funcionário responsável existente. Entretanto, o modelo de dados atual ainda não apresenta o atributo correspondente em Histórico de Atividades. Portanto, esse relacionamento é uma exigência dos requisitos, mas ainda não está completamente especificado no modelo.
+As migrations definem quatro chaves estrangeiras: `treinos.membro_id` e `pagamentos.membro_id` referenciam `membros(id)`; `historico_atividades.membro_id` referencia `membros(id)`; e `historico_atividades.funcionario_responsavel_id` referencia `funcionarios(id)`. Todas as colunas que compõem essas FKs são `NOT NULL`, e cada FK usa `ON DELETE RESTRICT`.
 
-As referências a `ID_Membro` aparecem nos atributos de Treino, Pagamento e Histórico de Atividades do [modelo de dados](modelo-de-dados.md). Os documentos não especificam nomes físicos de constraints nem todos os detalhes das chaves estrangeiras. No código atual existe somente a entidade `Membro`; ela não declara associações JPA. Não foram encontrados mapeamentos de entidades dependentes nem chaves estrangeiras implementadas pela aplicação.
+No código, `Treino` e `Pagamento` têm associações obrigatórias `@ManyToOne` com `Membro`. `HistoricoAtividade` tem associações obrigatórias `@ManyToOne` com `Membro` e com `Funcionario` responsável. Os repositórios declaram consultas por membro para treinos, pagamentos e histórico, além de consultas do histórico por funcionário responsável. Não há associações JPA inversas `@OneToMany` nas entidades `Membro` ou `Funcionario`.
+
+As relações físicas e seus atributos estão alinhados à seção de relacionamentos e ao diagrama ER de [modelo-de-dados.md](modelo-de-dados.md), bem como às migrations descritas em [migrations.md](migrations.md).
 
 ## 3. Detalhamento
 
 ### 3.1 Membro e Treino
 
-- **Entidade de origem:** Treino; entidade relacionada: Membro.
-- **Cardinalidade documentada:** um membro pode possuir vários treinos; cada treino está associado a um membro. Assim, um membro pode não ter treinos ou ter vários, e cada treino requer um membro.
-- **Referência:** `Treino.ID_Membro` aponta conceitualmente para `Membro.ID`. O modelo ainda não define a constraint ou o mapeamento físico da chave estrangeira.
-- **Obrigatoriedade:** vínculo obrigatório para cada Treino, conforme RN07 e RN08; a existência de treinos para um Membro é opcional.
-- **Regras relacionadas:** RN07–RN09; RF06–RF07. A gravação deve rejeitar membro ausente ou inexistente (CA10) e a consulta deve limitar os resultados ao membro selecionado (CA20).
-- **Implementação:** não há entidade, repositório ou associação de Treino no código consultado.
+- **Entidade de origem:** `Treino`; entidade relacionada: `Membro`.
+- **Cardinalidade:** um membro pode ter zero ou muitos treinos; cada treino referencia exatamente um membro (1:N).
+- **Chave estrangeira:** `treinos.membro_id` → `membros.id`, constraint `fk_treinos_membros`.
+- **Obrigatoriedade:** `membro_id` é `NOT NULL`; em JPA, `Treino.membro` usa `@ManyToOne(optional = false)` e `@JoinColumn(nullable = false)`.
+- **Exclusão:** `ON DELETE RESTRICT` impede excluir o membro enquanto houver treinos vinculados.
+- **Consultas:** `TreinoRepository.findByMembro_Id` consulta os treinos do membro; `existsByMembro_Id` é utilizado para verificar vínculo antes da exclusão do membro.
+- **Regras relacionadas:** RN07–RN09 e RF06–RF07.
 
 ### 3.2 Membro e Pagamento
 
-- **Entidade de origem:** Pagamento; entidade relacionada: Membro.
-- **Cardinalidade documentada:** o modelo descreve que um membro pode possuir vários pagamentos e cada pagamento está associado a um membro. Logo, o membro pode não ter pagamentos ou ter vários; cada pagamento requer um membro.
-- **Referência:** `Pagamento.ID_Membro` aponta conceitualmente para `Membro.ID`. A constraint física não está definida no modelo.
-- **Obrigatoriedade:** vínculo obrigatório para cada Pagamento, conforme RN10–RN11; a existência de pagamentos para um Membro é opcional.
-- **Regras relacionadas:** RN10–RN13 e RF08. O pagamento deve referenciar membro existente; a gravação de referência inválida deve ser rejeitada (CA27). Nesta entrega, o registro representa pagamento recebido e recebe status Pago.
-- **Implementação:** não há entidade, repositório ou associação de Pagamento no código consultado.
+- **Entidade de origem:** `Pagamento`; entidade relacionada: `Membro`.
+- **Cardinalidade:** um membro pode ter zero ou muitos pagamentos; cada pagamento referencia exatamente um membro (1:N).
+- **Chave estrangeira:** `pagamentos.membro_id` → `membros.id`, constraint `fk_pagamentos_membros`.
+- **Obrigatoriedade:** `membro_id` é `NOT NULL`; em JPA, `Pagamento.membro` usa `@ManyToOne(optional = false)` e `@JoinColumn(nullable = false)`.
+- **Exclusão:** `ON DELETE RESTRICT` impede excluir o membro enquanto houver pagamentos vinculados.
+- **Consultas:** `PagamentoRepository.findByMembro_Id` consulta os pagamentos do membro; `existsByMembro_Id` é utilizado para verificar vínculo antes da exclusão do membro.
+- **Regras relacionadas:** RN10–RN13 e RF08.
 
 ### 3.3 Membro e Histórico de Atividades
 
-- **Entidade de origem:** registro de Histórico de Atividades; entidade relacionada: Membro.
-- **Cardinalidade documentada:** o modelo descreve que um membro pode possuir vários registros de atividades e cada registro está associado a um membro. Portanto, o membro pode não ter atividades ou ter várias; cada registro requer um membro.
-- **Referência:** `Histórico de Atividades.ID_Membro` aponta conceitualmente para `Membro.ID`. A constraint física não está definida no modelo.
-- **Obrigatoriedade:** vínculo obrigatório para cada atividade, conforme RN14–RN15; a existência de atividades para um Membro é opcional.
-- **Regras relacionadas:** RN14–RN17 e RF09. A consulta deve retornar somente atividades do membro selecionado e informar quando não houver registros (CA14 e CA22). Os registros iniciais serão disponibilizados por carga técnica documentada; não haverá tela de cadastro nesta entrega (CA13).
-- **Implementação:** não há entidade, repositório ou associação de atividade no código consultado.
+- **Entidade de origem:** `HistoricoAtividade`; entidade relacionada: `Membro`.
+- **Cardinalidade:** um membro pode ter zero ou muitos registros de atividade; cada registro referencia exatamente um membro (1:N).
+- **Chave estrangeira:** `historico_atividades.membro_id` → `membros.id`, constraint `fk_historico_atividades_membros`.
+- **Obrigatoriedade:** `membro_id` é `NOT NULL`; em JPA, `HistoricoAtividade.membro` usa `@ManyToOne(optional = false)` e `@JoinColumn(nullable = false)`.
+- **Exclusão:** `ON DELETE RESTRICT` impede excluir o membro enquanto houver atividades vinculadas.
+- **Consultas:** `HistoricoAtividadeRepository.findByMembro_Id` consulta o histórico do membro; `existsByMembro_Id` é utilizado para verificar vínculo antes da exclusão do membro.
+- **Regras relacionadas:** RN14–RN17 e RF09.
 
 ### 3.4 Funcionário e Histórico de Atividades
 
-- **Entidade de origem:** registro de Histórico de Atividades; entidade relacionada: Funcionário responsável.
-- **Cardinalidade documentada:** RN14 e RN15 exigem que cada registro esteja associado a um funcionário responsável existente, isto é, cada atividade requer um funcionário. O modelo de dados declara que funcionários podem estar relacionados a atividades que executam ou registram, mas afirma que a forma exata do relacionamento ainda precisa ser definida; não determina quantas atividades cada funcionário pode ter associadas.
-- **Referência:** os requisitos preveem uma referência ao funcionário responsável, mas o atributo não aparece na lista de atributos de Histórico de Atividades do modelo. Nome, coluna e constraint da chave estrangeira não estão definidos.
-- **Obrigatoriedade:** funcionário responsável obrigatório por atividade segundo RN14–RN15; a multiplicidade de atividades por funcionário permanece sem definição explícita no modelo.
-- **Regras relacionadas:** RN14–RN16. A carga técnica inicial deve respeitar os vínculos e a existência do funcionário.
-- **Implementação:** não há entidades de Funcionário ou Atividade nem mapeamento dessa relação no código consultado.
+- **Entidade de origem:** `HistoricoAtividade`; entidade relacionada: `Funcionario` responsável.
+- **Cardinalidade:** um funcionário pode estar relacionado a zero ou muitos registros de atividade; cada registro referencia exatamente um funcionário (1:N).
+- **Chave estrangeira:** `historico_atividades.funcionario_responsavel_id` → `funcionarios.id`, constraint `fk_historico_atividades_funcionarios`.
+- **Obrigatoriedade:** `funcionario_responsavel_id` é `NOT NULL`; em JPA, `HistoricoAtividade.funcionarioResponsavel` usa `@ManyToOne(optional = false)` e `@JoinColumn(nullable = false)`.
+- **Exclusão:** `ON DELETE RESTRICT` impede excluir um funcionário referenciado por registros de atividade.
+- **Consultas:** `HistoricoAtividadeRepository.findByFuncionarioResponsavel_Id` consulta atividades pelo funcionário responsável.
+- **Regras relacionadas:** RN14–RN16 e RF09.
 
-## 4. Integridade referencial
+## 4. Integridade referencial e índices
 
-As referências de Treino, Pagamento e Atividade devem apontar para registros existentes de Membro; a referência de Atividade a Funcionário também deve apontar para funcionário existente. Inserções sem esses vínculos ou com referências inexistentes devem ser rejeitadas, conforme RN07, RN10, RN14 e RN21. O requisito RNF04 exige que relacionamentos inválidos não sejam persistidos.
+As quatro FKs são nomeadas nas migrations e rejeitam referências a membros ou funcionários inexistentes. Todas usam `ON DELETE RESTRICT`; nenhuma relação utiliza exclusão em cascata.
 
-A exclusão de um Membro deve ser permitida somente quando não houver treinos, pagamentos ou atividades vinculados. Havendo qualquer um desses registros, a operação deve ser bloqueada, o motivo informado e todos os dados preservados (RN06, RF05, CA08 e CA19). Essa regra é uma exigência de comportamento; os documentos não definem se será aplicada por consultas e validação na aplicação, por política de chave estrangeira no banco ou pela combinação desses mecanismos. Portanto, não se presume cascade nem uma ação específica de `ON DELETE`.
+A exclusão de membros é protegida tanto pela aplicação quanto pelo banco. `MembroService.excluir` verifica se existem treinos, pagamentos ou registros de histórico e bloqueia a operação com mensagem específica. Se houver uma condição concorrente entre essa verificação e a exclusão, as FKs continuam impedindo a remoção no banco. O controller oferece `POST /membros/{id}/excluir` e retorna a mensagem ao usuário. Essa implementação atende ao bloqueio exigido por RN06, RF05, CA08 e CA19, sem apagar os registros relacionados.
 
-O modelo prevê que referências correspondam a registros existentes e que atualizações e exclusões preservem a integridade, mas informa que tipos, restrições e chaves estrangeiras serão definidos no mapeamento das entidades. No código consultado, `Membro` tem chave primária gerada e CPF único, mas não há outras entidades nem relações mapeadas. Não há evidência de que as relações descritas já existam no banco PostgreSQL.
+Índices e restrições de unicidade registrados nas migrations:
+
+- `uk_membros_cpf`: constraint `UNIQUE` em `membros(cpf)`, que também cria o índice único usado pelo PostgreSQL para impor unicidade.
+- `ux_funcionarios_login_normalizado`: índice único em `funcionarios(lower(btrim(login)))`, que considera caixa e espaços comuns nas extremidades.
+- `idx_treinos_membro_id`: índice em `treinos(membro_id)`, associado às consultas e verificações por membro.
+- `idx_pagamentos_membro_id`: índice em `pagamentos(membro_id)`, associado às consultas e verificações por membro.
+- `idx_historico_atividades_membro_id`: índice em `historico_atividades(membro_id)`, associado às consultas e verificações por membro.
+
+A V5 não declara índice adicional em `historico_atividades(funcionario_responsavel_id)`. A consulta por funcionário está definida no repositório, mas não há índice específico para essa coluna nas migrations.
 
 ## 5. Pendências
 
-- Definir e implementar as chaves estrangeiras e constraints para `Treino.ID_Membro`, `Pagamento.ID_Membro` e `Histórico de Atividades.ID_Membro`.
-- Confirmar o atributo de referência a Funcionário no modelo de Histórico de Atividades, seu nome físico e sua chave estrangeira, em consistência com os requisitos e regras RN14–RN15.
-- Definir a multiplicidade do relacionamento Funcionário–Atividade no modelo, além da obrigatoriedade já estabelecida para cada atividade.
-- Definir como o banco e a aplicação aplicarão a regra de exclusão bloqueada por vínculos, sem exclusão em cascata que remova os registros protegidos.
-- Implementar as entidades, associações e repositórios ainda ausentes e validar a integridade referencial no PostgreSQL.
-- Atualizar o [modelo de dados](modelo-de-dados.md) quando os detalhes do schema e do relacionamento Funcionário–Atividade forem confirmados.
+- A estrutura física e os mapeamentos dos quatro relacionamentos estão definidos nas migrations e entidades atuais; não há pendência de nome de FK ou coluna para essas relações.
+- As classes de integração PostgreSQL incluem verificações de persistência, consulta e bloqueio pelas FKs, mas dependem de `DB_PASSWORD` e precisam ser executadas em ambiente PostgreSQL para comprovar esse comportamento.

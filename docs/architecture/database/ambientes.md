@@ -48,7 +48,7 @@ Antes da execução, o PostgreSQL deve estar disponível com a base e as credenc
 
 ### Comportamento JPA atual
 
-O perfil local não está separado em arquivo próprio. Em `application.properties`, `spring.jpa.hibernate.ddl-auto=update` está configurado, permitindo ao Hibernate atualizar o schema a partir das entidades mapeadas durante a execução. Não há migrations ou ferramenta de versionamento de schema configuradas. A estratégia proposta para mudanças do schema está documentada em [Migrations](migrations.md) e permanece pendente de adoção.
+O perfil local não está separado em arquivo próprio. Em `application.properties`, `spring.jpa.hibernate.ddl-auto=validate` está configurado: o Hibernate valida o mapeamento sem atualizar o schema. Flyway e a migration inicial estão configurados para executar no início da aplicação. A estratégia de gerenciamento está descrita em [Migrations](migrations.md). A execução efetiva da migration e a compatibilidade com o banco local ainda precisam ser verificadas.
 
 ## 3. Ambiente remoto
 
@@ -74,7 +74,8 @@ Essas orientações são coerentes com a decisão de gerenciamento de credenciai
 - O driver PostgreSQL e Spring Data JPA estão declarados no `pom.xml`.
 - A conexão local aponta para `localhost:5432/vigor`, com usuário `postgres` e senha via `DB_PASSWORD`.
 - A decisão técnica registra PostgreSQL local instalado e banco `vigor` criado.
-- `spring.jpa.hibernate.ddl-auto=update` está ativo.
+- Flyway está configurado com uma migration inicial para a tabela `membros`.
+- `spring.jpa.hibernate.ddl-auto=validate` está ativo.
 - O README documenta a inicialização pelo Maven Wrapper.
 
 Esses itens demonstram configuração e estado registrado; não comprovam persistência funcional nem atendimento integral dos requisitos de banco. Atualmente, `Membro` é a única entidade encontrada no código. O modelo das demais entidades e relacionamentos ainda é previsto, conforme [Modelo de dados](modelo-de-dados.md).
@@ -85,7 +86,8 @@ Esses itens demonstram configuração e estado registrado; não comprovam persis
 - Definir se haverá configuração separada por perfil para desenvolvimento e outros ambientes.
 - Decidir se Neon ou outro provedor será usado para ambiente remoto; não há configuração remota existente.
 - Caso exista ambiente remoto, provisionar a base, definir parâmetros e gestão segura das credenciais, permissões e procedimento de conexão.
-- Definir como o schema será gerenciado: atualmente há `ddl-auto=update`, enquanto a adoção de migrations permanece proposta e não implementada, conforme [Migrations](migrations.md).
+- Definir como incorporar ao histórico Flyway um banco local preexistente sem histórico, após comparar e validar o schema atual, conforme [Migrations](migrations.md).
+- Validar a execução das migrations e o mapeamento JPA com PostgreSQL nos ambientes pretendidos.
 - Definir e validar backup, recuperação, acesso e manutenção dos ambientes conforme forem disponibilizados.
 
 ## 6. Referências

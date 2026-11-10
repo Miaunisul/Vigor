@@ -306,13 +306,15 @@ A meta de cobertura de código definida para o projeto é de **75%**, conforme o
 
 ## 11. Ferramentas e execução
 
-Os testes automatizados deverão poder ser executados com:
+Os testes automatizados e o relatório JaCoCo são executados pelo ciclo Maven `verify`:
 
-```bash
-mvn test
+```powershell
+mvn clean verify
 ```
 
-A geração do relatório de cobertura dependerá da configuração do JaCoCo no projeto. Após essa configuração, o comando e o caminho do relatório deverão ser registrados neste documento.
+No Windows, também pode ser usado `.\mvnw.cmd clean verify`; em Linux ou macOS, `./mvnw clean verify`. O JaCoCo 0.8.16 gera os relatórios HTML e XML em `target/site/jacoco/index.html` e `target/site/jacoco/jacoco.xml`.
+
+Os resultados reais da execução de 10/11/2026 estão registrados em [`evidencias.md`](evidencias.md). A aprovação do conjunto automatizado não altera automaticamente o estado dos CTs: cada cenário funcional continua planejado até que sua execução específica e evidência sejam registradas.
 
 ## 12. Responsabilidades
 
@@ -337,14 +339,13 @@ Os defeitos deverão ser acompanhados pela equipe até que sejam corrigidos e ve
 
 ## 14. Situação atual
 
-Este documento representa o planejamento dos testes. Os testes descritos não devem ser considerados executados ou aprovados até que existam resultados e evidências correspondentes.
+Este documento representa o planejamento dos cenários. A execução automatizada registrada em [`evidencias.md`](evidencias.md) não comprova a execução individual dos CTs descritos; eles não devem ser considerados aprovados até que seus procedimentos e resultados específicos tenham evidências correspondentes.
 
 ## 15. Pendências
 
-- Implementar os testes automatizados.
-- Configurar o JaCoCo.
-- Confirmar a configuração do ambiente de integração com o banco de dados.
+- Ampliar a associação entre testes automatizados e os CT/VN aplicáveis, sem inferir cobertura funcional pela execução global.
+- Ampliar os testes de persistência no PostgreSQL além do carregamento de contexto, conforme as funcionalidades implementadas.
 - Realizar os testes de usabilidade.
-- Registrar os resultados e as evidências.
-- Verificar a cobertura mínima planejada de 75%.
+- Registrar as evidências pendentes de testes funcionais, usabilidade e CI.
+- Avaliar os indicadores de cobertura: instruções em 78% e branches em 73% na execução de 10/11/2026; a configuração ainda não aplica um limite automático.
 - Relacionar cada integrante às funcionalidades e aos respectivos arquivos de teste.
