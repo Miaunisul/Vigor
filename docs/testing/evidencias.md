@@ -10,20 +10,22 @@ A documentação dos testes está em preparação. Os resultados abaixo devem se
 
 ## 3. Evidências de execução
 
-| ID | Verificação | Evidência esperada | Situação |
-|---|---|---|---|
-| EV01 | Compilação do projeto | Resultado do build Maven | Pendente |
-| EV02 | Testes unitários | Relatório ou saída de `mvn test` | Pendente |
-| EV03 | Testes de integração | Relatório dos testes de integração | Pendente |
-| EV04 | Cadastro e consulta | Capturas ou registro do teste de aceitação | Pendente |
-| EV05 | Cobertura de código | Relatório HTML do JaCoCo | Pendente |
-| EV06 | Integração contínua | Link da execução do GitHub Actions | Pendente |
+| ID | Verificação | CT/VN e cenário a registrar | Evidência esperada | Situação |
+|---|---|---|---|---|
+| EV01 | Compilação do projeto | Não se aplica: build Maven | Resultado do build Maven | Pendente |
+| EV02 | Testes unitários | CT/VN e cenário/variante efetivamente executados; pendente até execução | Relatório ou saída de `mvn test` | Pendente |
+| EV03 | Testes de integração | CT/VN e cenário/variante efetivamente executados; pendente até execução | Relatório dos testes de integração | Pendente |
+| EV04 | Testes funcionais | CT/VN e cenário/variante efetivamente executados; pendente até execução | Capturas ou registro do teste de aceitação | Pendente |
+| EV05 | Cobertura de código | VN06 — geração e análise do relatório; pendente até execução | Relatório HTML do JaCoCo | Pendente |
+| EV06 | Integração contínua | VN06 — execução do workflow; pendente até execução | Link da execução do GitHub Actions | Pendente |
 
 ## 4. Como registrar uma evidência
 
 Para cada verificação realizada, registrar:
 
 - Identificador da evidência.
+- Identificador do CT ou VN relacionado e cenário/variante efetivamente executados.
+- Se o cenário ainda não foi executado, manter a evidência como pendente e não preencher resultado como aprovado.
 - Data da execução.
 - Comando ou procedimento utilizado.
 - Resultado obtido.
