@@ -33,7 +33,7 @@ A V1 impõe `NOT NULL` aos campos da tabela e unicidade ao CPF. Não possui `CHE
 
 O índice único `ux_funcionarios_login_normalizado` aplica `lower(btrim(login))`, tornando equivalentes logins que diferem por caixa ou por espaços comuns nas extremidades. O fluxo de autenticação deve usar normalização equivalente. A comparação de caixa segue as regras de localidade do banco.
 
-O schema não cria funcionários nem implementa tela de cadastro. Funcionários são previamente disponibilizados por procedimento técnico (RF01, RN18–RN20). A coluna e o `CHECK` garantem obrigatoriedade e conteúdo não vazio; não verificam que o valor esteja codificado como BCrypt. A aplicação deve gerar e verificar hashes BCrypt, sem persistir senhas em texto puro (RN18, RNF01).
+O schema não cria funcionários nem implementa tela de cadastro. Funcionários são previamente disponibilizados por procedimento técnico (RF01, RN18–RN20). A coluna e o `CHECK` garantem obrigatoriedade e conteúdo não vazio; não verificam que o valor esteja codificado como BCrypt. No código atual, `FuncionarioSecurityConfiguration` fornece um `BCryptPasswordEncoder` e `FuncionarioService` usa `matches` na autenticação. Não existe, neste serviço, uma operação de inclusão que gere e persista o hash; o procedimento técnico de provisionamento deve gravar um hash BCrypt, nunca a senha em texto puro (RN18, RNF01).
 
 ### 2.3. `treinos` — V3
 
@@ -71,7 +71,7 @@ O índice `idx_pagamentos_membro_id` atende consultas pelo membro. Cada pagament
 | `data_atividade` | `DATE` | Sim | — |
 | `tempo_execucao_minutos` | `INTEGER` | Sim | `ck_historico_atividades_tempo_positivo`: valor maior que zero. |
 
-O índice `idx_historico_atividades_membro_id` atende consultas pelo membro. Cada atividade referencia exatamente um membro existente e um funcionário responsável existente; cada um pode estar associado a zero ou vários registros de atividade. O requisito de funcionário responsável está materializado pela coluna e FK da V5 (RN14–RN16). Os registros serão disponibilizados por carga técnica documentada, sem tela para criação manual; a consulta permanece no escopo (RF09, RN17, CA13–CA14 e CA22).
+O índice `idx_historico_atividades_membro_id` atende consultas pelo membro. Cada atividade referencia exatamente um membro existente e um funcionário responsável existente; cada um pode estar associado a zero ou vários registros de atividade. O requisito de funcionário responsável está materializado pela coluna e FK da V5 (RN14–RN16). `HistoricoAtividadeService` permite registrar e consultar atividades; não há tela para criação manual, e o serviço não substitui um fluxo web (RF09, RN17, CA13–CA14 e CA22).
 
 ## 3. Relacionamentos e integridade referencial
 
@@ -150,21 +150,31 @@ erDiagram
 
 O índice de login é único sobre a expressão normalizada; não é uma constraint `UNIQUE` simples sobre o texto armazenado.
 
-## 6. Implementação e escopo funcional
+## 6. Implementação Java atual
 
-Segundo a confirmação da equipe, o banco contém as cinco tabelas descritas, correspondentes às migrations V1–V5. No código Java consultado, `Membro` é a única entidade JPA; `MembroRepository` e `MembroService` também são específicos de membros. Entidades, repositórios e associações JPA para Funcionário, Treino, Pagamento e Histórico de Atividades ainda não foram encontrados.
+As cinco tabelas das migrations V1–V5 possuem entidades JPA correspondentes no código atual. As anotações de mapeamento e os tipos Java são compatíveis com as colunas descritas nas seções 2 a 5. Os serviços executam validações da aplicação antes de salvar; essas validações complementam, mas não substituem, as constraints PostgreSQL.
 
-As cinco entidades fazem parte do escopo final. Funcionários são previamente cadastrados por procedimento técnico, sem tela de cadastro; o histórico é disponibilizado por carga técnica, sem tela de registro manual. A existência das tabelas no banco não significa que todos os fluxos da aplicação estejam implementados.
+| Entidade | Mapeamento e validações da aplicação | Repositório e serviço existentes |
+|---|---|---|
+| `Membro` | Mapeia `membros`; `Long` para ID, `String` para dados textuais e `LocalDate` para `data_cadastro`. Bean Validation exige nome, CPF, telefone e endereço, limita seus tamanhos e aplica `@CpfValido`. O serviço normaliza os campos e o CPF e verifica duplicidade antes de persistir. | `MembroRepository` e `MembroService` implementam cadastro, listagem, busca e exclusão com verificação de vínculos. |
+| `Funcionario` | Mapeia `funcionarios`; ID `Long` e campos textuais. Bean Validation exige nome, cargo, login e hash da senha; nome tem limite de 150 caracteres. | `FuncionarioRepository` consulta login com `lower(btrim(login))`; `FuncionarioService` autentica usando o `PasswordEncoder` configurado como BCrypt. |
+| `Treino` | Mapeia `treinos`; ID `Long`, duração `Integer`, campos de texto `String` e data `LocalDate`. Exige membro, tipo, descrição, duração positiva e data. | `TreinoRepository` consulta por membro; `TreinoService` cadastra e consulta treinos, verificando o membro e validando os dados. |
+| `Pagamento` | Mapeia `pagamentos`; ID `Long`, membro `Membro`, valor `BigDecimal`, status `String` e data `LocalDate`. Exige membro, valor positivo com até duas casas decimais, data e status `PAGO`. | `PagamentoRepository` consulta por membro; `PagamentoService` registra e consulta pagamentos, verificando o membro e validando os dados. |
+| `HistoricoAtividade` | Mapeia `historico_atividades`; ID `Long`, referências `Membro` e `Funcionario`, texto `String`, data `LocalDate` e tempo `Integer`. Exige atividade não vazia, data, tempo positivo, membro e funcionário responsável. | `HistoricoAtividadeRepository` consulta por membro e por funcionário responsável; `HistoricoAtividadeService` registra e consulta atividades, verificando ambas as referências e validando os dados. |
 
-## 7. Pendências de implementação
+As associações `ManyToOne` de `Treino`, `Pagamento` e `HistoricoAtividade` correspondem às FKs obrigatórias das migrations. O histórico possui associações obrigatórias tanto com `Membro` quanto com `Funcionario`. A cardinalidade inversa 1:N decorre das FKs no banco; as entidades não declaram coleções inversas.
 
-- Implementar mapeamentos JPA, repositórios, serviços e fluxos de aplicação ainda ausentes para Funcionários, Treinos, Pagamentos e Histórico de Atividades.
-- Implementar autenticação com BCrypt e garantir que a consulta de login aplique normalização equivalente a `lower(btrim(login))`.
-- Implementar validações da aplicação que complementam os checks do banco, incluindo CPF e rejeição da entrada monetária com mais de duas casas decimais.
-- Definir e documentar os procedimentos técnicos seguros para disponibilizar os funcionários e carregar registros iniciais do histórico.
-- Criar testes de integração que verifiquem os relacionamentos, constraints e comportamento de exclusão no PostgreSQL.
+No módulo de funcionários, o encoder BCrypt está configurado e a autenticação compara a senha informada com o hash por meio de `matches`, sem tentar reverter o hash. O serviço atual não inclui operação para criar funcionários nem para codificar e persistir senhas; permanece necessário provisioná-los tecnicamente com hashes BCrypt. Não há cadastro público de funcionários.
 
-As tabelas, tipos, constraints, índices, relacionamentos e ações referenciais descritos neste documento estão definidos nas migrations existentes; as pendências acima dizem respeito à implementação e verificação da aplicação.
+A existência de entidades, repositórios e serviços para os cinco módulos não implica que todos possuam interface web. O fluxo web disponível concentra-se em membros; treinos, pagamentos e histórico não possuem telas ou endpoints próprios no estado atual. O serviço de histórico permite registro e consulta por código, sem tela para inclusão manual.
+
+## 7. Pendências e limites atuais
+
+- Definir e documentar o procedimento técnico seguro de provisionamento dos funcionários, incluindo a geração e gravação de hashes BCrypt. Não há cadastro público nem operação de criação no `FuncionarioService`.
+- Definir se e quando serão criados controllers e interfaces web para treinos, pagamentos e histórico; os repositórios e serviços existentes não equivalem a esses fluxos de interface.
+- Executar e registrar verificações de integração contra PostgreSQL para os comportamentos que dependem do banco, incluindo FKs, constraints, índices e bloqueio de exclusões. A implementação de código, por si só, não comprova a execução desses testes.
+
+As tabelas, tipos, constraints, índices, relacionamentos e ações referenciais estão definidos nas migrations existentes. As validações Java mencionadas na seção 6 ocorrem na aplicação; as constraints descritas nas seções 2 a 5 são aplicadas pelo PostgreSQL e continuam sendo a proteção de integridade no banco.
 
 ## Referências
 
