@@ -164,10 +164,10 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 ### CT13 — Consulta do histórico com atividades
 
 - **Status:** Planejado.
-- **RF/CA:** RF09; CA14.
-- **Pré-condições:** Funcionário autenticado; dados de atividade carregados por procedimento técnico documentado e válidos conforme RN14 a RN16; registros de membros distintos.
-- **Passos:** Consultar o histórico de cada membro selecionado.
-- **Resultado esperado:** Cada consulta apresenta somente as atividades do membro correspondente, incluindo atividade, data e tempo de execução.
+- **RF/CA:** RF09; CA14. **Regras:** RN14, RN15, RN16 e RN17.
+- **Pré-condições:** Funcionário autenticado; dados de atividades e cadastros de membros e funcionários disponibilizados por procedimentos técnicos documentados; atividades associadas a membros distintos.
+- **Passos:** 1. Conferir cada registro de atividade disponibilizado: verificar identificador presente e único; presença do membro, atividade, data, tempo de execução e funcionário responsável; nome da atividade não vazio nem composto apenas por espaços; data válida; tempo de execução inteiro positivo em minutos. 2. Conferir que as referências de cada atividade correspondem a membro e funcionário existentes nos dados disponibilizados, sem pressupor nome físico de atributo ou coluna. 3. Consultar o histórico de cada membro selecionado e comparar os resultados com os registros armazenados, incluindo atividade, data e tempo de execução.
+- **Resultado esperado:** Cada atividade possui identificador único e todos os dados obrigatórios; atividade e data respeitam as regras; o tempo é inteiro positivo em minutos; cada referência corresponde a membro e funcionário existentes. A consulta apresenta somente as atividades do membro selecionado e seus dados apresentados correspondem aos valores armazenados.
 
 ### CT14 — Consulta do histórico sem atividades
 
@@ -180,10 +180,10 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 ### CT15 — Login válido e senha protegida
 
 - **Status:** Planejado.
-- **RF/CA:** RF01; CA15. **RNF:** RNF01.
-- **Pré-condições:** Funcionário previamente disponibilizado por procedimento técnico documentado, com login único e senha armazenada por hash apropriado.
-- **Passos:** Autenticar com credenciais corretas, acessar funcionalidade interna e verificar a forma armazenada da credencial sem expor senha nas evidências.
-- **Resultado esperado:** Acesso interno permitido; senha não persistida em texto puro e evidências sem credenciais.
+- **RF/CA:** RF01; CA15. **RN:** RN18, RN19, RN20. **RNF:** RNF01.
+- **Pré-condições:** Conjunto de funcionários de teste previamente disponibilizado por procedimento técnico documentado; credenciais conhecidas de um funcionário de teste para autenticação.
+- **Passos:** 1. Conferir todos os funcionários disponibilizados: cada registro possui identificador único, nome, cargo e login não vazios nem compostos apenas por espaços, e senha armazenada por hash apropriado, sem estar em texto puro. 2. Comparar a quantidade total de funcionários com a quantidade de logins distintos para verificar que nenhum login se repete. 3. Autenticar com as credenciais corretas do funcionário de teste e acessar uma funcionalidade interna.
+- **Resultado esperado:** Todos os funcionários disponibilizados atendem aos campos e à proteção de senha definidos em RN18; todos os logins são únicos conforme RN19. Com credenciais corretas, o acesso interno é permitido. As evidências não expõem senhas nem outros dados sensíveis.
 
 ### CT16 — Login inválido e acesso sem autenticação
 
