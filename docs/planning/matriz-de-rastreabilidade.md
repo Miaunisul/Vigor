@@ -12,7 +12,7 @@ Os nomes dos requisitos abaixo reproduzem os definidos em `docs/requirements/req
 
 | Requisito funcional | Regras de negócio relacionadas | Critérios de aceite relacionados | Casos de teste relacionados | Situação |
 |---|---|---|---|---|
-| RF01 — Autenticar funcionários | RN18 — Dados obrigatórios do funcionário (preparação); RN19 — Login único (preparação); RN20 — Validação das credenciais | CA15 — Login válido; CA16 — Login inválido; CA23 — Acesso sem autenticação | CT15, CT16 | Planejado |
+| RF01 — Autenticar funcionários | RN18 — Dados obrigatórios e hash da senha (verificação em CT15; hash ainda não implementado); RN19 — Login único (verificação em CT15); RN20 — Validação das credenciais | CA15 — Login válido; CA16 — Login inválido; CA23 — Acesso sem autenticação | CT15, CT16 | Planejado |
 | RF02 — Cadastrar membros | RN01 — Campos obrigatórios do membro; RN02 — Identificação e data de cadastro; RN03 — Validade do CPF; RN04 — CPF único; RN21 — Não persistência de dados inválidos | CA01 — Cadastro válido; CA02 — Campos obrigatórios não preenchidos; CA03 — CPF inválido; CA04 — CPF duplicado; CA24 — Identificação e data de cadastro; CA26 — Normalização e validação do CPF | CT01, CT02, CT03, CT04; CT17 (persistência após cadastro) | Planejado |
 | RF03 — Consultar membros | Não se aplica regra de negócio específica | CA05 — Consulta de membros cadastrados; CA06 — Consulta sem resultados | CT05, CT06 | Planejado |
 | RF04 — Atualizar membros | RN01 — Campos obrigatórios do membro; RN02 — Identificação e data de cadastro; RN03 — Validade do CPF; RN04 — CPF único; RN05 — Atualização válida; RN21 — Não persistência de dados inválidos | CA07 — Atualização válida; CA17 — Atualização inválida; CA18 — Manutenção do CPF do próprio membro; CA24 — Identificação e data de cadastro; CA26 — Normalização e validação do CPF | CT07; CT17 (persistência após atualização) | Planejado |
@@ -20,7 +20,7 @@ Os nomes dos requisitos abaixo reproduzem os definidos em `docs/requirements/req
 | RF06 — Cadastrar treinos | RN07 — Vínculo do treino; RN08 — Dados obrigatórios do treino; RN09 — Duração e data do treino; RN21 — Não persistência de dados inválidos | CA09 — Cadastro de treino; CA10 — Treino associado a membro inexistente; CA21 — Dados de treino inválidos | CT09 | Planejado |
 | RF07 — Consultar treinos | RN07 — Vínculo do treino (consistência da associação consultada) | CA20 — Consulta de treinos | CT10 | Planejado |
 | RF08 — Registrar pagamentos | RN10 — Vínculo do pagamento; RN11 — Dados obrigatórios do pagamento; RN12 — Valor do pagamento; RN13 — Status do pagamento; RN21 — Não persistência de dados inválidos | CA11 — Registro de pagamento válido; CA12 — Dados de pagamento inválidos; CA27 — Pagamento associado a membro inexistente | CT11, CT12 | Planejado |
-| RF09 — Consultar histórico de atividades | RN14 — Vínculos da atividade (preparação); RN15 — Dados obrigatórios da atividade (preparação); RN16 — Tempo de execução (preparação); RN17 — Consulta do histórico | CA14 — Consulta de histórico; CA22 — Histórico sem atividades | CT13, CT14 | Planejado |
+| RF09 — Consultar histórico de atividades | RN14 — Vínculos da atividade (verificação lógica em CT13; representação física pendente); RN15 — Dados obrigatórios da atividade (verificação em CT13; representação do funcionário responsável pendente); RN16 — Tempo de execução (verificação em CT13); RN17 — Consulta do histórico | CA14 — Consulta de histórico; CA22 — Histórico sem atividades | CT13, CT14 | Planejado |
 
 ## 3. Requisitos não funcionais
 
@@ -52,10 +52,10 @@ Os nomes dos critérios reproduzem `docs/requirements/criterios-de-aceite.md`. A
 | CA09 — Cadastro de treino | RF06 — Cadastrar treinos | RN07, RN08, RN09 | CT09 | Planejado |
 | CA10 — Treino associado a membro inexistente | RF06 — Cadastrar treinos | RN07, RN21 | CT09 | Planejado |
 | CA11 — Registro de pagamento válido | RF08 — Registrar pagamentos | RN10, RN11, RN12, RN13 | CT11 | Planejado |
-| CA12 — Dados de pagamento inválidos | RF08 — Registrar pagamentos | RN11, RN12, RN13, RN21 | CT12 | Planejado |
+| CA12 — Dados de pagamento inválidos | RF08 — Registrar pagamentos | RN10, RN11, RN12, RN13, RN21 | CT12 | Planejado |
 | CA13 — Registro de atividade — Futuro | Fora do escopo desta entrega; sem requisito funcional de registro pela interface | Não aplicável a um fluxo de registro por interface nesta entrega | Nenhum; sem CT por escopo | Não aplicável |
-| CA14 — Consulta de histórico | RF09 — Consultar histórico de atividades | RN14, RN15, RN16 (preparação); RN17 (consulta) | CT13 | Planejado |
-| CA15 — Login válido | RF01 — Autenticar funcionários | RN18, RN19 (preparação); RN20 | CT15 | Planejado |
+| CA14 — Consulta de histórico | RF09 — Consultar histórico de atividades | RN14, RN15, RN16 (verificação dos registros em CT13); RN17 (consulta) | CT13 | Planejado |
+| CA15 — Login válido | RF01 — Autenticar funcionários | RN18, RN19 (verificações de dados/hash em CT15); RN20 | CT15 | Planejado |
 | CA16 — Login inválido | RF01 — Autenticar funcionários | RN20 | CT16 | Planejado |
 | CA17 — Atualização inválida | RF04 — Atualizar membros | RN01, RN03, RN04, RN05, RN21 | CT07 | Planejado |
 | CA18 — Manutenção do CPF do próprio membro | RF04 — Atualizar membros | RN04, RN05 | CT07 | Planejado |
@@ -71,40 +71,41 @@ Os nomes dos critérios reproduzem `docs/requirements/criterios-de-aceite.md`. A
 
 ## 5. Relação das regras de negócio
 
-Esta tabela torna explícita a rastreabilidade de RN que se aplicam à preparação de dados ou a mais de um fluxo. Os nomes são os definidos em `docs/requirements/regras-de-negocio.md`.
+Esta seção diferencia a existência de um CT da existência de um procedimento que verifica a regra. “Procedimento definido” significa que o CT descreve passos e resultado esperado; não significa que o teste tenha sido executado ou aprovado. “Parcialmente coberta” indica que há verificações descritas, mas ainda existe uma dependência que impede a cobertura completa. A mera preparação de dados não conta como verificação.
 
-| Regra de negócio | Requisito(s) / critério(s) relacionados | CT relacionado(s) | Observação de cobertura |
+| Regra de negócio | Requisito(s) / critério(s) relacionados | CT relacionado(s) | Procedimento e cobertura documentada |
 |---|---|---|---|
-| RN01 — Campos obrigatórios do membro | RF02/CA02; RF04/CA17 | CT02, CT07 | Planejado |
-| RN02 — Identificação e data de cadastro | RF02/CA24; RF04/CA24 | CT01, CT07 | Planejado |
-| RN03 — Validade do CPF | RF02/CA03, CA26; RF04/CA17, CA26 | CT03, CT07 | Planejado |
-| RN04 — CPF único | RF02/CA04, CA26; RF04/CA17, CA18, CA26 | CT04, CT07 | Planejado |
-| RN05 — Atualização válida | RF04/CA07, CA17, CA18 | CT07 | Planejado |
-| RN06 — Exclusão de membros | RF05/CA08, CA19 | CT08 | Planejado |
-| RN07 — Vínculo do treino | RF06/CA09, CA10, CA21; RF07/CA20 | CT09, CT10 | CT10 usa a relação para conferir os treinos do membro selecionado; planejado |
-| RN08 — Dados obrigatórios do treino | RF06/CA09, CA21 | CT09 | Planejado |
-| RN09 — Duração e data do treino | RF06/CA09, CA21 | CT09 | Planejado |
-| RN10 — Vínculo do pagamento | RF08/CA11, CA27 | CT11, CT12 | Planejado |
-| RN11 — Dados obrigatórios do pagamento | RF08/CA11, CA12 | CT11, CT12 | Planejado |
-| RN12 — Valor do pagamento | RF08/CA11, CA12 | CT11, CT12 | Planejado |
-| RN13 — Status do pagamento | RF08/CA11, CA12 | CT11, CT12 | Planejado |
-| RN14 — Vínculos da atividade | RF09/CA14 (preparação dos dados) | CT13 | Dados previamente carregados, conforme pré-condições do caso; planejado |
-| RN15 — Dados obrigatórios da atividade | RF09/CA14 (preparação dos dados) | CT13 | Dados previamente carregados, conforme pré-condições do caso; planejado |
-| RN16 — Tempo de execução | RF09/CA14 (preparação dos dados) | CT13 | Dados previamente carregados, conforme pré-condições do caso; planejado |
-| RN17 — Consulta do histórico | RF09/CA14, CA22 | CT13, CT14 | Planejado |
-| RN18 — Dados obrigatórios do funcionário | RF01/CA15 (preparação do funcionário) | CT15 | Funcionário previamente disponibilizado; não implica tela de cadastro; planejado |
-| RN19 — Login único | RF01/CA15 (preparação do funcionário) | CT15 | Funcionário previamente disponibilizado; planejado |
-| RN20 — Validação das credenciais | RF01/CA15, CA16 | CT15, CT16 | Planejado |
-| RN21 — Não persistência de dados inválidos | RF02/CA02–CA04, CA26; RF04/CA17, CA26; RF05/CA19; RF06/CA10, CA21; RF08/CA12, CA27 | CT02–CT04, CT07–CT09, CT12 | Regra transversal; cenários específicos seguem os casos listados; planejado |
+| RN01 — Campos obrigatórios do membro | RF02/CA02; RF04/CA17 | CT02, CT07 | CT02 e CT07 tentam cada campo ausente, vazio ou só com espaços; espera rejeição e não persistência. Procedimento definido; execução pendente. |
+| RN02 — Identificação e data de cadastro | RF02/CA24; RF04/CA24 | CT01, CT07 | CT01 verifica geração automática de ID e data; CT07 verifica sua preservação na atualização. Procedimento definido; execução pendente. |
+| RN03 — Validade do CPF | RF02/CA03, CA26; RF04/CA17, CA26 | CT03, CT07 | CT03 e CT07 verificam quantidade de dígitos, dígitos verificadores e sequências repetidas, com e sem pontuação; esperam rejeição. Procedimento definido; execução pendente. |
+| RN04 — CPF único | RF02/CA04, CA26; RF04/CA17, CA18, CA26 | CT04, CT07 | CT04 e CT07 verificam duplicidade com formatações iguais/diferentes, CPF próprio e novo CPF inédito. Procedimento definido; execução pendente. |
+| RN05 — Atualização válida | RF04/CA07, CA17, CA18 | CT07 | CT07 verifica atualização válida e rejeição de dados inválidos com preservação dos dados anteriores. Procedimento definido; execução pendente. |
+| RN06 — Exclusão de membros | RF05/CA08, CA19 | CT08 | CT08 verifica exclusão sem vínculos e bloqueio com cada tipo de vínculo, preservando registros. Procedimento definido; execução pendente. |
+| RN07 — Vínculo do treino | RF06/CA09, CA10, CA21; RF07/CA20 | CT09, CT10 | CT09 verifica associação a membro existente e rejeição de inexistente; CT10 compara o membro apresentado com o associado ao treino. Procedimento definido; execução pendente. |
+| RN08 — Dados obrigatórios do treino | RF06/CA09, CA21 | CT09 | CT09 verifica campos obrigatórios, tipo/descrição não vazios e ID automático; entradas inválidas devem ser rejeitadas e não persistidas. Procedimento definido; execução pendente. |
+| RN09 — Duração e data do treino | RF06/CA09, CA21 | CT09 | CT09 verifica duração inteira positiva em minutos e data válida, incluindo rejeição de valores inválidos. Procedimento definido; execução pendente. |
+| RN10 — Vínculo do pagamento | RF08/CA11, CA12, CA27 | CT11, CT12 | CT11 verifica pagamento para membro existente; CT12 tenta sem referência e com referência inexistente e espera rejeição. Procedimento definido; execução pendente. |
+| RN11 — Dados obrigatórios do pagamento | RF08/CA11, CA12 | CT11, CT12 | CT11 verifica registro com dados válidos; CT12 tenta valor/data ausentes e data inválida e espera rejeição. Procedimento definido; execução pendente. |
+| RN12 — Valor do pagamento | RF08/CA11, CA12 | CT11, CT12 | CT11 verifica valor positivo com até duas casas; CT12 verifica rejeição de valor ausente, não numérico, zero, negativo ou com mais de duas casas. Procedimento definido; execução pendente. |
+| RN13 — Status do pagamento | RF08/CA11, CA12 | CT11, CT12 | CT11 verifica status Pago; CT12 tenta status diferente e espera rejeição. Procedimento definido; execução pendente. |
+| RN14 — Vínculos da atividade | RF09/CA14 | CT13 | CT13 verifica se cada referência lógica corresponde a membro e funcionário existentes. Parcialmente coberta: a representação física do vínculo com funcionário ainda não está definida no modelo. |
+| RN15 — Dados obrigatórios da atividade | RF09/CA14 | CT13 | CT13 verifica ID único, presença dos dados obrigatórios, atividade não vazia/só espaços e data válida. Parcialmente coberta: a representação física do funcionário responsável permanece pendente. |
+| RN16 — Tempo de execução | RF09/CA14 | CT13 | CT13 verifica diretamente que cada duração é inteira, positiva e expressa em minutos. Procedimento definido; execução depende de dados de atividade disponibilizados. |
+| RN17 — Consulta do histórico | RF09/CA14, CA22 | CT13, CT14 | CT13 compara as atividades consultadas com os registros do membro; CT14 verifica a mensagem de ausência. Procedimento definido; execução pendente. |
+| RN18 — Dados obrigatórios do funcionário | RF01/CA15; RNF01 | CT15 | CT15 verifica ID único, nome/cargo/login não vazios, valor armazenado diferente da senha original, formato do hash adotado e verificação da senha original. Parcialmente coberta: não há entidade/autenticação/hash implementados nem mecanismo adotado identificado; o teste não é executável. |
+| RN19 — Login único | RF01/CA15 | CT15 | CT15 compara o total de funcionários com o total de logins distintos. Procedimento definido; execução depende da disponibilização dos funcionários. |
+| RN20 — Validação das credenciais | RF01/CA15, CA16 | CT15, CT16 | CT15 verifica autenticação válida; CT16 verifica login inexistente, senha incorreta e acesso sem autenticação. Procedimento definido; execução pendente de implementação da autenticação. |
+| RN21 — Não persistência de dados inválidos | RF02/CA02–CA04, CA26; RF04/CA17, CA26; RF05/CA19; RF06/CA10, CA21; RF08/CA12, CA27 | CT02–CT04, CT07–CT09, CT12 | Os CT verificam rejeição e não persistência ou preservação dos dados conforme a operação. Procedimento definido; execução pendente. |
 
 ## 6. Lacunas, testes sem vínculo e divergências
 
-- **Requisitos sem teste associado:** não há RF01–RF09 sem CT no plano. Cada RNF01–RNF06 tem uma verificação VN01–VN06 planejada; RNF01 e RNF04 também se relacionam a CT funcionais indicados nas tabelas.
-- **Critérios aplicáveis sem CT associado:** nenhum. CA13 é futuro e não aplicável à entrega; não recebe CT.
-- **Testes sem requisito associado:** nenhum. CT01–CT17 estão ligados a RF e/ou RNF e a critérios aplicáveis. VN01–VN06 estão ligados aos respectivos RNF.
-- **Regras sem verificação associada:** nenhuma regra RN01–RN21 fica sem CT relacionado, consideradas as regras RN14–RN16 como condições de preparação dos dados do CT13 e RN18–RN19 como condições de preparação do funcionário do CT15.
-- **Divergências entre fontes consultadas:** não foram identificadas contradições entre requisitos, regras de negócio, critérios de aceite e plano de testes nesta revisão.
-- **Limite do mapeamento:** a relação documenta cobertura planejada a partir dos passos e pré-condições dos CT; não comprova implementação ou execução.
+- **Requisitos sem caso planejado:** nenhum RF01–RF09 ou CA aplicável está sem CT. CA13 permanece futuro e sem teste por não integrar esta entrega.
+- **Regras com procedimento definido:** RN01–RN13, RN16–RN17 e RN19–RN21 têm passos e resultados esperados descritos nos CT correspondentes; RN14, RN15 e RN18 também têm verificações descritas, mas com cobertura parcial indicada abaixo. Todos permanecem planejados.
+- **Regras usadas somente como preparação:** nenhuma das RN14, RN15, RN16, RN18 ou RN19 permanece apenas como pré-condição. CT13 agora inspeciona os registros de atividades e seus vínculos/dados; CT15 verifica os dados dos funcionários, a unicidade dos logins e o procedimento de hash. A carga técnica continua sendo necessária para fornecer os registros de teste.
+- **Cobertura parcial e dependências:** RN14 e RN15 dependem da definição da representação física do funcionário responsável no histórico. RN18 depende da implementação de entidade/provisionamento e autenticação de funcionários e da adoção de um mecanismo de hash de senha. RN19 tem procedimento documentado, mas depende da disponibilização dos registros de funcionários. CT16 e demais testes de autenticação também aguardam implementação.
+- **Sem cobertura executada:** não há regra com execução ou aprovação comprovada. CT01–CT17 e VN01–VN06 permanecem planejados. O documento `docs/testing/evidencias.md` não registra resultados aprovados; os itens de evidência seguem pendentes. Nenhuma cobertura medida ou execução é inferida pela existência dos CTs.
+- **Atualização após a auditoria da Issue #20:** as referências refletem os cenários atuais: CT07 para atualização, CT10 para consulta e conferência dos detalhes do treino, CT12 para pagamentos inválidos/inexistência de membro e CT15 para os dados do funcionário e verificação planejada da proteção por hash.
+- **Testes sem requisito associado:** nenhum CT ou VN está sem vínculo documentado.
 
 ## 7. Acompanhamento
 
