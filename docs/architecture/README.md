@@ -14,18 +14,15 @@ Este diretório reúne a documentação que descreve a organização técnica do
 
 ## Diagramas
 
-Os cinco diagramas previstos para a documentação são:
+Os diagramas documentam a arquitetura e os fluxos previstos; não comprovam, por si só, que as funcionalidades estejam implementadas.
 
-| Diagrama | Situação |
+| Diagrama | Arquivo |
 |---|---|
-| Diagrama de casos de uso | Pendente; imagem ainda não encontrada em `diagrams/`. |
-| BPMN de gestão de membros | Pendente; imagem ainda não encontrada em `diagrams/`. |
-| Diagrama de sequência do cadastro de membro | Pendente; imagem ainda não encontrada em `diagrams/`. |
-| Diagrama de classes de domínio | Pendente; imagem ainda não encontrada em `diagrams/`. |
-| Diagrama de classes da aplicação | Pendente; imagem ainda não encontrada em `diagrams/`. |
-
-O diretório `diagrams/` ainda não existe nesta estrutura; por isso, não são incluídos links para imagens ausentes.
-
+| Diagrama de casos de uso | [01_caso_de_uso.png](../diagrams/01_caso_de_uso.png) |
+| BPMN de gestão de membros | [04_bpmn_cadastro_gestao_membros.png](../diagrams/04_bpmn_cadastro_gestao_membros.png) |
+| Diagrama de sequência do cadastro de membro | [03_seq_rf01_cadastrar_membro.png](../diagrams/03_seq_rf01_cadastrar_membro.png) |
+| Diagrama de classes de domínio | [02a_classes_dominio.png](../diagrams/02a_classes_dominio.png) |
+| Diagrama de classes da aplicação | [02b_classes_camadas.png](../diagrams/02b_classes_camadas.png) |
 ## Banco de dados
 
 - [Modelo de dados](database/modelo-de-dados.md)

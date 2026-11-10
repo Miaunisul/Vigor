@@ -82,4 +82,4 @@ A presença dos arquivos não demonstra que todos os requisitos estejam cobertos
 - [Decisões técnicas](decisoes.md)
 - [Modelo de dados](database/modelo-de-dados.md)
 - [README do projeto](../../README.md)
-- Diagramas de arquitetura e de dados: não há arquivos de diagramas no repositório consultado; sua inclusão foi indicada como atividade separada.
+- Diagramas de arquitetura: [casos de uso](../diagrams/01_caso_de_uso.png), [BPMN de cadastro e gestão de membros](../diagrams/04_bpmn_cadastro_gestao_membros.png), [sequência do cadastro de membro](../diagrams/03_seq_rf01_cadastrar_membro.png), [classes de domínio](../diagrams/02a_classes_dominio.png) e [classes das camadas da aplicação](../diagrams/02b_classes_camadas.png). Os diagramas documentam a arquitetura e os fluxos previstos; não comprovam que as funcionalidades estejam implementadas.
