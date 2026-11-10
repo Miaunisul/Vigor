@@ -4,7 +4,7 @@
 
 Relacionar os requisitos funcionais e não funcionais do VIGOR às regras de negócio, aos critérios de aceite e aos casos ou verificações definidos em `docs/testing/plano-de-testes.md`.
 
-Os CT01 a CT17 e as verificações VN01 a VN06 estão **Planejados**. Esta matriz não registra implementação, execução, aprovação ou evidências já obtidas. As evidências esperadas indicadas abaixo são registros a produzir quando as verificações forem realizadas.
+Os CT01 a CT17 e as verificações VN01 a VN06 permanecem **Planejados como cenários individuais** até que sua execução específica seja relacionada a uma evidência. A execução global de testes automatizados e a medição JaCoCo de 10/11/2026 estão registradas em `docs/testing/evidencias.md`; elas não comprovam automaticamente cada CT ou VN.
 
 ## 2. Requisitos funcionais
 
@@ -24,7 +24,7 @@ Os nomes dos requisitos abaixo reproduzem os definidos em `docs/requirements/req
 
 ## 3. Requisitos não funcionais
 
-Os nomes reproduzem `docs/requirements/requisitos.md`. Os registros na coluna de evidência são esperados, não resultados existentes.
+Os nomes reproduzem `docs/requirements/requisitos.md`. Registros marcados como esperados ainda não foram obtidos; resultados globais reais de Maven e JaCoCo estão identificados explicitamente na linha RNF06.
 
 | Requisito não funcional | Forma de verificação e vínculos | Evidências esperadas | Verificação / CT | Situação |
 |---|---|---|---|---|
@@ -33,7 +33,7 @@ Os nomes reproduzem `docs/requirements/requisitos.md`. Os registros na coluna de
 | RNF03 — Usabilidade | Avaliar os fluxos principais quanto à identificação de campos, indicação de obrigatoriedade e clareza das mensagens de validação, sucesso e ausência de registros. | Registro da avaliação, dificuldades observadas e correções necessárias. | VN03 | Planejado |
 | RNF04 — Integridade e persistência | Verificar persistência no PostgreSQL, rejeição de dados inválidos, integridade dos relacionamentos e disponibilidade após reinício. CT17 limita o teste de reinício a membros criados/atualizados; outros tipos de registro não têm persistência após reinício coberta por esse CT. Relaciona-se também ao CA25. | Resultados dos cenários funcionais; consulta após reinício de membros em CT17. Persistência após reinício das demais entidades segue sem verificação definida. | VN04; CT08–CT13; CT17 (somente membros) | Planejado |
 | RNF05 — Manutenibilidade | Revisar a separação entre apresentação, regras de negócio e persistência e a execução de análise estática. | Registro da revisão, ferramenta/configuração de análise e resultado do quality gate adotado. | VN05 | Planejado |
-| RNF06 — Testabilidade | Verificar testes automatizados com Maven e na integração contínua e geração de relatório JaCoCo. A meta de 75% é de cobertura, não substitui a cobertura de requisitos. | Saída/relatório de `mvn test`, resultado da integração contínua e relatório JaCoCo com percentual medido. | VN06 | Planejado |
+| RNF06 — Testabilidade | Verificar testes automatizados com Maven e na integração contínua e geração de relatório JaCoCo. A meta de 75% é de cobertura, não substitui a cobertura de requisitos. Em 10/11/2026, `mvn clean verify` executou 37 testes sem falhas, erros ou ignorados; JaCoCo 0.8.16 mediu instruções 78%, branches 73%, linhas 98/117, métodos 24/35 e classes 6/6. | Saída do build e relatório JaCoCo registrados em `docs/testing/evidencias.md`; execução da CI ainda pendente. | VN06 | Parcialmente verificado |
 
 ## 4. Cobertura dos critérios de aceite
 
@@ -103,12 +103,12 @@ Esta seção diferencia a existência de um CT da existência de um procedimento
 - **Regras com procedimento definido:** RN01–RN13, RN16–RN17 e RN19–RN21 têm passos e resultados esperados descritos nos CT correspondentes; RN14, RN15 e RN18 também têm verificações descritas, mas com cobertura parcial indicada abaixo. Todos permanecem planejados.
 - **Regras usadas somente como preparação:** nenhuma das RN14, RN15, RN16, RN18 ou RN19 permanece apenas como pré-condição. CT13 agora inspeciona os registros de atividades e seus vínculos/dados; CT15 verifica os dados dos funcionários, a unicidade dos logins e o procedimento de hash. A carga técnica continua sendo necessária para fornecer os registros de teste.
 - **Cobertura parcial e dependências:** RN14 e RN15 dependem da definição da representação física do funcionário responsável no histórico. RN18 depende da implementação de entidade/provisionamento e autenticação de funcionários e da adoção de um mecanismo de hash de senha. RN19 tem procedimento documentado, mas depende da disponibilização dos registros de funcionários. CT16 e demais testes de autenticação também aguardam implementação.
-- **Sem cobertura executada:** não há regra com execução ou aprovação comprovada. CT01–CT17 e VN01–VN06 permanecem planejados. O documento `docs/testing/evidencias.md` não registra resultados aprovados; os itens de evidência seguem pendentes. Nenhuma cobertura medida ou execução é inferida pela existência dos CTs.
+- **Execução e cobertura automatizadas:** a execução global de 10/11/2026 está registrada em `docs/testing/evidencias.md`, incluindo 37 testes aprovados e os resultados JaCoCo. Isso não equivale à execução individual dos CTs/VNs nem comprova a cobertura dos requisitos funcionais planejados; esses cenários continuam planejados até serem vinculados a evidências próprias. A CI permanece pendente.
 - **Atualização após a auditoria da Issue #20:** as referências refletem os cenários atuais: CT07 para atualização, CT10 para consulta e conferência dos detalhes do treino, CT12 para pagamentos inválidos/inexistência de membro e CT15 para os dados do funcionário e verificação planejada da proteção por hash.
 - **Testes sem requisito associado:** nenhum CT ou VN está sem vínculo documentado.
 
 ## 7. Acompanhamento
 
-Os CT01–CT17 e VN01–VN06 devem permanecer com situação **Planejado** até que haja evidência real de implementação ou execução, conforme aplicável. Quando executados, registrar resultado, data e referência à evidência em `docs/testing/evidencias.md` e atualizar esta matriz sem inferir aprovação apenas pela existência do caso.
+Os CT01–CT17 e VN01–VN06 devem permanecer com situação **Planejado** até que haja evidência real da execução específica de cada cenário, conforme aplicável. A execução global registrada não altera automaticamente o estado dos casos. Ao executar cada CT/VN, registrar resultado, data e referência à evidência em `docs/testing/evidencias.md` e atualizar esta matriz sem inferir aprovação apenas pela existência do caso.
 
 O CA13 permanece identificado como futuro no documento oficial de critérios de aceite. Esta matriz não o converte em requisito, teste ou atividade de registro de atividades pela interface.

@@ -4,7 +4,7 @@ Projeto acadêmico desenvolvido para a A3 da disciplina de Gestão e Qualidade d
 
 O VIGOR é uma aplicação web voltada ao cadastro e à consulta de membros de uma academia, com foco na organização das informações, na validação dos dados e na integridade dos registros.
 
-> **Status do projeto:** em desenvolvimento e validação pela equipe. A execução da aplicação, os testes automatizados, a integração contínua e a cobertura de código devem ser confirmados na versão candidata à entrega.
+> **Verificação automatizada registrada em 10/11/2026:** `mvn clean verify` executou 37 testes, sem falhas, erros ou testes ignorados, e terminou com `BUILD SUCCESS`. JaCoCo 0.8.16 mediu 78% de cobertura de instruções e 73% de branches. Esses resultados não comprovam, por si só, a cobertura dos cenários funcionais planejados nem a execução da CI.
 
 ## 1. Problema e objetivo
 
@@ -53,7 +53,7 @@ Os requisitos detalhados e as regras de negócio estão documentados em [`docs/r
 | ID | Requisito |
 |---|---|
 | RQ01 | Implementar testes automatizados para as regras de negócio. |
-| RQ02 | Buscar a cobertura mínima de 75%, caso confirmada como exigência da avaliação, comprovada por relatório real do JaCoCo. |
+| RQ02 | Atingir a cobertura mínima de 75% definida para o projeto, medida e comprovada por relatório do JaCoCo. |
 | RQ03 | Configurar a integração contínua para compilar e executar os testes em push e pull request, conforme o fluxo adotado pela equipe. |
 | RQ04 | Separar as responsabilidades de apresentação, lógica de negócio e persistência. |
 | RQ05 | Documentar os pré-requisitos e os procedimentos de execução. |
@@ -91,8 +91,9 @@ As tecnologias identificadas na configuração atual do projeto incluem:
 - **Maven** — gerenciamento de dependências e build.
 - **Spring Boot Test** — suporte aos testes.
 - **JUnit e Mockito** — ferramentas de teste disponibilizadas pela configuração de dependências.
+- **JaCoCo 0.8.16** — instrumentação e geração dos relatórios HTML e XML de cobertura.
 
-JaCoCo, H2, Bootstrap e GitHub Actions só devem ser apresentados como tecnologias efetivamente configuradas quando sua presença e utilização forem confirmadas no projeto.
+H2 e Bootstrap não estão configurados como tecnologias da execução atual. O workflow do GitHub Actions está definido em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) e utiliza o segredo `CI_DB_PASSWORD`, que precisa ser cadastrado nas configurações de Actions do repositório. A existência do workflow não comprova uma execução bem-sucedida; a evidência de CI permanece pendente.
 
 ## 8. Pré-requisitos
 
@@ -121,6 +122,15 @@ cd Vigor
 
 Configure o PostgreSQL conforme as propriedades utilizadas pela aplicação.
 
+A configuração atual em `src/main/resources/application.properties` utiliza:
+
+- Banco: `vigor`.
+- URL: `jdbc:postgresql://localhost:5432/vigor`.
+- Usuário: `postgres`.
+- Senha: variável de ambiente `DB_PASSWORD`.
+
+O banco e o servidor PostgreSQL devem estar disponíveis antes da inicialização. A aplicação integra Flyway; a inicialização pode aplicar migrations pendentes. Consulte [Ambientes](docs/architecture/database/ambientes.md) e [Migrations](docs/architecture/database/migrations.md) antes de usar um banco com dados importantes.
+
 Antes de executar o projeto, confira:
 
 - endereço e porta do servidor;
@@ -131,51 +141,59 @@ Antes de executar o projeto, confira:
 
 Não versione credenciais reais, senhas pessoais ou outros segredos.
 
-> O procedimento definitivo de inicialização do banco deve ser documentado após a equipe confirmar a configuração efetivamente utilizada. Não presumir a existência de um arquivo Docker Compose.
+Não há configuração de Docker Compose documentada. As instruções complementares do banco estão em [Ambientes](docs/architecture/database/ambientes.md) e [Migrations](docs/architecture/database/migrations.md).
 
-### 9.3 Executar a aplicação no Windows
+### 9.3 Executar a aplicação
 
-Na raiz do projeto, execute:
+Na raiz do projeto, defina `DB_PASSWORD` com a senha local do PostgreSQL e inicie a aplicação.
 
-```bat
+**Windows PowerShell:**
+
+```powershell
+$env:DB_PASSWORD = "<senha-local>"
 .\mvnw.cmd spring-boot:run
 ```
 
-No Linux ou macOS:
+**Linux ou macOS (Bash):**
 
 ```bash
+export DB_PASSWORD="<senha-local>"
 ./mvnw spring-boot:run
 ```
 
-Após confirmar a inicialização, acesse o endereço local informado pela aplicação. Se estiver utilizando a porta padrão do Spring Boot, o endereço normalmente será `http://localhost:8080`.
+Substitua o marcador localmente; não registre senhas reais no README, no código ou no histórico do Git. Após a inicialização, acesse `http://localhost:8080/membros`. A rota `/` não está mapeada atualmente.
 
-### 9.4 Executar os testes
+### 9.4 Executar os testes e gerar cobertura
 
-No Windows:
+O comando `clean verify` executa os testes e, na fase `verify`, gera os relatórios JaCoCo. O teste de contexto Spring usa a configuração PostgreSQL da aplicação; forneça `DB_PASSWORD` no mesmo terminal e utilize um banco de desenvolvimento cuja situação de migrations seja conhecida.
 
-```bat
-.\mvnw.cmd clean test
-```
+**Windows PowerShell:**
 
-No Linux ou macOS:
-
-```bash
-./mvnw clean test
-```
-
-Verifique o resultado final do Maven. Uma execução bem-sucedida deve terminar sem falhas de build ou testes.
-
-### 9.5 Verificar a cobertura de código
-
-Se o JaCoCo estiver configurado no `pom.xml`, execute o comando definido para gerar o relatório. Quando o projeto estiver configurado para gerar a cobertura durante o ciclo `verify`, o comando será:
-
-```bat
+```powershell
+$env:DB_PASSWORD = "<senha-local>"
 .\mvnw.cmd clean verify
 ```
 
-O relatório deve ser localizado no caminho configurado pelo plugin. `target/site/jacoco/index.html` é um caminho comum, mas precisa ser confirmado na configuração real.
+**Linux ou macOS (Bash):**
 
-**Importante:** não declarar que a cobertura atingiu 75% sem consultar o relatório gerado pela versão testada.
+```bash
+export DB_PASSWORD="<senha-local>"
+./mvnw clean verify
+```
+
+Uma execução aprovada deve terminar sem falhas de build ou testes. Os relatórios são gerados em `target/site/jacoco/index.html` (HTML) e `target/site/jacoco/jacoco.xml` (XML).
+
+### 9.5 Resultado de cobertura registrado
+
+Na execução registrada em 10/11/2026, JaCoCo 0.8.16 analisou 6 classes e reportou:
+
+- Instruções: **78%**.
+- Branches: **73%**.
+- Linhas: **98 de 117**.
+- Métodos: **24 de 35**.
+- Classes: **6 de 6**.
+
+Assim, a cobertura de instruções ultrapassou a meta de 75%, enquanto branches ficou abaixo de 75%. Não há configuração de limite ou quality gate JaCoCo no POM; nenhum resultado deve ser interpretado como se todas as métricas tivessem atingido 75%. O registro detalhado está em [Evidências de testes](docs/testing/evidencias.md).
 
 ## 10. Estrutura do repositório
 
@@ -253,8 +271,8 @@ Antes da entrega final, a equipe deve:
 2. Executar a aplicação em um ambiente local reproduzível.
 3. Validar o fluxo de cadastro e consulta.
 4. Executar e revisar os testes automatizados.
-5. Confirmar a configuração da integração contínua, se exigida.
-6. Gerar e verificar o relatório de cobertura, se o JaCoCo estiver configurado.
+5. Executar o workflow de integração contínua no GitHub e registrar a evidência correspondente.
+6. Revisar o relatório JaCoCo gerado, incluindo os indicadores que ficaram abaixo de 75%.
 7. Revisar requisitos, regras de negócio, diagramas e rastreabilidade.
 8. Consolidar as evidências da versão candidata à entrega.
 
