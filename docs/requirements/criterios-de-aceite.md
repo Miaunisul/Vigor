@@ -250,7 +250,7 @@ Os critérios de aceite devem orientar os testes unitários, de integração, de
 
 Todos os critérios deste documento integram a entrega final da A3, exceto o CA13, identificado como futuro. A execução das verificações acompanhará as etapas de implementação.
 
-Os critérios CA17 a CA27 descrevem comportamentos esperados, mas sua presença neste documento não comprova a existência de testes correspondentes. A definição dos casos de teste, seus identificadores e as evidências de execução serão completadas pelo responsável pelos testes.
+Os critérios CA17 a CA27 descrevem comportamentos esperados. Os identificadores CT01 a CT17 já estão definidos em `docs/testing/plano-de-testes.md`; isso não comprova implementação ou execução dos testes. Os cenários permanecem planejados até serem executados, e suas evidências devem ser registradas em `docs/testing/evidencias.md`.
 
 O CA25 exige verificar a permanência dos dados após reiniciar a aplicação. Um teste que apenas salva e consulta dados sem reiniciar a aplicação não comprova, por si só, o atendimento integral desse critério.
 

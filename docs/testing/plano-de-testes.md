@@ -30,15 +30,15 @@ Os testes contemplarão as funcionalidades RF01 a RF09 previstas para a entrega.
 
 ### 2.4. Treinos
 
-- Cadastro de treinos válidos.
-- Associação do treino a um membro existente.
+- Cadastro de treinos válidos e associação a membro existente.
+- Consulta de treinos, conferindo tipo, descrição, duração, data de início e membro associado (CT10).
 - Rejeição de associação a membro inexistente.
 
 ### 2.5. Pagamentos
 
-- Registro de pagamentos válidos.
-- Validação dos valores informados.
-- Verificação dos status de pagamento definidos pela equipe.
+- Registro de pagamentos recebidos com status Pago.
+- Verificação da persistência do registro por leitura técnica de teste, sem depender de tela financeira (CT11).
+- Rejeição de dados inválidos e de status diferente de Pago (CT12).
 
 ### 2.6. Histórico de atividades
 
@@ -94,8 +94,8 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 - **Status:** Planejado.
 - **RF/CA:** RF02; CA04, CA26.
 - **Pré-condições:** Funcionário autenticado; existe membro cadastrado com CPF válido.
-- **Passos:** Tentar cadastrar outro membro com os mesmos dígitos do CPF existente usando formatação igual e diferente. Em execuções separadas, cadastrar CPF válido inédito com e sem pontuação.
-- **Resultado esperado:** Tentativas duplicadas são rejeitadas e preservam o registro existente; CPF válido inédito é aceito em ambas as formas, se os demais dados forem válidos.
+- **Passos:** Tentar cadastrar outro membro com os mesmos dígitos do CPF existente usando formatação igual e diferente. Em cada tentativa positiva, cadastrar com CPF válido que ainda não esteja cadastrado, considerando a comparação normalizada; para as duas formas de pontuação, usar CPFs válidos de teste distintos e inéditos.
+- **Resultado esperado:** Tentativas duplicadas são rejeitadas e preservam o registro existente. Cada tentativa positiva com CPF válido ainda não cadastrado é aceita, com ou sem pontuação, se os demais dados forem válidos.
 
 ### CT05 — Consulta de membros cadastrados
 
@@ -134,8 +134,8 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 - **Status:** Planejado.
 - **RF/CA:** RF06; CA09, CA10, CA21.
 - **Pré-condições:** Funcionário autenticado; existe membro válido; também há referência que não corresponde a membro cadastrado para o cenário inválido.
-- **Passos:** Cadastrar treino válido. Em execuções separadas, tentar gravar sem cada dado obrigatório, tipo/descrição vazios ou só com espaços, duração ausente, não inteira, zero ou negativa, data ausente/inválida e membro inexistente.
-- **Resultado esperado:** Treino válido é associado ao membro e recebe ID único. Cada tentativa inválida é rejeitada, informa os dados a corrigir e não persiste o treino.
+- **Passos:** Cadastrar treino válido. Em execuções separadas, tentar gravar sem cada dado obrigatório preenchido pelo usuário (membro, tipo, descrição, duração e data de início); o ID não é informado pelo usuário, pois é gerado automaticamente. Testar também tipo/descrição vazios ou só com espaços, duração ausente, não inteira, zero ou negativa, data ausente/inválida e membro inexistente. Nos casos em que a validação da interface prevê bloquear o envio, verificar esse bloqueio; para os demais casos, exercitar a rejeição na validação do servidor pelo mecanismo de teste disponível.
+- **Resultado esperado:** O treino válido é associado ao membro e recebe ID único automaticamente. Entradas inválidas são bloqueadas pela interface quando esse comportamento estiver previsto; em todos os casos, devem ser rejeitadas e não persistidas, com indicação dos dados que precisam ser corrigidos.
 
 ### CT10 — Consulta de treinos por membro
 
@@ -150,16 +150,16 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 - **Status:** Planejado.
 - **RF/CA:** RF08; CA11.
 - **Pré-condições:** Funcionário autenticado; membro existente, valor positivo com no máximo duas casas decimais e data válida.
-- **Passos:** Registrar o pagamento para o membro e consultar o resultado.
-- **Resultado esperado:** Pagamento associado ao membro é persistido com ID único e status Pago, e a operação é confirmada.
+- **Passos:** Registrar o pagamento recebido para o membro. Confirmar a operação e verificar a persistência por consulta técnica ao registro armazenado no PostgreSQL no ambiente de teste, comparando membro, valor, data, identificador e status Pago, sem usar uma tela financeira.
+- **Resultado esperado:** O registro persistido corresponde ao membro, valor e data informados, possui ID único e status Pago; a operação é confirmada. Esta verificação é de persistência do registro após gravação, sem reinício da aplicação.
 
 ### CT12 — Rejeição de pagamento inválido ou sem membro existente
 
 - **Status:** Planejado.
 - **RF/CA:** RF08; CA12, CA27. **Regras:** RN10, RN11, RN12 e RN13.
 - **Pré-condições:** Funcionário autenticado; membro cadastrado para validar os demais dados; dados de teste que permitam também enviar pagamento sem referência a membro e com referência a membro inexistente.
-- **Passos:** Em execuções separadas, tentar gravar pagamento sem referência a membro, com referência a membro inexistente, valor ausente, não numérico, igual a zero, negativo ou com mais de duas casas decimais, data ausente ou inválida e status diferente de Pago.
-- **Resultado esperado:** Cada tentativa é rejeitada e o pagamento não é persistido. A mensagem identifica a informação que impede o registro: selecionar um membro cadastrado; informar valor numérico positivo com no máximo duas casas decimais; informar uma data de pagamento válida; ou manter o status Pago.
+- **Passos:** Em execuções separadas, tentar gravar pagamento sem referência a membro, com referência a membro inexistente, valor ausente, não numérico, igual a zero, negativo ou com mais de duas casas decimais, data ausente ou inválida e status diferente de Pago. Nos casos em que a interface prevê bloquear o envio, verificar o bloqueio; para os demais, exercitar a validação do servidor pelo mecanismo de teste disponível.
+- **Resultado esperado:** Cada tentativa é rejeitada e o pagamento não é persistido. A interface bloqueia o envio quando esse comportamento estiver previsto; em qualquer caso, a validação deve rejeitar os dados e identificar a informação a corrigir: selecionar membro cadastrado, informar valor numérico positivo com no máximo duas casas decimais, informar data válida ou manter status Pago.
 
 ### CT13 — Consulta do histórico com atividades
 
@@ -194,13 +194,13 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 - **Passos:** 1. Tentar login com usuário inexistente. 2. Em outra tentativa, usar login existente com senha incorreta. 3. Sem possuir sessão autenticada, tentar acessar diretamente uma rota ou funcionalidade interna protegida.
 - **Resultado esperado:** As tentativas de login são negadas com mensagem apropriada, sem expor informação sensível. O acesso direto é negado, a funcionalidade protegida não pode ser visualizada nem utilizada e o sistema solicita autenticação.
 
-### CT17 — Persistência após reinício da aplicação
+### CT17 — Persistência de membros após reinício da aplicação
 
 - **Status:** Planejado.
 - **RF/CA:** RF02, RF04; CA25. **RNF:** RNF04.
 - **Pré-condições:** PostgreSQL de testes configurado; funcionário autenticado; dados fictícios disponíveis.
-- **Passos:** Cadastrar um membro e atualizá-lo validamente; encerrar e reiniciar efetivamente a aplicação mantendo o banco; autenticar novamente e consultar o membro.
-- **Resultado esperado:** Dados cadastrados e atualizados continuam disponíveis após o reinício.
+- **Passos:** Cadastrar um membro com dados válidos e registrar os valores apresentados, incluindo ID e data de cadastro. Atualizar validamente esse membro e registrar os valores atualizados. Encerrar e reiniciar efetivamente a aplicação mantendo o banco; autenticar novamente, consultar o membro e comparar ID, data de cadastro, nome, CPF, telefone e endereço com os valores registrados antes do reinício.
+- **Resultado esperado:** Os dados do membro criado e atualizado, incluindo ID e data de cadastro, permanecem disponíveis e correspondem aos valores anteriores ao reinício. Este CT verifica persistência após reinício somente para cadastro e atualização de membros; não verifica persistência após reinício de treinos, pagamentos, atividades ou funcionários.
 
 ## 4. Verificações planejadas de requisitos não funcionais
 
@@ -211,7 +211,7 @@ As verificações abaixo complementam os CT funcionais, sem receber identificado
 | VN01 | RNF01 | Usar CT15 e CT16 para verificar autenticação, bloqueio de acesso e senha armazenada por hash apropriado; não expor credenciais nas evidências. | Planejado |
 | VN02 | RNF02 | Registrar ambiente, volume de dados, tempos observados nas consultas e ocorrência de travamentos/timeouts, sem presumir limite numérico. | Planejado |
 | VN03 | RNF03 | Avaliar fluxos principais quanto a campos identificados, obrigatoriedade, clareza das mensagens e navegação; registrar dificuldades. | Planejado |
-| VN04 | RNF04 | Usar os cenários funcionais e CT17 para verificar rejeição de inválidos, integridade dos vínculos, preservação em operações rejeitadas e persistência após reinício. | Planejado |
+| VN04 | RNF04 | Usar os CT funcionais para verificar rejeição/não persistência de dados inválidos e integridade dos vínculos; CT11 verifica persistência do pagamento após gravação; CT17 verifica persistência após reinício somente dos dados de membro criado/atualizado. Não atribuir ao CT17 persistência após reinício de treinos, pagamentos, atividades ou funcionários. | Planejado |
 | VN05 | RNF05 | Revisar separação de apresentação, regras de negócio e persistência; registrar análise estática e resultado do quality gate adotado. | Planejado |
 | VN06 | RNF06 | Executar `mvn test`, verificar execução na integração contínua e gerar relatório JaCoCo após sua configuração; registrar cobertura frente à meta planejada de 75%. | Planejado |
 
@@ -230,7 +230,7 @@ As verificações abaixo complementam os CT funcionais, sem receber identificado
 | RF01: CA15, CA16, CA23 | CT15, CT16 |
 | RNF01 a RNF06 | VN01 a VN06; CT15, CT16 e CT17 complementam conforme indicado |
 
-O CA13 é futuro e não se aplica aos testes desta entrega. A numeração CT01 a CT16 proposta na matriz foi preservada; CT17 foi definido para CA25. CT13 e CT14 cobrem, respectivamente, histórico com e sem atividades. Todos os casos permanecem planejados.
+O CA13 é futuro e não se aplica aos testes desta entrega. Os identificadores CT01 a CT17 estão definidos no plano. CT13 e CT14 cobrem, respectivamente, histórico com e sem atividades. Todos os casos permanecem planejados.
 
 ## 6. Tipos de teste
 
