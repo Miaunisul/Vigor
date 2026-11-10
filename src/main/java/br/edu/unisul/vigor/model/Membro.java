@@ -28,15 +28,15 @@ public class Membro {
         regexp = "\\d{11}",
         message = "O CPF deve conter 11 dígitos numéricos."
     )
-    @Column(nullable = false, unique = true, length = 11)
+    @Column(nullable = false, length = 11)
     private String cpf;
 
     @Size(max = 20)
-    @Column(length = 20)
+    @Column(nullable = false, length = 20)
     private String telefone;
 
     @Size(max = 255)
-    @Column(length = 255)
+    @Column(nullable = false, length = 255)
     private String endereco;
 
     @Column(name = "data_cadastro", nullable = false, updatable = false)
