@@ -156,10 +156,10 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 ### CT12 — Rejeição de pagamento inválido ou sem membro existente
 
 - **Status:** Planejado.
-- **RF/CA:** RF08; CA12, CA27.
-- **Pré-condições:** Funcionário autenticado; membro existente para validações de campos; referência inexistente para CA27.
-- **Passos:** Em execuções separadas, tentar gravar com valor ausente, não numérico, zero, negativo ou com mais de duas casas decimais; data ausente/inválida; status diferente de Pago; e membro inexistente.
-- **Resultado esperado:** Cada tentativa é rejeitada e não persiste o pagamento; o sistema indica os dados a corrigir quando aplicável.
+- **RF/CA:** RF08; CA12, CA27. **Regras:** RN10, RN11, RN12 e RN13.
+- **Pré-condições:** Funcionário autenticado; membro cadastrado para validar os demais dados; dados de teste que permitam também enviar pagamento sem referência a membro e com referência a membro inexistente.
+- **Passos:** Em execuções separadas, tentar gravar pagamento sem referência a membro, com referência a membro inexistente, valor ausente, não numérico, igual a zero, negativo ou com mais de duas casas decimais, data ausente ou inválida e status diferente de Pago.
+- **Resultado esperado:** Cada tentativa é rejeitada e o pagamento não é persistido. A mensagem identifica a informação que impede o registro: selecionar um membro cadastrado; informar valor numérico positivo com no máximo duas casas decimais; informar uma data de pagamento válida; ou manter o status Pago.
 
 ### CT13 — Consulta do histórico com atividades
 

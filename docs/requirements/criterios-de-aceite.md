@@ -108,11 +108,11 @@ Nos fluxos internos, o usuário é o funcionário autenticado. Os critérios de 
 
 ### CA12 — Dados de pagamento inválidos
 
-**Dado** que o pagamento possui dados inválidos,
+**Dado** que o pagamento apresenta referência de membro ausente ou inexistente, valor ausente, não numérico, igual a zero, negativo ou com mais de duas casas decimais, data ausente ou inválida, ou status diferente de Pago,
 
 **Quando** é solicitada sua gravação,
 
-**Então** o sistema deve rejeitar a operação, não persistir o pagamento e informar os dados que precisam ser corrigidos.
+**Então** o sistema deve rejeitar a operação, não persistir o pagamento e informar qual informação precisa ser corrigida. Para que o registro seja aceito, deve haver referência a um membro existente, valor numérico positivo com no máximo duas casas decimais, data de pagamento válida e status Pago.
 
 ## 7. Histórico de atividades
 
