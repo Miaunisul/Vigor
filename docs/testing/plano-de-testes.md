@@ -141,9 +141,9 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 
 - **Status:** Planejado.
 - **RF/CA:** RF07; CA20.
-- **Pré-condições:** Funcionário autenticado; há treinos de um membro e outro membro sem treinos.
-- **Passos:** Consultar os treinos de cada membro em execuções separadas.
-- **Resultado esperado:** São apresentados somente os treinos do membro consultado ou informada a ausência de treinos.
+- **Pré-condições:** Funcionário autenticado; existe um membro com um treino previamente cadastrado (por CT09 ou preparação de dados), e os valores armazenados de tipo, descrição, duração em minutos, data de início e membro associado são conhecidos para comparação. Para verificar a consulta sem resultados, existe também outro membro sem treinos.
+- **Passos:** Consultar os treinos do membro com o treino conhecido e comparar cada detalhe apresentado com os valores armazenados: tipo, descrição, duração, data de início e membro associado. Em execução separada, consultar o membro sem treinos.
+- **Resultado esperado:** A consulta apresenta somente os treinos associados ao membro consultado, e tipo, descrição, duração, data de início e membro de cada treino apresentado correspondem aos valores efetivamente armazenados. Para o membro sem treinos, o sistema informa que não há treinos cadastrados.
 
 ### CT11 — Registro de pagamento válido
 
