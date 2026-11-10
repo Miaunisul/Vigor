@@ -10,4 +10,6 @@ public interface TreinoRepository extends JpaRepository<Treino, Long> {
 
     @EntityGraph(attributePaths = "membro")
     List<Treino> findByMembro_Id(Long membroId);
+
+    boolean existsByMembro_Id(Long membroId);
 }

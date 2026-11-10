@@ -13,4 +13,6 @@ public interface HistoricoAtividadeRepository extends JpaRepository<HistoricoAti
 
     @EntityGraph(attributePaths = {"membro", "funcionarioResponsavel"})
     List<HistoricoAtividade> findByFuncionarioResponsavel_Id(Long funcionarioId);
+
+    boolean existsByMembro_Id(Long membroId);
 }

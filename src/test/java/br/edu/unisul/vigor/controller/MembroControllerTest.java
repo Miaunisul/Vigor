@@ -1,7 +1,10 @@
 package br.edu.unisul.vigor.controller;
 
 import br.edu.unisul.vigor.model.Membro;
+import br.edu.unisul.vigor.repository.HistoricoAtividadeRepository;
 import br.edu.unisul.vigor.repository.MembroRepository;
+import br.edu.unisul.vigor.repository.PagamentoRepository;
+import br.edu.unisul.vigor.repository.TreinoRepository;
 import br.edu.unisul.vigor.service.MembroService;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.AfterEach;
@@ -24,6 +27,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -122,7 +126,12 @@ class MembroControllerTest {
     void deveAssociarErroDaConstraintCpfQuandoRepositorioFalhaAoSalvar()
             throws Exception {
         MembroRepository repository = mock(MembroRepository.class);
-        MembroService serviceReal = new MembroService(repository, validator);
+        MembroService serviceReal = new MembroService(
+                repository,
+                mock(TreinoRepository.class),
+                mock(PagamentoRepository.class),
+                mock(HistoricoAtividadeRepository.class),
+                validator);
         MockMvc mvcComServicoReal = standaloneSetup(new MembroController(serviceReal))
                 .setValidator(validator)
                 .build();
@@ -147,6 +156,30 @@ class MembroControllerTest {
 
         verify(repository).existsByCpf("52998224725");
         verify(repository).save(org.mockito.ArgumentMatchers.any(Membro.class));
+    }
+
+    @Test
+    void deveRedirecionarComSucessoAoExcluirMembroSemVinculos() throws Exception {
+        mockMvc.perform(post("/membros/{id}/excluir", 42L))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/membros"))
+                .andExpect(flash().attribute("sucesso", "Membro excluído com sucesso."));
+
+        verify(membroService).excluir(42L);
+    }
+
+    @Test
+    void deveRedirecionarComMotivoQuandoExclusaoEstaBloqueada() throws Exception {
+        String mensagem = "Não é possível excluir o membro: existem treinos vinculados.";
+        org.mockito.Mockito.doThrow(new IllegalStateException(mensagem))
+                .when(membroService).excluir(42L);
+
+        mockMvc.perform(post("/membros/{id}/excluir", 42L))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/membros"))
+                .andExpect(flash().attribute("erro", mensagem));
+
+        verify(membroService).excluir(42L);
     }
 
     @Test

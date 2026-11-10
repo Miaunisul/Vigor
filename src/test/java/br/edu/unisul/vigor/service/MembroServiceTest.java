@@ -2,7 +2,10 @@
 package br.edu.unisul.vigor.service;
 
 import br.edu.unisul.vigor.model.Membro;
+import br.edu.unisul.vigor.repository.HistoricoAtividadeRepository;
 import br.edu.unisul.vigor.repository.MembroRepository;
+import br.edu.unisul.vigor.repository.PagamentoRepository;
+import br.edu.unisul.vigor.repository.TreinoRepository;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -27,6 +30,9 @@ class MembroServiceTest {
     private static final Validator VALIDATOR = VALIDATOR_FACTORY.getValidator();
 
     private MembroRepository membroRepository;
+    private TreinoRepository treinoRepository;
+    private PagamentoRepository pagamentoRepository;
+    private HistoricoAtividadeRepository historicoAtividadeRepository;
     private MembroService membroService;
 
     @AfterAll
@@ -37,7 +43,11 @@ class MembroServiceTest {
     @BeforeEach
     void configurar() {
         membroRepository = mock(MembroRepository.class);
-        membroService = new MembroService(membroRepository, VALIDATOR);
+        treinoRepository = mock(TreinoRepository.class);
+        pagamentoRepository = mock(PagamentoRepository.class);
+        historicoAtividadeRepository = mock(HistoricoAtividadeRepository.class);
+        membroService = new MembroService(membroRepository, treinoRepository,
+                pagamentoRepository, historicoAtividadeRepository, VALIDATOR);
     }
 
     @Test
@@ -174,6 +184,73 @@ class MembroServiceTest {
                 () -> membroService.cadastrar(membro));
 
         verifyNoInteractions(membroRepository);
+    }
+
+    @Test
+    void deveExcluirMembroSemRegistrosRelacionados() {
+        Membro membro = membroValido("52998224725");
+        when(membroRepository.findById(42L)).thenReturn(java.util.Optional.of(membro));
+
+        membroService.excluir(42L);
+
+        verify(treinoRepository).existsByMembro_Id(42L);
+        verify(pagamentoRepository).existsByMembro_Id(42L);
+        verify(historicoAtividadeRepository).existsByMembro_Id(42L);
+        verify(membroRepository).delete(membro);
+        verify(membroRepository).flush();
+    }
+
+    @Test
+    void deveBloquearExclusaoDeMembroComTreino() {
+        Membro membro = membroValido("52998224725");
+        when(membroRepository.findById(42L)).thenReturn(java.util.Optional.of(membro));
+        when(treinoRepository.existsByMembro_Id(42L)).thenReturn(true);
+
+        IllegalStateException excecao = assertThrows(IllegalStateException.class,
+                () -> membroService.excluir(42L));
+
+        assertTrue(excecao.getMessage().contains("treinos"));
+        verify(membroRepository, never()).delete(any(Membro.class));
+        verifyNoInteractions(pagamentoRepository, historicoAtividadeRepository);
+    }
+
+    @Test
+    void deveBloquearExclusaoDeMembroComPagamento() {
+        Membro membro = membroValido("52998224725");
+        when(membroRepository.findById(42L)).thenReturn(java.util.Optional.of(membro));
+        when(pagamentoRepository.existsByMembro_Id(42L)).thenReturn(true);
+
+        IllegalStateException excecao = assertThrows(IllegalStateException.class,
+                () -> membroService.excluir(42L));
+
+        assertTrue(excecao.getMessage().contains("pagamentos"));
+        verify(membroRepository, never()).delete(any(Membro.class));
+        verifyNoInteractions(historicoAtividadeRepository);
+    }
+
+    @Test
+    void deveBloquearExclusaoDeMembroComHistorico() {
+        Membro membro = membroValido("52998224725");
+        when(membroRepository.findById(42L)).thenReturn(java.util.Optional.of(membro));
+        when(historicoAtividadeRepository.existsByMembro_Id(42L)).thenReturn(true);
+
+        IllegalStateException excecao = assertThrows(IllegalStateException.class,
+                () -> membroService.excluir(42L));
+
+        assertTrue(excecao.getMessage().contains("histórico"));
+        verify(membroRepository, never()).delete(any(Membro.class));
+    }
+
+    @Test
+    void deveRejeitarExclusaoDeMembroInexistente() {
+        when(membroRepository.findById(404L)).thenReturn(java.util.Optional.empty());
+
+        IllegalArgumentException excecao = assertThrows(IllegalArgumentException.class,
+                () -> membroService.excluir(404L));
+
+        assertEquals("Membro não encontrado.", excecao.getMessage());
+        verifyNoInteractions(treinoRepository, pagamentoRepository, historicoAtividadeRepository);
+        verify(membroRepository, never()).delete(any(Membro.class));
     }
 
     static Stream<Arguments> camposAcimaDoLimite() {

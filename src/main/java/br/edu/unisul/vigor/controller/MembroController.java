@@ -43,6 +43,17 @@ public class MembroController {
         return "membros/lista";
     }
 
+    @PostMapping("/{id}/excluir")
+    public String excluir(@PathVariable Long id, RedirectAttributes atributos) {
+        try {
+            membroService.excluir(id);
+            atributos.addFlashAttribute("sucesso", "Membro excluído com sucesso.");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            atributos.addFlashAttribute("erro", e.getMessage());
+        }
+        return "redirect:/membros";
+    }
+
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("membro", new Membro());
