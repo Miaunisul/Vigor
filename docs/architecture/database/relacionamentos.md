@@ -73,4 +73,4 @@ A V5 não declara índice adicional em `historico_atividades(funcionario_respons
 ## 5. Pendências
 
 - A estrutura física e os mapeamentos dos quatro relacionamentos estão definidos nas migrations e entidades atuais; não há pendência de nome de FK ou coluna para essas relações.
-- As classes de integração PostgreSQL incluem verificações de persistência, consulta e bloqueio pelas FKs, mas dependem de `DB_PASSWORD` e precisam ser executadas em ambiente PostgreSQL para comprovar esse comportamento.
+- As classes de integração PostgreSQL foram executadas em ambiente PostgreSQL local em 13/11/2026, com `DB_PASSWORD` configurado: `mvn test` executou 126 testes sem falhas, erros ou testes ignorados, e `mvn clean verify` foi concluído com sucesso, incluindo a verificação de cobertura do JaCoCo. A execução continua dependendo de `DB_PASSWORD` e de um PostgreSQL acessível.
