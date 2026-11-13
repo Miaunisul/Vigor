@@ -86,16 +86,16 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 - **Status:** Planejado.
 - **RF/CA:** RF02; CA03, CA26.
 - **Pré-condições:** Funcionário autenticado; demais dados do membro válidos.
-- **Passos:** Tentar cadastrar separadamente CPFs com quantidade incorreta de dígitos, dígitos verificadores incorretos e todos os dígitos iguais; considerar CPF com e sem pontuação.
-- **Resultado esperado:** Cada CPF inválido é rejeitado, o sistema informa a correção necessária e não persiste o registro.
+- **Passos:** Com os demais dados válidos, solicitar um cadastro separado para cada entrada inválida da seção 9.1. Conferir a indicação de erro no CPF e verificar que nenhum membro foi criado em cada tentativa.
+- **Resultado esperado:** O sistema rejeita cada CPF inválido, informa que o campo precisa ser corrigido e não grava o membro.
 
 ### CT04 — CPF duplicado e normalizado
 
 - **Status:** Planejado.
 - **RF/CA:** RF02; CA04, CA26.
 - **Pré-condições:** Funcionário autenticado; existe membro cadastrado com CPF válido.
-- **Passos:** Tentar cadastrar outro membro com os mesmos dígitos do CPF existente usando formatação igual e diferente. Em cada tentativa positiva, cadastrar com CPF válido que ainda não esteja cadastrado, considerando a comparação normalizada; para as duas formas de pontuação, usar CPFs válidos de teste distintos e inéditos.
-- **Resultado esperado:** Tentativas duplicadas são rejeitadas e preservam o registro existente. Cada tentativa positiva com CPF válido ainda não cadastrado é aceita, com ou sem pontuação, se os demais dados forem válidos.
+- **Passos:** 1. Com `52998224725` já cadastrado, tentar cadastrar outro membro com `52998224725` e, separadamente, com `529.982.247-25`. Conferir os registros após cada tentativa. 2. Para os cenários positivos da seção 9.1, usar bases de teste independentes nas quais esse CPF ainda não exista. Cadastrar uma vez com a forma sem pontuação e, na outra base, com a forma pontuada. Conferir o CPF gravado.
+- **Resultado esperado:** As tentativas duplicadas informam que o CPF já está cadastrado, não criam outro membro e preservam o registro original. Em cada cenário positivo, o cadastro é aceito e o valor gravado é `52998224725`.
 
 ### CT05 — Consulta de membros cadastrados
 
@@ -221,7 +221,7 @@ As verificações abaixo complementam os CT funcionais, sem receber identificado
 |---|---|
 | RF02: CA01, CA02, CA03, CA04, CA24, CA26 | CT01, CT02, CT03, CT04 |
 | RF03: CA05, CA06 | CT05, CT06 |
-| RF04: CA07, CA17, CA18, CA24, CA26 | CT07; CT03 e CT04 cobrem validações correlatas de CPF |
+| RF04: CA07, CA17, CA18, CA24, CA26 | CT07 — verifica a atualização de membros e reutiliza variações de entrada dos CT02–CT04, que tratam do cadastro. |
 | RF05: CA08, CA19 | CT08 |
 | RF06: CA09, CA10, CA21 | CT09 |
 | RF07: CA20 | CT10 |
@@ -292,6 +292,34 @@ Os conjuntos de dados deverão incluir:
 - Treinos, pagamentos e atividades válidos e inválidos, conforme as regras implementadas.
 - Credenciais fictícias para os testes de autenticação.
 
+### 9.1. Dados de CPF para CT03 e CT04
+
+Usar os valores abaixo apenas como dados de teste. Manter os demais campos válidos para que o resultado de cada tentativa dependa do CPF.
+
+| Caso | Entrada | Condição ou motivo | Resultado esperado |
+|---|---|---|---|
+| CT04 | `52998224725` | CPF válido, ainda não cadastrado | Aceitar e gravar `52998224725`. |
+| CT04 | ` 529.982.247-25 ` | Mesmo CPF, pontuado e com espaços externos; base independente, sem cadastro prévio | Aceitar e gravar `52998224725`. |
+| CT03 | `52998224726` | Dígito verificador incorreto | Rejeitar. |
+| CT03 | `5299822472` | Apenas 10 dígitos | Rejeitar. |
+| CT03 | `52998224A25` | Contém letra | Rejeitar. |
+| CT03 | `529 98224725` | Contém espaço interno | Rejeitar. |
+| CT03 | `00000000000` e `11111111111` | Onze dígitos iguais; uma tentativa para cada sequência | Rejeitar ambas. |
+| CT04 | `529.982.247-25` | Já existe um membro com `52998224725` | Rejeitar por duplicidade e preservar o cadastro existente. |
+
+### 9.2. Validação de CPF: testes existentes e evidências
+
+| Referência | O que o código de teste verifica | Situação da evidência |
+|---|---|---|
+| CT03 — `CpfUtilsTest` e `MembroServiceTest` | CPF com dígito verificador incorreto, letra, quantidade incorreta de dígitos ou sequência `11111111111`. No serviço, os testes esperam rejeição antes de consultar o repositório. | Testes escritos. O registro da CI não discrimina a execução dessas variantes. A entrada `00000000000` está prevista na seção 9.1, mas não aparece explicitamente nessas duas classes. |
+| CT04 — `CpfUtilsTest` e `MembroServiceTest` | Normalização de CPF com e sem pontuação e de espaços externos. No cadastro, o serviço consulta o CPF normalizado e não chama a gravação se o repositório indicar duplicidade. | Testes escritos. O teste de serviço usa repositório simulado; a execução específica não está identificada no registro da CI. |
+| CT04 — `MembroCpfPostgresIntegrationTest.postgresConstraintRejectsSecondMemberWithSameCpf` | Após o primeiro cadastro, uma inserção direta no PostgreSQL com o mesmo CPF deve violar a restrição `uk_membros_cpf` (SQLSTATE `23505`). Deve permanecer apenas um registro com esse CPF. | Teste integrado escrito, mas ainda não executado no PostgreSQL. A execução e o registro do resultado estão pendentes. |
+| CT04 — `MembroCpfPostgresIntegrationTest.servicoNormalizaPontuacaoERejeitaCpfDuplicadoMantendoUmRegistro` | Após cadastrar o CPF sem pontuação, uma nova tentativa pelo serviço com o mesmo CPF pontuado deve ser rejeitada. A consulta ao banco deve retornar o CPF sem pontuação e apenas um registro. | Teste integrado escrito, mas ainda não executado no PostgreSQL. A execução e o registro do resultado estão pendentes. |
+
+A execução de 10/11/2026 está documentada em [evidencias.md](evidencias.md), seção 3. A EV02 registra 37 testes executados com sucesso no run #27, sem identificar os métodos de CPF. A EV03 identifica o carregamento do contexto Spring com PostgreSQL e Flyway. Nenhuma dessas evidências, isoladamente, comprova a execução integral dos CT03 e CT04.
+
+Para registrar a execução integrada, identificar o método, a data, o resultado e o relatório correspondente. A classe de integração exige `DB_PASSWORD` definida e não vazia; um teste ignorado não deve ser registrado como aprovado.
+
 ## 10. Critérios de aceitação dos testes
 
 Uma funcionalidade será considerada aprovada quando:
@@ -344,7 +372,7 @@ Este documento representa o planejamento dos cenários. A execução automatizad
 ## 15. Pendências
 
 - Ampliar a associação entre testes automatizados e os CT/VN aplicáveis, sem inferir cobertura funcional pela execução global.
-- Ampliar os testes de persistência no PostgreSQL além do carregamento de contexto, conforme as funcionalidades implementadas.
+- Registrar em `evidencias.md` os resultados individuais dos testes integrados de CPF descritos na seção 9.2 e ampliar os testes de persistência das demais funcionalidades conforme a implementação.
 - Realizar os testes de usabilidade.
 - Registrar as evidências pendentes de testes funcionais, usabilidade e CI.
 - Avaliar os indicadores de cobertura: instruções em 78% e branches em 73% na execução de 10/11/2026; a configuração ainda não aplica um limite automático.
