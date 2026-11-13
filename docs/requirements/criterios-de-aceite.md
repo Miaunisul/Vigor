@@ -28,19 +28,19 @@ Nos fluxos internos, o usuário é o funcionário autenticado. Os critérios de 
 
 ### CA03 — CPF inválido
 
-**Dado** que o funcionário informa um CPF inválido,
+**Dado** que, após a normalização da RN03, o CPF não contém exatamente 11 dígitos numéricos, possui todos os dígitos iguais ou apresenta algum dígito verificador incorreto,
 
-**Quando** solicita o cadastro,
+**Quando** o funcionário solicita o cadastro,
 
-**Então** o sistema deve rejeitar o cadastro, não salvar o registro e informar que o CPF precisa ser corrigido.
+**Então** o sistema deve rejeitar o cadastro, informar que o CPF precisa ser corrigido e não salvar o membro.
 
 ### CA04 — CPF duplicado
 
 **Dado** que já existe um membro cadastrado com determinado CPF,
 
-**Quando** o funcionário tenta cadastrar outro membro com o mesmo CPF,
+**Quando** o funcionário tenta cadastrar outro membro com o mesmo CPF normalizado, ainda que use uma formatação diferente,
 
-**Então** o sistema deve rejeitar o novo cadastro e preservar o registro existente.
+**Então** o sistema deve informar que o CPF já está cadastrado, não criar um segundo membro e preservar o registro existente.
 
 ## 3. Consulta de membros
 
@@ -228,13 +228,13 @@ Essa exclusão se refere somente ao registro pela interface. A consulta do hist�
 
 ### CA26 — Normalização e validação do CPF
 
-**Dado** que o funcionário informa um CPF com ou sem pontos e hífen,
+**Dado** que o funcionário informa `52998224725` ou `529.982.247-25`, inclusive com espaços nas extremidades,
 
-**Quando** o sistema valida o CPF,
+**Quando** o sistema valida o CPF e verifica sua unicidade no cadastro,
 
-**Então** deve considerar os mesmos dígitos para validar e verificar duplicidade, rejeitando sequências repetidas e dígitos verificadores incorretos.
+**Então** deve usar `52998224725` como valor normalizado nas duas verificações. Em cadastros independentes, com os demais dados válidos e o CPF ainda não utilizado, ambas as formas devem ser aceitas e gravadas sem pontuação.
 
-**E** um CPF válido e ainda não cadastrado deve ser aceito em ambas as formas, desde que os demais dados estejam válidos.
+**E** se esse CPF já estiver cadastrado, a outra forma de apresentação deve ser rejeitada como duplicada, conforme o CA04. A normalização não remove letras nem espaços internos; entradas que permaneçam inválidas devem ser rejeitadas conforme o CA03.
 
 ### CA27 — Pagamento associado a membro inexistente
 
