@@ -3,22 +3,25 @@
 - **Responsável:** Luan Milian Martins
 - **Task:** L07 — Validar persistência e consultas de treinos, pagamentos e histórico de atividades.
 - **Data da conferência:** 13/11/2026
+- **Complementação:** 16/11/2026, conforme a revisão do PR #38 (seção 8)
 - **Branch:** `feat/revisao-relacionamentos-banco`, criada a partir da `develop` atualizada
 - **Evidências relacionadas:** [evidencias.md](evidencias.md), EV07 a EV10 e seção 4
 
 ## Resumo
 
-A conferência cobriu as entidades JPA e as migrations V1 a V5, as chaves estrangeiras e os índices no PostgreSQL, os repositórios e suas consultas, e a execução completa dos testes automatizados. Os 126 testes do projeto foram executados sem falhas, erros ou testes ignorados, incluindo 30 testes de integração com PostgreSQL.
+A conferência cobriu as entidades JPA e as migrations V1 a V5, as chaves estrangeiras e os índices no PostgreSQL, os repositórios e suas consultas, e a execução completa dos testes automatizados. Na execução de 13/11/2026, os 126 testes do projeto passaram sem falhas, erros ou testes ignorados, incluindo 30 testes de integração com PostgreSQL.
+
+Na revisão do PR #38, três itens estavam pendentes por falta de teste específico. Em 16/11/2026 foram adicionados cinco testes de integração com PostgreSQL que cobrem esses itens, e a suíte passou a ter 131 testes, todos aprovados (seção 8).
 
 | Seção | Itens | Aprovados | Pendentes | Reprovados |
 |---|---|---|---|---|
-| 1. Treinos | 5 | 4 | 1 | 0 |
+| 1. Treinos | 5 | 5 | 0 | 0 |
 | 2. Pagamentos | 5 | 5 | 0 | 0 |
 | 3. Histórico de atividades | 5 | 5 | 0 | 0 |
-| 4. Isolamento dos dados | 2 | 0 | 2 | 0 |
-| **Total** | **17** | **14** | **3** | **0** |
+| 4. Isolamento dos dados | 2 | 2 | 0 | 0 |
+| **Total** | **17** | **17** | **0** | **0** |
 
-Nenhum item foi reprovado. Os itens pendentes não têm teste automatizado específico identificado. Dois achados da revisão foram registrados para avaliação da equipe (seção 6.3).
+Nenhum item foi reprovado. Dois achados da revisão foram registrados para avaliação da equipe (seção 6.3). A falha da integração contínua observada no PR está descrita na seção 6.5.
 
 ## Ambiente e método
 
@@ -42,6 +45,7 @@ Nenhum item foi reprovado. Os itens pendentes não têm teste automatizado espec
 5. Revisão dos repositórios e do uso de cada método no código de produção ([Anexo C](#anexo-c--repositórios-e-consultas)).
 6. Execução de `mvn test` e `mvn clean verify` (seção 5).
 7. Associação de cada item deste relatório aos métodos de teste, com base nos relatórios do Surefire em `target/surefire-reports/`.
+8. Em 16/11/2026, criação dos testes que faltavam para os itens pendentes e nova execução de `mvn clean verify` (seção 8).
 
 ### Critério de avaliação
 
@@ -58,8 +62,8 @@ Os testes de integração estão em `src/test/java/br/edu/unisul/vigor/repositor
 | Item | Resultado | Integração com PostgreSQL (`TreinoPostgresIntegrationTest`) | Unitário (`TreinoServiceTest`) | CT |
 |---|---|---|---|---|
 | Persistência no PostgreSQL | Aprovado | `persisteTreinoVinculadoEConsultaPeloMembro` | `cadastraTreinoVinculadoAMembroExistente` | CT09 |
-| Consulta por ID | Pendente | Nenhum teste específico identificado | Nenhum teste específico identificado | — |
-| Consulta por membro | Aprovado | `persisteTreinoVinculadoEConsultaPeloMembro` | `consultaTreinosDoMembroSelecionado`; `rejeitaConsultaDeMembroInexistente` | CT10 |
+| Consulta por ID | Aprovado (16/11) | `consultaTreinoPorIdRetornaOsDadosPersistidos`; `consultaTreinoPorIdInexistenteRetornaVazio` | — | — |
+| Consulta por membro | Aprovado | `persisteTreinoVinculadoEConsultaPeloMembro`; `consultaPorMembroNaoRetornaTreinosDeOutroMembro` (16/11) | `consultaTreinosDoMembroSelecionado`; `rejeitaConsultaDeMembroInexistente` | CT10 |
 | Relacionamento com membro | Aprovado | `chaveEstrangeiraRejeitaMembroInexistente` | `rejeitaCadastroSemMembro`; `rejeitaCadastroQuandoMembroNaoExiste` | CT09 |
 | Rejeição de dados inválidos | Aprovado | `servicoRejeitaDuracaoInvalidaSemPersistirTreino`; `checkDoBancoRejeitaDuracaoNaoPositiva`; `checkDoBancoRejeitaTipoVazio` | `rejeitaDadosInvalidosSemPersistir` (8 variantes) | CT09 |
 
@@ -67,14 +71,14 @@ Os testes de integração estão em `src/test/java/br/edu/unisul/vigor/repositor
 
 - A FK `fk_treinos_membros` e os `CHECK` de tipo e descrição não vazios e de duração positiva definidos na V3 são exercitados diretamente no banco pelos testes `chaveEstrangeira...` e `checkDoBanco...`.
 - A entidade `Treino` mapeia `membro_id` com `@ManyToOne(optional = false)` e `@JoinColumn(nullable = false)`, e valida duração com `@Positive`.
-- A consulta por ID usa `findById`, herdado de `JpaRepository`, mas nenhum teste a exercita de forma específica.
+- A consulta por ID usa `findById`, herdado de `JpaRepository`. Em 13/11/2026 nenhum teste a exercitava de forma específica; em 16/11/2026 foram adicionados testes para um ID existente, comparando todos os dados lidos do banco com os gravados, e para um ID inexistente, que retorna vazio.
 
 ## 2. Testes de Pagamentos
 
 | Item | Resultado | Integração com PostgreSQL (`PagamentoPostgresIntegrationTest`) | Unitário (`PagamentoServiceTest`) | CT |
 |---|---|---|---|---|
 | Persistência no PostgreSQL | Aprovado | `persistePagamentoEConsultaVinculoComOMembro` | `registraPagamentoPagoVinculadoAMembroExistente` | CT11 |
-| Consulta por membro | Aprovado em teste unitário | Nenhum teste específico de consulta por membro identificado; o teste de persistência confere o vínculo do pagamento com o membro | `consultaPagamentosDoMembro`; `rejeitaConsultaDeMembroInexistente` | — |
+| Consulta por membro | Aprovado (16/11) | `consultaPorMembroRetornaSomenteOsPagamentosDoMembro` | `consultaPagamentosDoMembro`; `rejeitaConsultaDeMembroInexistente` | — |
 | Validação de valor positivo | Aprovado | `servicoRejeitaValorInvalidoSemPersistirPagamento`; `constraintDoBancoRejeitaValorNaoPositivo` | `rejeitaValorNaoPositivoOuComMaisDeDuasCasas` (3 variantes); `rejeitaValorNulo` | CT12 |
 | Validação do status PAGO | Aprovado | `servicoRejeitaStatusInvalidoSemPersistirPagamento`; `constraintDoBancoRejeitaStatusDiferenteDePago` | `rejeitaStatusDiferenteDePago` (4 variantes) | CT12 |
 | Relacionamento com membro | Aprovado | `chaveEstrangeiraRejeitaMembroInexistente`; `persistePagamentoEConsultaVinculoComOMembro` | `rejeitaRegistroSemMembro`; `rejeitaRegistroQuandoMembroNaoExiste` | CT12 |
@@ -83,14 +87,14 @@ Os testes de integração estão em `src/test/java/br/edu/unisul/vigor/repositor
 
 - As regras de valor e status são verificadas em duas camadas: no serviço, antes de persistir, e no banco, pelos `CHECK` da V4 (`valor > 0` e `status = 'PAGO'`).
 - A entidade `Pagamento` mapeia `valor` como `BigDecimal` com `precision = 12, scale = 2`, compatível com `NUMERIC(12, 2)`, e `status` com tamanho 4 e `@Pattern("PAGO")`.
-- A consulta por membro está aprovada apenas em teste unitário, com o repositório simulado. Não foi identificado teste que execute essa consulta contra o PostgreSQL.
+- Em 13/11/2026, a consulta por membro estava aprovada apenas em teste unitário, com o repositório simulado. Em 16/11/2026 foi adicionado teste de integração que registra pagamentos para dois membros diferentes e executa a consulta contra o PostgreSQL.
 
 ## 3. Testes de Histórico de Atividades
 
 | Item | Resultado | Integração com PostgreSQL (`HistoricoAtividadePostgresIntegrationTest`) | Unitário (`HistoricoAtividadeServiceTest`) | CT |
 |---|---|---|---|---|
 | Persistência no PostgreSQL | Aprovado | `persisteAtividadeComMembroEFuncionarioEConsultaPorAmbos` | `registraAtividadeComMembroEFuncionarioResponsavelExistentes` | CT13 |
-| Consulta por membro | Aprovado | `persisteAtividadeComMembroEFuncionarioEConsultaPorAmbos` | `consultaAtividadesPorMembroExistente`; `rejeitaConsultaPorMembroInexistente` | CT13 |
+| Consulta por membro | Aprovado | `persisteAtividadeComMembroEFuncionarioEConsultaPorAmbos`; `consultaPorMembroNaoRetornaAtividadesDeOutroMembro` (16/11) | `consultaAtividadesPorMembroExistente`; `rejeitaConsultaPorMembroInexistente` | CT13 |
 | Relacionamento com membro | Aprovado | `chaveEstrangeiraRejeitaMembroInexistente` | `rejeitaRegistroSemMembro`; `rejeitaRegistroQuandoMembroNaoExiste` | CT13 |
 | Relacionamento com funcionário | Aprovado | `chaveEstrangeiraRejeitaFuncionarioInexistente`; `chaveEstrangeiraTambemExigeFuncionarioResponsavel` | `rejeitaRegistroSemFuncionarioResponsavel`; `rejeitaRegistroQuandoFuncionarioNaoExiste`; `consultaAtividadesPorFuncionarioExistente` | CT13 |
 | Validação do tempo de execução | Aprovado | `checkDoBancoRejeitaTempoNaoPositivo`; `servicoRejeitaDadosInvalidosSemPersistirAtividade` | `rejeitaTempoDeExecucaoNaoPositivo` (2 variantes); `rejeitaTempoNulo` | CT13 |
@@ -103,12 +107,14 @@ Os testes de integração estão em `src/test/java/br/edu/unisul/vigor/repositor
 
 ## 4. Isolamento dos dados
 
-| Item | Resultado | Observação | CT |
+| Item | Resultado | Testes de integração com PostgreSQL | CT |
 |---|---|---|---|
-| Testes com dois membros diferentes | Pendente | Nenhum teste identificado pelo nome do método; a confirmação depende da leitura do corpo dos testes. | CT10, CT13 |
-| Consultas retornaram somente os registros do membro solicitado | Pendente | Sem teste específico identificado. | CT10, CT13 |
+| Testes com dois membros diferentes | Aprovado (16/11) | `TreinoPostgresIntegrationTest.consultaPorMembroNaoRetornaTreinosDeOutroMembro`; `PagamentoPostgresIntegrationTest.consultaPorMembroRetornaSomenteOsPagamentosDoMembro`; `HistoricoAtividadePostgresIntegrationTest.consultaPorMembroNaoRetornaAtividadesDeOutroMembro` | CT10, CT13 |
+| Consultas retornaram somente os registros do membro solicitado | Aprovado (16/11) | Os mesmos três testes | CT10, CT13 |
 
-**Observação da revisão de código:** as consultas por membro (`findByMembro_Id`) são derivadas pelo Spring Data a partir do nome do método e filtram por `membro.id`. Não há `@Query` manual nas consultas por membro que possa omitir o filtro. Essa análise reduz o risco, mas não substitui um teste que compare os resultados de dois membros.
+Em 13/11/2026 os dois itens estavam pendentes: nenhum teste comparava os resultados de dois membros. Em cada um dos três testes adicionados em 16/11/2026, são criados dois membros novos; o primeiro recebe dois registros e o segundo, um. A consulta de cada membro deve retornar exatamente o conjunto de identificadores dos seus registros, sem nenhum registro do outro membro. No histórico de atividades, as atividades dos dois membros usam o mesmo funcionário responsável válido.
+
+**Observação da revisão de código:** as consultas por membro (`findByMembro_Id`) são derivadas pelo Spring Data a partir do nome do método e filtram por `membro.id`. Não há `@Query` manual nas consultas por membro que possa omitir o filtro.
 
 ## 5. Execução dos testes
 
@@ -163,6 +169,8 @@ Os testes de integração estão em `src/test/java/br/edu/unisul/vigor/repositor
 
 Os relatórios são gerados localmente em `target/surefire-reports/` e `target/site/jacoco/index.html` e não são versionados.
 
+A execução complementar de 16/11/2026, com os testes adicionados após a revisão, está registrada na seção 8.2.
+
 ## 6. Problemas encontrados
 
 ### 6.1. Falhas nos testes
@@ -171,11 +179,11 @@ Nenhuma falha ou erro foi registrado nos testes automatizados.
 
 ### 6.2. Itens sem evidência específica
 
-| Item | Seção | Situação |
-|---|---|---|
-| Consulta de treino por ID | 1 | Sem teste específico |
-| Consulta de pagamentos por membro no PostgreSQL | 2 | Coberta apenas por teste unitário |
-| Isolamento dos dados entre dois membros | 4 | Sem teste específico identificado |
+| Item | Seção | Situação em 13/11/2026 | Situação em 16/11/2026 |
+|---|---|---|---|
+| Consulta de treino por ID | 1 | Sem teste específico | Resolvido: 2 testes de integração |
+| Consulta de pagamentos por membro no PostgreSQL | 2 | Coberta apenas por teste unitário | Resolvido: 1 teste de integração |
+| Isolamento dos dados entre dois membros | 4 | Sem teste específico identificado | Resolvido: 3 testes de integração |
 
 ### 6.3. Achados da revisão
 
@@ -195,7 +203,9 @@ CREATE INDEX idx_historico_atividades_funcionario_responsavel_id
 
 **Achado 2 — Método sem uso em `MembroRepository`**
 
-`MembroRepository.findByCpf` não é chamado em nenhum ponto do projeto. A verificação de CPF duplicado usa `existsByCpf`. Sugestão: avaliar a remoção do método ou mantê-lo, caso haja uso planejado.
+`MembroRepository.findByCpf` não é chamado no código de produção. A verificação de CPF duplicado usa `existsByCpf`. O método é usado apenas no teste `MembroCpfPostgresIntegrationTest.servicoNormalizaPontuacaoERejeitaCpfDuplicadoMantendoUmRegistro`. Sugestão: avaliar se o método deve permanecer apenas para uso em teste.
+
+*Correção em 16/11/2026: a versão de 13/11/2026 afirmava que o método não era chamado em nenhum ponto do projeto. A busca usada na conferência desconsiderou a pasta de testes de integração.*
 
 ### 6.4. Problemas de ambiente local
 
@@ -208,13 +218,88 @@ Problemas resolvidos durante a preparação do ambiente, sem relação com o có
 
 Os testes de integração também exigem a variável de ambiente `DB_PASSWORD` definida no terminal em que o Maven é executado.
 
+### 6.5. Integração contínua
+
+As execuções do workflow `CI - VIGOR` para este PR falharam no passo "Executar testes, relatório e quality gate", com `Process completed with exit code 1`. O relatório do JaCoCo não chegou a ser gerado.
+
+| Execução | Origem | Commit | Data | Resultado |
+|---|---|---|---|---|
+| #34 | Push na `develop` | `2eb72a0` | 10/11/2026 | Sucesso |
+| #35 | PR #37 (`docs/d03-validacao-cpf`) | `c65a23d` | 13/11/2026 | Falha |
+| #36 | Push na `feat/revisao-relacionamentos-banco` | `226e577` | 13/11/2026 | Falha |
+| #37 | PR #38 | `226e577` | 13/11/2026 | Falha |
+
+Os commits `226e577` (PR #38) e `c65a23d` (PR #37) alteram apenas arquivos de documentação em relação ao `2eb72a0`, cujo código de aplicação e de testes passou na execução #34. A falha, portanto, não decorre das alterações de documentação desses PRs. A causa depende da leitura do log da execução, que exige acesso autenticado ao GitHub.
+
 ## 7. Conclusão
 
 A persistência e as consultas de treinos, pagamentos e histórico de atividades foram validadas por testes automatizados executados contra PostgreSQL local, com 126 testes executados sem falhas, erros ou testes ignorados. Os relacionamentos com membro e funcionário, as validações de valor, status e tempo de execução e o bloqueio de exclusão de membros com registros vinculados estão aprovados.
 
-Permanecem pendentes de evidência específica a consulta de treino por ID, a consulta de pagamentos por membro no PostgreSQL e o isolamento dos dados entre dois membros. A conclusão da task depende da avaliação da equipe sobre essas pendências e sobre os dois achados da seção 6.3.
+Os três itens que estavam pendentes em 13/11/2026 (consulta de treino por ID, consulta de pagamentos por membro no PostgreSQL e isolamento dos dados entre dois membros) foram comprovados em 16/11/2026 por cinco novos testes de integração. A execução local de `mvn clean verify` terminou com 131 testes aprovados e cobertura de instruções de 81%.
 
-**Pull Request:** [Adicionar link]
+A aprovação da task depende ainda da correção da falha da integração contínua (seção 6.5) e da avaliação da equipe sobre os dois achados da seção 6.3.
+
+**Pull Request:** [#38](https://github.com/Miaunisul/Vigor/pull/38)
+
+## 8. Complementação da revisão (16/11/2026)
+
+A revisão do PR #38 solicitou comprovar a consulta de treino por ID, a consulta de pagamentos por membro diretamente no PostgreSQL e o isolamento dos dados entre membros em treinos, pagamentos e histórico de atividades, além de corrigir a falha da integração contínua e atualizar as evidências.
+
+Orientações seguidas: as migrations V1 a V5, a estrutura do banco e o código de produção não foram alterados; nenhuma migration nova foi criada; nenhum dado do banco foi apagado.
+
+### 8.1. Testes adicionados
+
+| Classe | Teste | O que verifica | Item atendido |
+|---|---|---|---|
+| `TreinoPostgresIntegrationTest` | `consultaTreinoPorIdRetornaOsDadosPersistidos` | Grava um treino, consulta pelo ID no PostgreSQL e compara ID, membro, tipo, descrição, duração e data de início com os valores gravados | Consulta de treino por ID |
+| `TreinoPostgresIntegrationTest` | `consultaTreinoPorIdInexistenteRetornaVazio` | Consulta um ID que não pode existir (`-1`) e confirma que o resultado é vazio | Consulta de treino por ID inexistente |
+| `TreinoPostgresIntegrationTest` | `consultaPorMembroNaoRetornaTreinosDeOutroMembro` | Cria dois membros, registra dois treinos para o primeiro e um para o segundo, e confirma que cada consulta retorna exatamente os treinos do próprio membro | Isolamento em treinos |
+| `PagamentoPostgresIntegrationTest` | `consultaPorMembroRetornaSomenteOsPagamentosDoMembro` | Cria dois membros com pagamentos de valores diferentes e confirma, para cada consulta, os identificadores, o membro, o valor e o status `PAGO` retornados | Consulta de pagamentos por membro no PostgreSQL; isolamento em pagamentos |
+| `HistoricoAtividadePostgresIntegrationTest` | `consultaPorMembroNaoRetornaAtividadesDeOutroMembro` | Cria dois membros com atividades registradas pelo mesmo funcionário válido e confirma os identificadores, o membro e o funcionário responsável retornados | Isolamento no histórico de atividades |
+
+Características comuns:
+
+- Todos os testes rodam dentro de uma transação desfeita ao final (`@Transactional`). Não deixam registros no banco nem alteram dados existentes.
+- Antes das consultas, as alterações são enviadas ao banco (`flush`) e o contexto de persistência é limpo (`EntityManager.clear()`), para que os dados sejam lidos do PostgreSQL e não do cache do Hibernate.
+- Nos testes de isolamento, os dois membros são criados no próprio teste, o que garante que não existam outros registros vinculados a eles. Por isso a comparação é feita pelo conjunto exato de identificadores.
+- As alterações consistem apenas na inclusão de linhas nos três arquivos de teste, sem modificar ou remover linhas existentes.
+
+### 8.2. Execução
+
+**Comando:** `mvn clean verify` (executado com `.\mvnw.cmd clean verify`), concluído em 16/11/2026 às 12:58
+
+- Testes executados: 131
+- Falhas: 0
+- Erros: 0
+- Ignorados: 0
+- Cobertura: instruções 81% (977/1.192); branches 68% (92/134); linhas 274/322; métodos 88/104; classes 15/15. Verificação `jacoco:check` aprovada (`All coverage checks have been met.`).
+- Resultado: `BUILD SUCCESS`
+
+| Classe | Testes em 13/11/2026 | Testes em 16/11/2026 |
+|---|---|---|
+| `TreinoPostgresIntegrationTest` | 5 | 8 |
+| `PagamentoPostgresIntegrationTest` | 6 | 7 |
+| `HistoricoAtividadePostgresIntegrationTest` | 7 | 8 |
+| Demais 12 classes | 108 | 108 |
+| **Total** | **126** | **131** |
+
+Os testes de integração com PostgreSQL passaram de 30 para 35.
+
+| Pacote | Instruções | Branches |
+|---|---|---|
+| `br.edu.unisul.vigor.service` | 79% | 65% |
+| `br.edu.unisul.vigor.controller` | 71% | 65% |
+| `br.edu.unisul.vigor.model` | 92% | n/a |
+| `br.edu.unisul.vigor.validation` | 100% | 85% |
+| `br.edu.unisul.vigor.config` | 100% | n/a |
+| `br.edu.unisul.vigor` | 37% | n/a |
+| **Total** | **81%** | **68%** |
+
+O ambiente foi o mesmo descrito em "Ambiente e método".
+
+### 8.3. Integração contínua
+
+A falha está descrita na seção 6.5. Situação em 16/11/2026: em análise.
 
 ---
 
@@ -351,7 +436,7 @@ O banco rejeitou a exclusão do membro com treino vinculado, e o `ROLLBACK` desf
 | `HistoricoAtividadeRepository` | `findByFuncionarioResponsavel_Id` | `HistoricoAtividadeService`, linha 87 | Consistente |
 | `HistoricoAtividadeRepository` | `existsByMembro_Id` | `MembroService`, linha 101 | Consistente |
 | `MembroRepository` | `existsByCpf` | `MembroService`, linha 61 | Consistente |
-| `MembroRepository` | `findByCpf` | Sem uso | Achado 2 |
+| `MembroRepository` | `findByCpf` | Sem uso em produção; usado apenas em `MembroCpfPostgresIntegrationTest` | Achado 2 |
 | `FuncionarioRepository` | `findByLoginNormalizado` | `FuncionarioService`, linha 29 | Consistente |
 
 - Não há consultas duplicadas. Os métodos `findByMembro_Id` e `existsByMembro_Id` repetem o nome em repositórios diferentes, mas cada um consulta uma entidade distinta.
@@ -372,3 +457,4 @@ O banco rejeitou a exclusão do membro com treino vinculado, e o `ROLLBACK` desf
 | Data | Alteração | Responsável |
 |---|---|---|
 | 13/11/2026 | Criação do relatório de validação da task L07 | Luan Milian Martins |
+| 16/11/2026 | Complementação solicitada na revisão do PR #38: cinco testes de integração, nova execução de `mvn clean verify`, correção do achado 2 e registro da falha da integração contínua | Luan Milian Martins |

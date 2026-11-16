@@ -5,6 +5,8 @@ import br.edu.unisul.vigor.model.HistoricoAtividade;
 import br.edu.unisul.vigor.model.Membro;
 import br.edu.unisul.vigor.service.HistoricoAtividadeService;
 import br.edu.unisul.vigor.validation.CpfUtils;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -41,6 +45,9 @@ class HistoricoAtividadePostgresIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Test
     void persisteAtividadeComMembroEFuncionarioEConsultaPorAmbos() {
@@ -121,6 +128,38 @@ class HistoricoAtividadePostgresIntegrationTest {
                         + "(membro_id, funcionario_responsavel_id, atividade, data_atividade, "
                         + "tempo_execucao_minutos) VALUES (?, NULL, ?, ?, ?)",
                 membro.getId(), "Atividade de teste", LocalDate.now(), 10));
+    }
+
+    @Test
+    void consultaPorMembroNaoRetornaAtividadesDeOutroMembro() {
+        Membro primeiro = criarMembroTransitorio();
+        Membro segundo = criarMembroTransitorio();
+        Funcionario funcionario = funcionarioParaTeste();
+        HistoricoAtividade primeiraAtividade = historicoService.registrar(
+                atividadeValida(), primeiro.getId(), funcionario.getId());
+        HistoricoAtividade segundaAtividade = historicoService.registrar(
+                atividadeValida(), primeiro.getId(), funcionario.getId());
+        HistoricoAtividade atividadeDoSegundo = historicoService.registrar(
+                atividadeValida(), segundo.getId(), funcionario.getId());
+        historicoRepository.flush();
+        entityManager.clear();
+
+        List<HistoricoAtividade> doPrimeiro = historicoService.consultarPorMembro(primeiro.getId());
+        List<HistoricoAtividade> doSegundo = historicoService.consultarPorMembro(segundo.getId());
+
+        assertEquals(Set.of(primeiraAtividade.getId(), segundaAtividade.getId()),
+                idsDasAtividades(doPrimeiro));
+        assertEquals(Set.of(atividadeDoSegundo.getId()), idsDasAtividades(doSegundo));
+        assertTrue(doPrimeiro.stream()
+                .allMatch(atividade -> atividade.getMembro().getId().equals(primeiro.getId())));
+        assertTrue(doSegundo.stream()
+                .allMatch(atividade -> atividade.getMembro().getId().equals(segundo.getId())));
+        assertTrue(doPrimeiro.stream().allMatch(atividade ->
+                atividade.getFuncionarioResponsavel().getId().equals(funcionario.getId())));
+    }
+
+    private Set<Long> idsDasAtividades(List<HistoricoAtividade> atividades) {
+        return atividades.stream().map(HistoricoAtividade::getId).collect(Collectors.toSet());
     }
 
     private void inserir(long membroId, long funcionarioId, String atividade, int tempo) {

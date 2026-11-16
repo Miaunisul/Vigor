@@ -10,6 +10,8 @@ Em 10/11/2026 foram registradas uma execução local de `mvn clean verify` e a p
 
 Em 13/11/2026 foram registradas novas execuções locais de `mvn test` e `mvn clean verify` na branch `feat/revisao-relacionamentos-banco`, com PostgreSQL local e as seis classes de testes de integração com PostgreSQL. Os resultados e a associação dos testes aos itens validados na task L07 estão na seção 4.
 
+Em 16/11/2026, após a revisão do PR #38, foram adicionados cinco testes de integração com PostgreSQL e registrada nova execução local de `mvn clean verify`, com 131 testes aprovados (seção 4.11). Também foi registrada a falha da integração contínua nas execuções #35 a #37 (EV15).
+
 ## 3. Evidências de execução
 
 | ID | Verificação | CT/VN e cenário a registrar | Evidência esperada | Situação |
@@ -24,6 +26,11 @@ Em 13/11/2026 foram registradas novas execuções locais de `mvn test` e `mvn cl
 | EV08 | Testes automatizados | Execuções locais `mvn test` e `mvn clean verify`, branch `feat/revisao-relacionamentos-banco`, 13/11/2026 | 126 executados em 15 classes; 0 falhas; 0 erros; 0 ignorados | Executado com sucesso |
 | EV09 | Testes de integração com PostgreSQL | Seis classes `*PostgresIntegrationTest`, incluídas no EV08, com `DB_PASSWORD` configurado e PostgreSQL local | 30 executados; 0 falhas; 0 erros; 0 ignorados. Detalhamento na seção 4. Não substitui a execução individual dos CT funcionais. | Executado com sucesso |
 | EV10 | Cobertura de código | Medição local: `mvn clean verify`, JaCoCo 0.8.16, 13/11/2026 | Instruções 80% (965/1.192); branches 68% (92/134); linhas 270/322; métodos 84/104; classes 15/15 | Meta de instruções (75%) atendida |
+| EV11 | Build do projeto | Execução local `mvn clean verify`, branch `feat/revisao-relacionamentos-banco`, 16/11/2026 | `BUILD SUCCESS`; verificação `jacoco:check` aprovada (`All coverage checks have been met.`) | Executado com sucesso |
+| EV12 | Testes automatizados | Execução local `mvn clean verify`, branch `feat/revisao-relacionamentos-banco`, 16/11/2026 | 131 executados em 15 classes; 0 falhas; 0 erros; 0 ignorados | Executado com sucesso |
+| EV13 | Testes de integração com PostgreSQL | Seis classes `*PostgresIntegrationTest`, incluídas no EV12, com os cinco testes adicionados em 16/11/2026 | 35 executados; 0 falhas; 0 erros; 0 ignorados. Detalhamento na seção 4.11. Não substitui a execução individual dos CT funcionais. | Executado com sucesso |
+| EV14 | Cobertura de código | Medição local: `mvn clean verify`, JaCoCo 0.8.16, 16/11/2026 | Instruções 81% (977/1.192); branches 68% (92/134); linhas 274/322; métodos 88/104; classes 15/15 | Meta de instruções (75%) atendida |
+| EV15 | Integração contínua | Workflow `CI - VIGOR`: execução #35 (PR #37, commit `c65a23d`) e execuções #36 e #37 (branch `feat/revisao-relacionamentos-banco`, PR #38, commit `226e577`), 13/11/2026 | Falha no passo "Executar testes, relatório e quality gate" (`Process completed with exit code 1`); relatório JaCoCo não gerado. A execução #34 (`develop`, commit `2eb72a0`, 10/11/2026) concluiu com sucesso, e os dois PRs alteram apenas documentação em relação a esse commit. | Falha em análise |
 
 ## 4. Validação de persistência PostgreSQL — Task L07
 
@@ -32,6 +39,8 @@ Em 13/11/2026 foram registradas novas execuções locais de `mvn test` e `mvn cl
 - **Data da execução:** 13/11/2026
 - **Branch:** `feat/revisao-relacionamentos-banco`
 - **Relatório detalhado da conferência:** [relatorio-validacao-persistencia.md](relatorio-validacao-persistencia.md)
+
+As subseções 4.1 a 4.10 registram a execução de 13/11/2026. Os itens pendentes nessa data foram complementados em 16/11/2026, conforme a subseção 4.11.
 
 ### 4.1. Ambiente
 
@@ -165,7 +174,7 @@ Itens sem evidência específica:
 Achados da revisão, não corrigidos nesta task e encaminhados para avaliação da equipe:
 
 - Ausência de índice em `historico_atividades.funcionario_responsavel_id`, coluna usada por `findByFuncionarioResponsavel_Id`. A ausência já está registrada em [relacionamentos.md](../architecture/database/relacionamentos.md).
-- `MembroRepository.findByCpf` não é utilizado no projeto; a verificação de duplicidade usa `existsByCpf`.
+- `MembroRepository.findByCpf` não é utilizado no código de produção; a verificação de duplicidade usa `existsByCpf`. O método é usado apenas em `MembroCpfPostgresIntegrationTest`. *(Corrigido em 16/11/2026: o registro original afirmava que o método não era utilizado no projeto.)*
 
 Problemas de ambiente local, resolvidos e sem relação com o código:
 
@@ -180,7 +189,37 @@ A persistência e as consultas de treinos, pagamentos e histórico de atividades
 
 Permanecem pendentes de evidência específica a consulta de treino por ID, a consulta de pagamentos por membro no PostgreSQL e o isolamento dos dados entre dois membros. A conclusão da task depende da avaliação da equipe sobre essas pendências.
 
-**Pull Request:** [adicionar link]
+**Pull Request:** [#38](https://github.com/Miaunisul/Vigor/pull/38)
+
+### 4.11. Complementação de 16/11/2026
+
+Após a revisão do PR #38, foram adicionados cinco testes de integração com PostgreSQL, sem alteração nas migrations, na estrutura do banco ou no código de produção. Todos rodam em transação desfeita ao final e leem os dados do PostgreSQL após limpar o contexto de persistência do Hibernate.
+
+| Item pendente em 13/11/2026 | Novo resultado | Testes adicionados |
+|---|---|---|
+| Consulta de treino por ID | Aprovado | `TreinoPostgresIntegrationTest.consultaTreinoPorIdRetornaOsDadosPersistidos`; `TreinoPostgresIntegrationTest.consultaTreinoPorIdInexistenteRetornaVazio` |
+| Consulta de pagamentos por membro no PostgreSQL | Aprovado | `PagamentoPostgresIntegrationTest.consultaPorMembroRetornaSomenteOsPagamentosDoMembro` |
+| Testes com dois membros diferentes | Aprovado | `TreinoPostgresIntegrationTest.consultaPorMembroNaoRetornaTreinosDeOutroMembro`; `PagamentoPostgresIntegrationTest.consultaPorMembroRetornaSomenteOsPagamentosDoMembro`; `HistoricoAtividadePostgresIntegrationTest.consultaPorMembroNaoRetornaAtividadesDeOutroMembro` |
+| Consultas retornaram somente os registros do membro solicitado | Aprovado | Os mesmos três testes |
+
+**Comando:** `mvn clean verify` (executado com `.\mvnw.cmd clean verify`), 16/11/2026, concluído às 12:58
+
+- Testes executados: 131 (126 anteriores e 5 novos)
+- Falhas: 0
+- Erros: 0
+- Ignorados: 0
+- Cobertura: instruções 81% (977/1.192); branches 68% (92/134); linhas 274/322; métodos 88/104; classes 15/15; `All coverage checks have been met.`
+- Resultado: `BUILD SUCCESS`
+
+| Classe | Testes em 13/11/2026 | Testes em 16/11/2026 |
+|---|---|---|
+| `TreinoPostgresIntegrationTest` | 5 | 8 |
+| `PagamentoPostgresIntegrationTest` | 6 | 7 |
+| `HistoricoAtividadePostgresIntegrationTest` | 7 | 8 |
+| Demais 12 classes | 108 | 108 |
+| **Total** | **126** | **131** |
+
+Integração contínua: as execuções #35, #36 e #37 falharam (EV15). A causa está em análise; o detalhamento está na seção 6.5 do [relatório](relatorio-validacao-persistencia.md).
 
 ## 5. Como registrar uma evidência
 
@@ -214,6 +253,8 @@ A meta definida para o projeto é de pelo menos 75% de cobertura de instruções
 
 Na medição local de 13/11/2026 (EV10), a cobertura de instruções foi de 80%, acima da meta, e a de branches foi de 68%. A meta definida se aplica a instruções.
 
+Na medição local de 16/11/2026 (EV14), a cobertura de instruções foi de 81% e a de branches permaneceu em 68%.
+
 ## 8. Histórico
 
 | Data | Alteração | Responsável |
@@ -222,9 +263,10 @@ Na medição local de 13/11/2026 (EV10), a cobertura de instruções foi de 80%,
 | 10/11/2026 | Registro dos resultados de `mvn clean verify` e JaCoCo 0.8.16 | Execução informada pela equipe |
 | 10/11/2026 | Registro da primeira execução bem-sucedida do GitHub Actions, run #27, com PostgreSQL, Flyway, gate JaCoCo e artefato de cobertura | Execução informada pela equipe |
 | 13/11/2026 | Registro das execuções locais de `mvn test` e `mvn clean verify` (126 testes), da cobertura JaCoCo e da validação de persistência PostgreSQL da task L07 (EV07 a EV10 e seção 4) | Luan Milian Martins |
+| 16/11/2026 | Complementação da task L07 após a revisão do PR #38: cinco testes de integração, nova execução de `mvn clean verify` (131 testes), cobertura JaCoCo, registro da falha da CI e correção sobre `findByCpf` (EV11 a EV15 e seção 4.11) | Luan Milian Martins |
 
 Atualizar este histórico conforme novas evidências forem produzidas.
 
 ## 9. Situação do documento
 
-Os resultados do build, dos testes automatizados, da medição JaCoCo, da primeira execução da CI e da validação de persistência PostgreSQL da task L07 estão registrados. A seção 4 associa os testes automatizados aos CT relacionados, sem substituir a execução individual dos CT. As evidências de execução dos CT/VN funcionais e de usabilidade continuam pendentes até que cada verificação seja executada e registrada individualmente.
+Os resultados do build, dos testes automatizados, da medição JaCoCo, da primeira execução da CI e da validação de persistência PostgreSQL da task L07, incluindo a complementação de 16/11/2026, estão registrados. A falha da CI nas execuções #35 a #37 está registrada e em análise. A seção 4 associa os testes automatizados aos CT relacionados, sem substituir a execução individual dos CT. As evidências de execução dos CT/VN funcionais e de usabilidade continuam pendentes até que cada verificação seja executada e registrada individualmente.

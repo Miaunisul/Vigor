@@ -4,6 +4,8 @@ import br.edu.unisul.vigor.model.Membro;
 import br.edu.unisul.vigor.model.Pagamento;
 import br.edu.unisul.vigor.service.PagamentoService;
 import br.edu.unisul.vigor.validation.CpfUtils;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -38,6 +42,9 @@ class PagamentoPostgresIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Test
     void persistePagamentoEConsultaVinculoComOMembro() {
@@ -102,6 +109,39 @@ class PagamentoPostgresIntegrationTest {
                 "INSERT INTO pagamentos (membro_id, valor, data_pagamento, status) "
                         + "VALUES (?, ?, ?, ?)",
                 -1L, new BigDecimal("10.00"), LocalDate.now(), "PAGO"));
+    }
+
+    @Test
+    void consultaPorMembroRetornaSomenteOsPagamentosDoMembro() {
+        Membro primeiro = criarMembroTransitorio();
+        Membro segundo = criarMembroTransitorio();
+        Pagamento primeiroPagamento =
+                pagamentoService.registrar(pagamentoValido(), primeiro.getId());
+        Pagamento segundoPagamento =
+                pagamentoService.registrar(pagamentoValido(), primeiro.getId());
+        Pagamento pagamentoDoSegundo = pagamentoValido();
+        pagamentoDoSegundo.setValor(new BigDecimal("80.00"));
+        pagamentoDoSegundo = pagamentoService.registrar(pagamentoDoSegundo, segundo.getId());
+        pagamentoRepository.flush();
+        entityManager.clear();
+
+        List<Pagamento> doPrimeiro = pagamentoService.consultarPorMembro(primeiro.getId());
+        List<Pagamento> doSegundo = pagamentoService.consultarPorMembro(segundo.getId());
+
+        assertEquals(Set.of(primeiroPagamento.getId(), segundoPagamento.getId()),
+                idsDosPagamentos(doPrimeiro));
+        assertEquals(Set.of(pagamentoDoSegundo.getId()), idsDosPagamentos(doSegundo));
+        assertTrue(doPrimeiro.stream()
+                .allMatch(pagamento -> pagamento.getMembro().getId().equals(primeiro.getId())));
+        assertTrue(doPrimeiro.stream().allMatch(pagamento ->
+                pagamento.getValor().compareTo(new BigDecimal("125.50")) == 0));
+        assertEquals(segundo.getId(), doSegundo.get(0).getMembro().getId());
+        assertEquals(0, doSegundo.get(0).getValor().compareTo(new BigDecimal("80.00")));
+        assertEquals("PAGO", doSegundo.get(0).getStatus());
+    }
+
+    private Set<Long> idsDosPagamentos(List<Pagamento> pagamentos) {
+        return pagamentos.stream().map(Pagamento::getId).collect(Collectors.toSet());
     }
 
     private Membro membroParaTeste() {
