@@ -241,13 +241,15 @@ As demais classes com a mesma configuração reutilizaram o contexto que falhou 
 
 **Correção (16/11/2026):** nas cinco classes, `@SpringBootTest(properties = "spring.flyway.enabled=false")` foi substituído por `@SpringBootTest`. Com isso, o Flyway aplica as migrations V1 a V5 já existentes quando o banco está vazio, independentemente da ordem dos testes, e não faz nada quando elas já foram aplicadas. Nenhuma migration foi criada ou alterada, e a estrutura do banco permanece a definida pela equipe. As cinco classes passam a compartilhar o mesmo contexto Spring de `VigorApplicationTests` e `FuncionarioPostgresIntegrationTest`.
 
+**Resultado após a correção:** as execuções #38 (push) e #39 (PR #38), do commit `b5a4bb3`, em 16/11/2026, concluíram com sucesso na imagem `ubuntu-26.04`, com PostgreSQL 18.7. `HistoricoAtividadePostgresIntegrationTest` continuou sendo a primeira classe de integração a rodar, mas agora o Flyway criou as tabelas no início (`Successfully applied 5 migrations to schema "public", now at version v5`). Resultado: `Tests run: 131, Failures: 0, Errors: 0, Skipped: 0`, `All coverage checks have been met.` e `BUILD SUCCESS`, com o relatório JaCoCo publicado como artefato `relatorio-jacoco`.
+
 ## 7. Conclusão
 
 A persistência e as consultas de treinos, pagamentos e histórico de atividades foram validadas por testes automatizados executados contra PostgreSQL local, com 126 testes executados sem falhas, erros ou testes ignorados. Os relacionamentos com membro e funcionário, as validações de valor, status e tempo de execução e o bloqueio de exclusão de membros com registros vinculados estão aprovados.
 
 Os três itens que estavam pendentes em 13/11/2026 (consulta de treino por ID, consulta de pagamentos por membro no PostgreSQL e isolamento dos dados entre dois membros) foram comprovados em 16/11/2026 por cinco novos testes de integração. A execução local de `mvn clean verify` terminou com 131 testes aprovados e cobertura de instruções de 81%.
 
-A falha da integração contínua foi causada pela dependência de ordem entre testes de integração e foi corrigida nos próprios testes (seção 6.5). A aprovação da task depende da confirmação da nova execução da CI e da avaliação da equipe sobre os dois achados da seção 6.3.
+A falha da integração contínua foi causada pela dependência de ordem entre testes de integração e foi corrigida nos próprios testes; as execuções #38 e #39 da CI concluíram com sucesso (seção 6.5). Permanece para a equipe a avaliação dos dois achados da seção 6.3.
 
 **Pull Request:** [#38](https://github.com/Miaunisul/Vigor/pull/38)
 
@@ -309,7 +311,7 @@ O ambiente foi o mesmo descrito em "Ambiente e método".
 
 ### 8.3. Integração contínua
 
-A causa e a correção estão descritas na seção 6.5. Situação em 16/11/2026: correção aplicada; resultado da nova execução da CI a registrar.
+A causa e a correção estão descritas na seção 6.5. Situação em 16/11/2026: as execuções #38 e #39 da CI concluíram com sucesso (131 testes, 0 falhas, 0 erros).
 
 ---
 
