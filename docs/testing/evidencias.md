@@ -18,8 +18,7 @@ Em 10/11/2026 foram registradas uma execução local de `mvn clean verify` e a p
 | EV04 | Testes funcionais | CT/VN e cenário/variante efetivamente executados; pendente até execução | Capturas ou registro do teste de aceitação | Pendente |
 | EV05 | Cobertura de código | Medição local: `mvn clean verify`, JaCoCo 0.8.16, 10/11/2026; CI: run #27 | Medição local: instruções 78%; branches 73%; linhas 98/117; métodos 24/35; classes 6/6. Na CI, JaCoCo analisou 6 classes e o gate de instruções de 75% passou (`All coverage checks have been met.`); o percentual exato da CI não foi informado. Relatório publicado como artefato `relatorio-jacoco`. | Gate de instruções aprovado na CI; percentual exato da CI não disponível |
 | EV06 | Integração contínua | Workflow `CI - VIGOR`, execução #27, branch `feat/postgres-persistencia`, 10/11/2026 | `BUILD SUCCESS`; relatório JaCoCo publicado como artefato `relatorio-jacoco` | Executado com sucesso |
-
-| EV07 | Cadastro HTTP e persistência de CPF | CT01, CT03 e CT04 nos cenários abaixo | Oito cenários em `MembroCpfHttpPostgresIntegrationTest` | Aprovado localmente |
+| EV07 | Cadastro HTTP e persistência de CPF | CT01, CT03 e CT04 nos cenários abaixo | Oito cenários em `MembroCpfHttpPostgresIntegrationTest` | Aprovado localmente e na CI |
 
 ### EV07 — Validação de CPF pelo fluxo HTTP
 
@@ -32,6 +31,7 @@ Execução local em 16/11/2026 com Java 21 e PostgreSQL 18.3 em uma instância t
 | CT04 | `rejeitaCpfDuplicadoAposNormalizacaoEPreservaOriginal` | Dois envios duplicados com pontuação diferente do cadastro inicial, um em cada sentido, retornaram HTTP 200 com a mensagem de CPF já cadastrado. Em cada cenário, o banco manteve apenas o membro original com CPF normalizado. |
 
 O relatório Surefire `target/surefire-reports/br.edu.unisul.vigor.controller.MembroCpfHttpPostgresIntegrationTest.txt` registrou 8 testes aprovados, sem falhas, erros ou ignorados. A suíte completa registrou 134 testes, sem falhas, erros ou ignorados, e o JaCoCo aprovou o mínimo de 75% de cobertura de instruções.
+Em 16/11/2026, a [execução #42 da CI - VIGOR](https://github.com/Miaunisul/Vigor/actions/runs/43932828095) no [PR #39](https://github.com/Miaunisul/Vigor/pull/39) executou `mvn --batch-mode --no-transfer-progress clean verify` com PostgreSQL 18. Os 8 cenários HTTP passaram dentro da suíte de 134 testes, sem falhas, erros ou ignorados. O build e a verificação de cobertura JaCoCo foram aprovados.
 
 ## 4. Como registrar uma evidência
 
@@ -70,8 +70,7 @@ A meta definida para o projeto é de pelo menos 75% de cobertura de instruções
 | 26/10/2026 | Criação do modelo inicial de registro de evidências | Millena |
 | 10/11/2026 | Registro dos resultados de `mvn clean verify` e JaCoCo 0.8.16 | Execução informada pela equipe |
 | 10/11/2026 | Registro da primeira execução bem-sucedida do GitHub Actions, run #27, com PostgreSQL, Flyway, gate JaCoCo e artefato de cobertura | Execução informada pela equipe |
-
-| 16/11/2026 | Registro da validação HTTP de CPF com PostgreSQL e dos resultados da suíte local | Execução da issue #28 |
+| 16/11/2026 | Registro da validação HTTP de CPF com PostgreSQL e dos resultados da suíte local e da CI | Execução da issue #28 |
 
 Atualizar este histórico conforme novas evidências forem produzidas.
 
