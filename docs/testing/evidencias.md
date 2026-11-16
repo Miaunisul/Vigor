@@ -31,7 +31,10 @@ Execução local em 16/11/2026 com Java 21 e PostgreSQL 18.3 em uma instância t
 | CT04 | `rejeitaCpfDuplicadoAposNormalizacaoEPreservaOriginal` | Dois envios duplicados com pontuação diferente do cadastro inicial, um em cada sentido, retornaram HTTP 200 com a mensagem de CPF já cadastrado. Em cada cenário, o banco manteve apenas o membro original com CPF normalizado. |
 
 O relatório Surefire `target/surefire-reports/br.edu.unisul.vigor.controller.MembroCpfHttpPostgresIntegrationTest.txt` registrou 8 testes aprovados, sem falhas, erros ou ignorados. A suíte completa registrou 134 testes, sem falhas, erros ou ignorados, e o JaCoCo aprovou o mínimo de 75% de cobertura de instruções.
-Em 16/11/2026, a [execução #42 da CI - VIGOR](https://github.com/Miaunisul/Vigor/actions/runs/43932828095) no [PR #39](https://github.com/Miaunisul/Vigor/pull/39) executou `mvn --batch-mode --no-transfer-progress clean verify` com PostgreSQL 18. Os 8 cenários HTTP passaram dentro da suíte de 134 testes, sem falhas, erros ou ignorados. O build e a verificação de cobertura JaCoCo foram aprovados.
+
+Em 16/11/2026, a execução #42 da CI executou `mvn --batch-mode --no-transfer-progress clean verify` com PostgreSQL 18 e aprovou os 134 testes e a verificação de cobertura JaCoCo. [Execução #42](https://github.com/Miaunisul/Vigor/actions/runs/43932828095)
+
+Uma execução posterior encontrou uma dependência da ordem da suíte. Cinco classes de repositório desativavam o Flyway e falhavam quando iniciavam com o banco vazio. Essas classes passaram a usar as migrações padrão da aplicação. A revalidação local em banco vazio com `mvnw.cmd --batch-mode --no-transfer-progress -Dsurefire.runOrder=reversealphabetical clean verify` aplicou as cinco migrações no primeiro teste de repositório e aprovou os 134 testes e a verificação do JaCoCo. [Execução que identificou a falha](https://github.com/Miaunisul/Vigor/actions/runs/43933437066) · [Verificações do PR #39](https://github.com/Miaunisul/Vigor/pull/39/checks)
 
 ## 4. Como registrar uma evidência
 

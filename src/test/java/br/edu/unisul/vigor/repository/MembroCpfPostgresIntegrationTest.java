@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest(properties = "spring.flyway.enabled=false")
+@SpringBootTest
 @Transactional
 @EnabledIfEnvironmentVariable(named = "DB_PASSWORD", matches = ".+")
 class MembroCpfPostgresIntegrationTest {
