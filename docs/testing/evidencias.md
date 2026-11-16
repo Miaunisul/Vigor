@@ -30,7 +30,7 @@ Em 16/11/2026, após a revisão do PR #38, foram adicionados cinco testes de int
 | EV12 | Testes automatizados | Execução local `mvn clean verify`, branch `feat/revisao-relacionamentos-banco`, 16/11/2026 | 131 executados em 15 classes; 0 falhas; 0 erros; 0 ignorados | Executado com sucesso |
 | EV13 | Testes de integração com PostgreSQL | Seis classes `*PostgresIntegrationTest`, incluídas no EV12, com os cinco testes adicionados em 16/11/2026 | 35 executados; 0 falhas; 0 erros; 0 ignorados. Detalhamento na seção 4.11. Não substitui a execução individual dos CT funcionais. | Executado com sucesso |
 | EV14 | Cobertura de código | Medição local: `mvn clean verify`, JaCoCo 0.8.16, 16/11/2026 | Instruções 81% (977/1.192); branches 68% (92/134); linhas 274/322; métodos 88/104; classes 15/15 | Meta de instruções (75%) atendida |
-| EV15 | Integração contínua | Workflow `CI - VIGOR`: execução #35 (PR #37, commit `c65a23d`) e execuções #36 e #37 (branch `feat/revisao-relacionamentos-banco`, PR #38, commit `226e577`), 13/11/2026 | Falha no passo "Executar testes, relatório e quality gate" (`Process completed with exit code 1`); relatório JaCoCo não gerado. A execução #34 (`develop`, commit `2eb72a0`, 10/11/2026) concluiu com sucesso, e os dois PRs alteram apenas documentação em relação a esse commit. | Falha em análise |
+| EV15 | Integração contínua | Workflow `CI - VIGOR`: execução #35 (PR #37, commit `c65a23d`) e execuções #36 e #37 (branch `feat/revisao-relacionamentos-banco`, PR #38, commit `226e577`), 13/11/2026 | Falha no passo "Executar testes, relatório e quality gate": `Tests run: 126, Failures: 0, Errors: 27`, causada por `Schema validation: missing table [funcionarios]` na imagem `ubuntu-26.04`, em que testes de integração com Flyway desligado passaram a rodar antes da criação das tabelas. A execução #34 (`develop`, commit `2eb72a0`, 10/11/2026) concluiu com sucesso, e os dois PRs alteram apenas documentação em relação a esse commit. | Causa identificada; correção aplicada em 16/11/2026 (seção 6.5 do relatório) |
 
 ## 4. Validação de persistência PostgreSQL — Task L07
 
@@ -219,7 +219,7 @@ Após a revisão do PR #38, foram adicionados cinco testes de integração com P
 | Demais 12 classes | 108 | 108 |
 | **Total** | **126** | **131** |
 
-Integração contínua: as execuções #35, #36 e #37 falharam (EV15). A causa está em análise; o detalhamento está na seção 6.5 do [relatório](relatorio-validacao-persistencia.md).
+Integração contínua: as execuções #35, #36 e #37 falharam (EV15) porque cinco classes de testes de integração desligavam o Flyway e dependiam de outra classe ter criado as tabelas. Com a nova imagem `ubuntu-26.04` da CI, a ordem dos testes mudou e essas classes passaram a rodar primeiro no banco vazio. Em 16/11/2026, a configuração `spring.flyway.enabled=false` foi removida dessas cinco classes, sem criar ou alterar migrations. O detalhamento está na seção 6.5 do [relatório](relatorio-validacao-persistencia.md). O resultado da nova execução da CI será registrado após o envio das alterações.
 
 ## 5. Como registrar uma evidência
 
@@ -263,10 +263,10 @@ Na medição local de 16/11/2026 (EV14), a cobertura de instruções foi de 81% 
 | 10/11/2026 | Registro dos resultados de `mvn clean verify` e JaCoCo 0.8.16 | Execução informada pela equipe |
 | 10/11/2026 | Registro da primeira execução bem-sucedida do GitHub Actions, run #27, com PostgreSQL, Flyway, gate JaCoCo e artefato de cobertura | Execução informada pela equipe |
 | 13/11/2026 | Registro das execuções locais de `mvn test` e `mvn clean verify` (126 testes), da cobertura JaCoCo e da validação de persistência PostgreSQL da task L07 (EV07 a EV10 e seção 4) | Luan Milian Martins |
-| 16/11/2026 | Complementação da task L07 após a revisão do PR #38: cinco testes de integração, nova execução de `mvn clean verify` (131 testes), cobertura JaCoCo, registro da falha da CI e correção sobre `findByCpf` (EV11 a EV15 e seção 4.11) | Luan Milian Martins |
+| 16/11/2026 | Complementação da task L07 após a revisão do PR #38: cinco testes de integração, nova execução de `mvn clean verify` (131 testes), cobertura JaCoCo, registro da falha da CI e correção sobre `findByCpf` (EV11 a EV15 e seção 4.11); diagnóstico e correção da falha da CI | Luan Milian Martins |
 
 Atualizar este histórico conforme novas evidências forem produzidas.
 
 ## 9. Situação do documento
 
-Os resultados do build, dos testes automatizados, da medição JaCoCo, da primeira execução da CI e da validação de persistência PostgreSQL da task L07, incluindo a complementação de 16/11/2026, estão registrados. A falha da CI nas execuções #35 a #37 está registrada e em análise. A seção 4 associa os testes automatizados aos CT relacionados, sem substituir a execução individual dos CT. As evidências de execução dos CT/VN funcionais e de usabilidade continuam pendentes até que cada verificação seja executada e registrada individualmente.
+Os resultados do build, dos testes automatizados, da medição JaCoCo, da primeira execução da CI e da validação de persistência PostgreSQL da task L07, incluindo a complementação de 16/11/2026, estão registrados. A falha da CI nas execuções #35 a #37 está registrada com causa identificada e correção aplicada; o resultado da nova execução será registrado. A seção 4 associa os testes automatizados aos CT relacionados, sem substituir a execução individual dos CT. As evidências de execução dos CT/VN funcionais e de usabilidade continuam pendentes até que cada verificação seja executada e registrada individualmente.

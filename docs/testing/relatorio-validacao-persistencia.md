@@ -229,7 +229,17 @@ As execuções do workflow `CI - VIGOR` para este PR falharam no passo "Executar
 | #36 | Push na `feat/revisao-relacionamentos-banco` | `226e577` | 13/11/2026 | Falha |
 | #37 | PR #38 | `226e577` | 13/11/2026 | Falha |
 
-Os commits `226e577` (PR #38) e `c65a23d` (PR #37) alteram apenas arquivos de documentação em relação ao `2eb72a0`, cujo código de aplicação e de testes passou na execução #34. A falha, portanto, não decorre das alterações de documentação desses PRs. A causa depende da leitura do log da execução, que exige acesso autenticado ao GitHub.
+Os commits `226e577` (PR #38) e `c65a23d` (PR #37) alteram apenas arquivos de documentação em relação ao `2eb72a0`, cujo código de aplicação e de testes passou na execução #34. A falha, portanto, não decorre das alterações de documentação desses PRs.
+
+**Causa (log da execução #37):** a partir de 13/11/2026 a CI passou a rodar na imagem `ubuntu-26.04` (versão 20261101.186.1), com a qual a ordem de execução das classes de teste mudou. Cinco classes de integração (`HistoricoAtividade`, `Pagamento`, `Treino`, `MembroCpf` e `MembroExclusao`) usavam `@SpringBootTest(properties = "spring.flyway.enabled=false")` e dependiam de outra classe ter criado as tabelas antes. Na CI o banco começa vazio, e `HistoricoAtividadePostgresIntegrationTest` passou a ser a primeira a rodar:
+
+```text
+Caused by: org.hibernate.tool.schema.spi.SchemaManagementException: Schema validation: missing table [funcionarios]
+```
+
+As demais classes com a mesma configuração reutilizaram o contexto que falhou (`ApplicationContext failure threshold (1) exceeded`). Resultado: `Tests run: 126, Failures: 0, Errors: 27` e `BUILD FAILURE`. Na máquina local o problema não aparece porque o banco já contém as tabelas.
+
+**Correção (16/11/2026):** nas cinco classes, `@SpringBootTest(properties = "spring.flyway.enabled=false")` foi substituído por `@SpringBootTest`. Com isso, o Flyway aplica as migrations V1 a V5 já existentes quando o banco está vazio, independentemente da ordem dos testes, e não faz nada quando elas já foram aplicadas. Nenhuma migration foi criada ou alterada, e a estrutura do banco permanece a definida pela equipe. As cinco classes passam a compartilhar o mesmo contexto Spring de `VigorApplicationTests` e `FuncionarioPostgresIntegrationTest`.
 
 ## 7. Conclusão
 
@@ -237,7 +247,7 @@ A persistência e as consultas de treinos, pagamentos e histórico de atividades
 
 Os três itens que estavam pendentes em 13/11/2026 (consulta de treino por ID, consulta de pagamentos por membro no PostgreSQL e isolamento dos dados entre dois membros) foram comprovados em 16/11/2026 por cinco novos testes de integração. A execução local de `mvn clean verify` terminou com 131 testes aprovados e cobertura de instruções de 81%.
 
-A aprovação da task depende ainda da correção da falha da integração contínua (seção 6.5) e da avaliação da equipe sobre os dois achados da seção 6.3.
+A falha da integração contínua foi causada pela dependência de ordem entre testes de integração e foi corrigida nos próprios testes (seção 6.5). A aprovação da task depende da confirmação da nova execução da CI e da avaliação da equipe sobre os dois achados da seção 6.3.
 
 **Pull Request:** [#38](https://github.com/Miaunisul/Vigor/pull/38)
 
@@ -262,7 +272,7 @@ Características comuns:
 - Todos os testes rodam dentro de uma transação desfeita ao final (`@Transactional`). Não deixam registros no banco nem alteram dados existentes.
 - Antes das consultas, as alterações são enviadas ao banco (`flush`) e o contexto de persistência é limpo (`EntityManager.clear()`), para que os dados sejam lidos do PostgreSQL e não do cache do Hibernate.
 - Nos testes de isolamento, os dois membros são criados no próprio teste, o que garante que não existam outros registros vinculados a eles. Por isso a comparação é feita pelo conjunto exato de identificadores.
-- As alterações consistem apenas na inclusão de linhas nos três arquivos de teste, sem modificar ou remover linhas existentes.
+- Os testes novos foram incluídos nos três arquivos de teste sem modificar ou remover linhas existentes. Para corrigir a integração contínua, foi alterada apenas a anotação `@SpringBootTest` em cinco classes de integração (seção 6.5).
 
 ### 8.2. Execução
 
@@ -299,7 +309,7 @@ O ambiente foi o mesmo descrito em "Ambiente e método".
 
 ### 8.3. Integração contínua
 
-A falha está descrita na seção 6.5. Situação em 16/11/2026: em análise.
+A causa e a correção estão descritas na seção 6.5. Situação em 16/11/2026: correção aplicada; resultado da nova execução da CI a registrar.
 
 ---
 
@@ -457,4 +467,4 @@ O banco rejeitou a exclusão do membro com treino vinculado, e o `ROLLBACK` desf
 | Data | Alteração | Responsável |
 |---|---|---|
 | 13/11/2026 | Criação do relatório de validação da task L07 | Luan Milian Martins |
-| 16/11/2026 | Complementação solicitada na revisão do PR #38: cinco testes de integração, nova execução de `mvn clean verify`, correção do achado 2 e registro da falha da integração contínua | Luan Milian Martins |
+| 16/11/2026 | Complementação solicitada na revisão do PR #38: cinco testes de integração, nova execução de `mvn clean verify`, correção do achado 2, diagnóstico e correção da falha da integração contínua | Luan Milian Martins |
