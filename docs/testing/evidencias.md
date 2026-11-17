@@ -10,7 +10,7 @@ Em 10/11/2026 foram registradas uma execução local de `mvn clean verify` e a p
 
 Em 13/11/2026 foram registradas novas execuções locais de `mvn test` e `mvn clean verify` na branch `feat/revisao-relacionamentos-banco`, com PostgreSQL local e as seis classes de testes de integração com PostgreSQL. Os resultados e a associação dos testes aos itens validados na task L07 estão na seção 4.
 
-Em 16/11/2026, após a revisão do PR #38, foram adicionados cinco testes de integração com PostgreSQL e registrada nova execução local de `mvn clean verify`, com 131 testes aprovados (seção 4.11). Também foram registradas a falha da integração contínua nas execuções #35 a #37 (EV15), sua correção e as execuções #38 e #39 aprovadas (EV16).
+Em 16/11/2026, após a revisão do PR #38, foram adicionados cinco testes de integração com PostgreSQL e registrada nova execução local de `mvn clean verify`, com 131 testes aprovados (seção 4.11). Também foram registradas a falha da integração contínua nas execuções #35 a #37 (EV15), sua correção e as execuções #38 e #39 aprovadas.
 
 ## 3. Evidências de execução
 
@@ -22,6 +22,23 @@ Em 16/11/2026, após a revisão do PR #38, foram adicionados cinco testes de int
 | EV04 | Testes funcionais | CT/VN e cenário/variante efetivamente executados; pendente até execução | Capturas ou registro do teste de aceitação | Pendente |
 | EV05 | Cobertura de código | Medição local: `mvn clean verify`, JaCoCo 0.8.16, 10/11/2026; CI: run #27 | Medição local: instruções 78%; branches 73%; linhas 98/117; métodos 24/35; classes 6/6. Na CI, JaCoCo analisou 6 classes e o gate de instruções de 75% passou (`All coverage checks have been met.`); o percentual exato da CI não foi informado. Relatório publicado como artefato `relatorio-jacoco`. | Gate de instruções aprovado na CI; percentual exato da CI não disponível |
 | EV06 | Integração contínua | Workflow `CI - VIGOR`, execução #27, branch `feat/postgres-persistencia`, 10/11/2026 | `BUILD SUCCESS`; relatório JaCoCo publicado como artefato `relatorio-jacoco` | Executado com sucesso |
+| EV17 | Cadastro HTTP e persistência de CPF | CT01, CT03 e CT04 nos cenários abaixo | Oito cenários em `MembroCpfHttpPostgresIntegrationTest` | Aprovado localmente e na CI |
+
+### EV17 — Validação de CPF pelo fluxo HTTP
+
+Execução local em 16/11/2026 com Java 21 e PostgreSQL 18.3 em uma instância temporária. O comando `mvnw.cmd --batch-mode --no-transfer-progress clean verify` foi executado com `DB_PASSWORD` e `SPRING_DATASOURCE_URL` configuradas para essa instância. O teste inicializou a aplicação Spring Boot com Tomcat em porta aleatória, enviou formulários HTTP para `POST /membros` e consultou a tabela `membros` por JDBC após cada cenário.
+
+| Caso do plano | Método em `MembroCpfHttpPostgresIntegrationTest` | Resultado observado |
+|---|---|---|
+| CT01 e CT04 | `cadastraCpfValidoEPersisteSomenteDigitos` | Dois cadastros com CPFs válidos distintos, um com pontuação e outro sem, retornaram HTTP 302 para `/membros`. Em ambos os casos o CPF foi gravado com 11 dígitos. |
+| CT03 | `rejeitaCpfInvalidoSemPersistir` | Quatro envios retornaram HTTP 200 com o formulário e a mensagem de CPF inválido. O banco ficou sem registro para as tentativas com dígito verificador incorreto, com e sem pontuação, e para as sequências `00000000000` e `11111111111`. |
+| CT04 | `rejeitaCpfDuplicadoAposNormalizacaoEPreservaOriginal` | Dois envios duplicados com pontuação diferente do cadastro inicial, um em cada sentido, retornaram HTTP 200 com a mensagem de CPF já cadastrado. Em cada cenário, o banco manteve apenas o membro original com CPF normalizado. |
+
+O relatório Surefire `target/surefire-reports/br.edu.unisul.vigor.controller.MembroCpfHttpPostgresIntegrationTest.txt` registrou 8 testes aprovados, sem falhas, erros ou ignorados. A suíte completa registrou 134 testes, sem falhas, erros ou ignorados, e o JaCoCo aprovou o mínimo de 75% de cobertura de instruções.
+
+Em 16/11/2026, a execução #42 da CI executou `mvn --batch-mode --no-transfer-progress clean verify` com PostgreSQL 18 e aprovou os 134 testes e a verificação de cobertura JaCoCo. [Execução #42](https://github.com/Miaunisul/Vigor/actions/runs/43932828095)
+
+Uma execução posterior encontrou uma dependência da ordem da suíte. Cinco classes de repositório desativavam o Flyway e falhavam quando iniciavam com o banco vazio. Essas classes passaram a usar as migrações padrão da aplicação. A revalidação local em banco vazio com `mvnw.cmd --batch-mode --no-transfer-progress -Dsurefire.runOrder=reversealphabetical clean verify` aplicou as cinco migrações no primeiro teste de repositório e aprovou os 134 testes e a verificação do JaCoCo. [Execução que identificou a falha](https://github.com/Miaunisul/Vigor/actions/runs/43933437066) · [Verificações do PR #39](https://github.com/Miaunisul/Vigor/pull/39/checks)
 | EV07 | Build do projeto | Execução local `mvn clean verify`, branch `feat/revisao-relacionamentos-banco`, 13/11/2026 | `BUILD SUCCESS`; verificação `jacoco:check` aprovada (`All coverage checks have been met.`) | Executado com sucesso |
 | EV08 | Testes automatizados | Execuções locais `mvn test` e `mvn clean verify`, branch `feat/revisao-relacionamentos-banco`, 13/11/2026 | 126 executados em 15 classes; 0 falhas; 0 erros; 0 ignorados | Executado com sucesso |
 | EV09 | Testes de integração com PostgreSQL | Seis classes `*PostgresIntegrationTest`, incluídas no EV08, com `DB_PASSWORD` configurado e PostgreSQL local | 30 executados; 0 falhas; 0 erros; 0 ignorados. Detalhamento na seção 4. Não substitui a execução individual dos CT funcionais. | Executado com sucesso |
@@ -30,7 +47,7 @@ Em 16/11/2026, após a revisão do PR #38, foram adicionados cinco testes de int
 | EV12 | Testes automatizados | Execução local `mvn clean verify`, branch `feat/revisao-relacionamentos-banco`, 16/11/2026 | 131 executados em 15 classes; 0 falhas; 0 erros; 0 ignorados | Executado com sucesso |
 | EV13 | Testes de integração com PostgreSQL | Seis classes `*PostgresIntegrationTest`, incluídas no EV12, com os cinco testes adicionados em 16/11/2026 | 35 executados; 0 falhas; 0 erros; 0 ignorados. Detalhamento na seção 4.11. Não substitui a execução individual dos CT funcionais. | Executado com sucesso |
 | EV14 | Cobertura de código | Medição local: `mvn clean verify`, JaCoCo 0.8.16, 16/11/2026 | Instruções 81% (977/1.192); branches 68% (92/134); linhas 274/322; métodos 88/104; classes 15/15 | Meta de instruções (75%) atendida |
-| EV15 | Integração contínua | Workflow `CI - VIGOR`: execução #35 (PR #37, commit `c65a23d`) e execuções #36 e #37 (branch `feat/revisao-relacionamentos-banco`, PR #38, commit `226e577`), 13/11/2026 | Falha no passo "Executar testes, relatório e quality gate": `Tests run: 126, Failures: 0, Errors: 27`, causada por `Schema validation: missing table [funcionarios]` na imagem `ubuntu-26.04`, em que testes de integração com Flyway desligado passaram a rodar antes da criação das tabelas. A execução #34 (`develop`, commit `2eb72a0`, 10/11/2026) concluiu com sucesso, e os dois PRs alteram apenas documentação em relação a esse commit. | Causa identificada e corrigida em 16/11/2026 (EV16) |
+| EV15 | Integração contínua | Workflow `CI - VIGOR`: execução #35 (PR #37, commit `c65a23d`) e execuções #36 e #37 (branch `feat/revisao-relacionamentos-banco`, PR #38, commit `226e577`), 13/11/2026 | Falha no passo "Executar testes, relatório e quality gate": `Tests run: 126, Failures: 0, Errors: 27`, causada por `Schema validation: missing table [funcionarios]` na imagem `ubuntu-26.04`, em que testes de integração com Flyway desligado passaram a rodar antes da criação das tabelas. A execução #34 (`develop`, commit `2eb72a0`, 10/11/2026) concluiu com sucesso, e os dois PRs alteram apenas documentação em relação a esse commit. | Causa identificada e corrigida em 16/11/2026 |
 | EV16 | Integração contínua | Workflow `CI - VIGOR`, execuções #38 (push) e #39 (PR #38), commit `b5a4bb3`, branch `feat/revisao-relacionamentos-banco`, 16/11/2026, imagem `ubuntu-26.04`, PostgreSQL 18.7 | Flyway aplicou V1 a V5 no banco vazio; 131 executados; 0 falhas; 0 erros; 0 ignorados; `All coverage checks have been met.`; `BUILD SUCCESS`; relatório JaCoCo publicado como artefato `relatorio-jacoco` | Executado com sucesso |
 
 ## 4. Validação de persistência PostgreSQL — Task L07
@@ -220,7 +237,7 @@ Após a revisão do PR #38, foram adicionados cinco testes de integração com P
 | Demais 12 classes | 108 | 108 |
 | **Total** | **126** | **131** |
 
-Integração contínua: as execuções #35, #36 e #37 falharam (EV15) porque cinco classes de testes de integração desligavam o Flyway e dependiam de outra classe ter criado as tabelas. Com a nova imagem `ubuntu-26.04` da CI, a ordem dos testes mudou e essas classes passaram a rodar primeiro no banco vazio. Em 16/11/2026, a configuração `spring.flyway.enabled=false` foi removida dessas cinco classes, sem criar ou alterar migrations. O detalhamento está na seção 6.5 do [relatório](relatorio-validacao-persistencia.md). Após a correção, as execuções #38 e #39 da CI concluíram com sucesso, com 131 testes aprovados (EV16).
+Integração contínua: as execuções #35, #36 e #37 falharam (EV15) porque cinco classes de testes de integração desligavam o Flyway e dependiam de outra classe ter criado as tabelas. Com a nova imagem `ubuntu-26.04` da CI, a ordem dos testes mudou e essas classes passaram a rodar primeiro no banco vazio. Em 16/11/2026, a configuração `spring.flyway.enabled=false` foi removida dessas cinco classes, sem criar ou alterar migrations. O detalhamento está na seção 6.5 do [relatório](relatorio-validacao-persistencia.md). Após a correção, as execuções #38 e #39 da CI concluíram com sucesso, com 131 testes aprovados.
 
 ## 5. Como registrar uma evidência
 
@@ -264,10 +281,11 @@ Na medição local de 16/11/2026 (EV14), a cobertura de instruções foi de 81% 
 | 10/11/2026 | Registro dos resultados de `mvn clean verify` e JaCoCo 0.8.16 | Execução informada pela equipe |
 | 10/11/2026 | Registro da primeira execução bem-sucedida do GitHub Actions, run #27, com PostgreSQL, Flyway, gate JaCoCo e artefato de cobertura | Execução informada pela equipe |
 | 13/11/2026 | Registro das execuções locais de `mvn test` e `mvn clean verify` (126 testes), da cobertura JaCoCo e da validação de persistência PostgreSQL da task L07 (EV07 a EV10 e seção 4) | Luan Milian Martins |
-| 16/11/2026 | Complementação da task L07 após a revisão do PR #38: cinco testes de integração, nova execução de `mvn clean verify` (131 testes), cobertura JaCoCo, registro da falha da CI e correção sobre `findByCpf` (EV11 a EV15 e seção 4.11); diagnóstico e correção da falha da CI; registro das execuções #38 e #39 da CI aprovadas (EV16) | Luan Milian Martins |
+| 16/11/2026 | Complementação da task L07 após a revisão do PR #38: cinco testes de integração, nova execução de `mvn clean verify` (131 testes), cobertura JaCoCo, registro da falha da CI e correção sobre `findByCpf` (EV11 a EV15 e seção 4.11); diagnóstico e correção da falha da CI; registro das execuções #38 e #39 da CI aprovadas | Luan Milian Martins |
+| 16/11/2026 | Registro da validação HTTP de CPF com PostgreSQL e dos resultados da suíte local e da CI | Execução da issue #28 |
 
 Atualizar este histórico conforme novas evidências forem produzidas.
 
 ## 9. Situação do documento
 
-Os resultados do build, dos testes automatizados, da medição JaCoCo, da primeira execução da CI e da validação de persistência PostgreSQL da task L07, incluindo a complementação de 16/11/2026, estão registrados. A falha da CI nas execuções #35 a #37 está registrada com a causa identificada; após a correção, as execuções #38 e #39 concluíram com sucesso. A seção 4 associa os testes automatizados aos CT relacionados, sem substituir a execução individual dos CT. As evidências de execução dos CT/VN funcionais e de usabilidade continuam pendentes até que cada verificação seja executada e registrada individualmente.
+Os resultados do build, dos testes automatizados, da medição JaCoCo, da primeira execução da CI e da validação de persistência PostgreSQL da task L07, incluindo a complementação de 16/11/2026, estão registrados. A falha da CI nas execuções #35 a #37 está registrada com a causa identificada; após a correção, as execuções #38 e #39 concluíram com sucesso. A seção 4 associa os testes automatizados aos CT relacionados, sem substituir a execução individual dos CT. A EV17 registra os cenários de cadastro e validação de CPF executados por HTTP. As demais verificações funcionais e de usabilidade seguem pendentes até a execução individual.
