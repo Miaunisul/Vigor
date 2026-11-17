@@ -12,19 +12,21 @@
 
         <form th:action="@{/membros}" th:object="${membro}" method="post">
             <label for="nome">Nome completo</label>
-            <input id="nome" type="text" th:field="*{nome}" required>
+            <input id="nome" type="text" th:field="*{nome}" maxlength="150" required>
             <small th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></small>
 
-            <label for="cpf">CPF (somente números)</label>
+            <label for="cpf">CPF</label>
             <input id="cpf" type="text" th:field="*{cpf}"
-                   inputmode="numeric" maxlength="11" required>
+                   required>
             <small th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}"></small>
 
             <label for="telefone">Telefone</label>
-            <input id="telefone" type="text" th:field="*{telefone}">
+            <input id="telefone" type="text" th:field="*{telefone}" maxlength="20" required>
+            <small th:if="${#fields.hasErrors('telefone')}" th:errors="*{telefone}"></small>
 
             <label for="endereco">Endereço</label>
-            <input id="endereco" type="text" th:field="*{endereco}">
+            <input id="endereco" type="text" th:field="*{endereco}" maxlength="255" required>
+            <small th:if="${#fields.hasErrors('endereco')}" th:errors="*{endereco}"></small>
 
             <button type="submit">Cadastrar membro</button>
         </form>

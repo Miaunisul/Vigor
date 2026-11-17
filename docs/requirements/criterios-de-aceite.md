@@ -28,19 +28,19 @@ Nos fluxos internos, o usuário é o funcionário autenticado. Os critérios de 
 
 ### CA03 — CPF inválido
 
-**Dado** que o funcionário informa um CPF inválido,
+**Dado** que, após a normalização da RN03, o CPF não contém exatamente 11 dígitos numéricos, possui todos os dígitos iguais ou apresenta algum dígito verificador incorreto,
 
-**Quando** solicita o cadastro,
+**Quando** o funcionário solicita o cadastro,
 
-**Então** o sistema deve rejeitar o cadastro, não salvar o registro e informar que o CPF precisa ser corrigido.
+**Então** o sistema deve rejeitar o cadastro, informar que o CPF precisa ser corrigido e não salvar o membro.
 
 ### CA04 — CPF duplicado
 
 **Dado** que já existe um membro cadastrado com determinado CPF,
 
-**Quando** o funcionário tenta cadastrar outro membro com o mesmo CPF,
+**Quando** o funcionário tenta cadastrar outro membro com o mesmo CPF normalizado, ainda que use uma formatação diferente,
 
-**Então** o sistema deve rejeitar o novo cadastro e preservar o registro existente.
+**Então** o sistema deve informar que o CPF já está cadastrado, não criar um segundo membro e preservar o registro existente.
 
 ## 3. Consulta de membros
 
@@ -108,11 +108,11 @@ Nos fluxos internos, o usuário é o funcionário autenticado. Os critérios de 
 
 ### CA12 — Dados de pagamento inválidos
 
-**Dado** que o pagamento possui dados inválidos,
+**Dado** que o pagamento apresenta referência de membro ausente ou inexistente, valor ausente, não numérico, igual a zero, negativo ou com mais de duas casas decimais, data ausente ou inválida, ou status diferente de Pago,
 
 **Quando** é solicitada sua gravação,
 
-**Então** o sistema deve rejeitar a operação, não persistir o pagamento e informar os dados que precisam ser corrigidos.
+**Então** o sistema deve rejeitar a operação, não persistir o pagamento e informar qual informação precisa ser corrigida. Para que o registro seja aceito, deve haver referência a um membro existente, valor numérico positivo com no máximo duas casas decimais, data de pagamento válida e status Pago.
 
 ## 7. Histórico de atividades
 
@@ -228,13 +228,13 @@ Essa exclusão se refere somente ao registro pela interface. A consulta do hist�
 
 ### CA26 — Normalização e validação do CPF
 
-**Dado** que o funcionário informa um CPF com ou sem pontos e hífen,
+**Dado** que o funcionário informa `52998224725` ou `529.982.247-25`, inclusive com espaços nas extremidades,
 
-**Quando** o sistema valida o CPF,
+**Quando** o sistema valida o CPF e verifica sua unicidade no cadastro,
 
-**Então** deve considerar os mesmos dígitos para validar e verificar duplicidade, rejeitando sequências repetidas e dígitos verificadores incorretos.
+**Então** deve usar `52998224725` como valor normalizado nas duas verificações. Em cadastros independentes, com os demais dados válidos e o CPF ainda não utilizado, ambas as formas devem ser aceitas e gravadas sem pontuação.
 
-**E** um CPF válido e ainda não cadastrado deve ser aceito em ambas as formas, desde que os demais dados estejam válidos.
+**E** se esse CPF já estiver cadastrado, a outra forma de apresentação deve ser rejeitada como duplicada, conforme o CA04. A normalização não remove letras nem espaços internos; entradas que permaneçam inválidas devem ser rejeitadas conforme o CA03.
 
 ### CA27 — Pagamento associado a membro inexistente
 
@@ -250,7 +250,7 @@ Os critérios de aceite devem orientar os testes unitários, de integração, de
 
 Todos os critérios deste documento integram a entrega final da A3, exceto o CA13, identificado como futuro. A execução das verificações acompanhará as etapas de implementação.
 
-Os critérios CA17 a CA27 descrevem comportamentos esperados, mas sua presença neste documento não comprova a existência de testes correspondentes. A definição dos casos de teste, seus identificadores e as evidências de execução serão completadas pelo responsável pelos testes.
+Os critérios CA17 a CA27 descrevem comportamentos esperados. Os identificadores CT01 a CT17 já estão definidos em `docs/testing/plano-de-testes.md`; isso não comprova implementação ou execução dos testes. Os cenários permanecem planejados até serem executados, e suas evidências devem ser registradas em `docs/testing/evidencias.md`.
 
 O CA25 exige verificar a permanência dos dados após reiniciar a aplicação. Um teste que apenas salva e consulta dados sem reiniciar a aplicação não comprova, por si só, o atendimento integral desse critério.
 

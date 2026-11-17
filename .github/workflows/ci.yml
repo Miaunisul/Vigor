@@ -2,13 +2,18 @@ name: CI - VIGOR
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - 'feat/**'
+      - develop
+      - main
   pull_request:
-    branches: [main, develop]
+    branches:
+      - develop
+      - main
 
 jobs:
   tests:
-    name: Compilar e executar testes
+    name: Compilar, testar e verificar cobertura
     runs-on: ubuntu-latest
 
     services:
@@ -17,7 +22,7 @@ jobs:
         env:
           POSTGRES_DB: vigor
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: vigor_test_password
+          POSTGRES_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
         ports:
           - 5432:5432
         options: >-
@@ -27,7 +32,7 @@ jobs:
           --health-retries 5
 
     env:
-      DB_PASSWORD: vigor_test_password
+      DB_PASSWORD: ${{ secrets.CI_DB_PASSWORD }}
 
     steps:
       - name: Baixar o código
@@ -40,5 +45,14 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Executar testes
-        run: mvn --batch-mode --no-transfer-progress clean test
+      - name: Executar testes, relatório e quality gate
+        run: mvn --batch-mode --no-transfer-progress clean verify
+
+      - name: Publicar relatórios JaCoCo
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-jacoco
+          path: target/site/jacoco/
+          if-no-files-found: warn
+          retention-days: 14

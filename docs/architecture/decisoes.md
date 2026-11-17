@@ -47,11 +47,11 @@ As tecnologias listadas representam as escolhas e o planejamento técnico atual.
 **Situação:** definida como diretriz; implementação pendente.
 
 ### DEC04 — Banco de dados
-**Decisão:** utilizar PostgreSQL para persistência dos dados da academia.
+**Decisão:** utilizar PostgreSQL para persistência dos dados da academia e Flyway para versionar as alterações de schema.
 
 **Justificativa:** manter os registros disponíveis para consultas posteriores.
 
-**Situação:** PostgreSQL 18.6 instalado no ambiente local; banco vigor criado; driver JDBC incluído no projeto e conexão configurada por meio da variável de ambiente DB_PASSWORD. O teste de contexto passou. A persistência das entidades da aplicação ainda precisa ser implementada e validada.
+**Situação:** PostgreSQL 18.6 instalado no ambiente local; banco vigor criado; driver JDBC e Flyway configurados, migration inicial de membros criada e conexão configurada por meio da variável de ambiente DB_PASSWORD. O mapeamento JPA está configurado para validação do schema. A execução da migration e as operações de persistência ainda precisam ser validadas no PostgreSQL.
 
 ### DEC05 — Gerenciamento de credenciais
 
@@ -79,7 +79,7 @@ As tecnologias listadas representam as escolhas e o planejamento técnico atual.
 
 - Confirmar os campos definitivos da entidade Membro, conforme os requisitos da academia.
 - Implementar e testar a persistência das entidades no PostgreSQL.
-- Definir como serão gerenciadas as alterações do schema do banco.
+- Definir como incorporar ao histórico Flyway o banco local preexistente, após inspecionar e validar o schema atual.
 - Confirmar as versões e dependências definitivas após verificar a compatibilidade.
 - Ampliar os testes automatizados para regras de negócio, validação e persistência.
 - Configurar o JaCoCo e verificar a cobertura de testes.

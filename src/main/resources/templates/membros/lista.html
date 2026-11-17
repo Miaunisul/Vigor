@@ -11,6 +11,7 @@
         <h1>Membros cadastrados</h1>
 
         <p th:if="${sucesso}" th:text="${sucesso}"></p>
+        <p th:if="${erro}" th:text="${erro}"></p>
 
         <a th:href="@{/membros/novo}">Cadastrar novo membro</a>
 
@@ -26,6 +27,7 @@
                     <th>CPF</th>
                     <th>Telefone</th>
                     <th>Data de cadastro</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -35,6 +37,12 @@
                     <td th:text="${membro.cpf}"></td>
                     <td th:text="${membro.telefone}"></td>
                     <td th:text="${membro.dataCadastro}"></td>
+                    <td>
+                        <form th:action="@{/membros/{id}/excluir(id=${membro.id})}" method="post"
+                              onsubmit="return confirm('Confirma a exclusão deste membro?')">
+                            <button type="submit">Excluir</button>
+                        </form>
+                    </td>
                 </tr>
             </tbody>
         </table>

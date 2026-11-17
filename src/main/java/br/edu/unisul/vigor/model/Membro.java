@@ -3,8 +3,8 @@ package br.edu.unisul.vigor.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import br.edu.unisul.vigor.validation.CpfValido;
 
 import java.time.LocalDate;
 
@@ -24,19 +24,18 @@ public class Membro {
     private String nome;
 
     @NotBlank(message = "O CPF é obrigatório.")
-    @Pattern(
-        regexp = "\\d{11}",
-        message = "O CPF deve conter 11 dígitos numéricos."
-    )
-    @Column(nullable = false, unique = true, length = 11)
+    @CpfValido
+    @Column(nullable = false, length = 11)
     private String cpf;
 
-    @Size(max = 20)
-    @Column(length = 20)
+    @NotBlank(message = "O telefone é obrigatório.")
+    @Size(max = 20, message = "O telefone deve ter no máximo 20 caracteres.")
+    @Column(nullable = false, length = 20)
     private String telefone;
 
-    @Size(max = 255)
-    @Column(length = 255)
+    @NotBlank(message = "O endereço é obrigatório.")
+    @Size(max = 255, message = "O endereço deve ter no máximo 255 caracteres.")
+    @Column(nullable = false, length = 255)
     private String endereco;
 
     @Column(name = "data_cadastro", nullable = false, updatable = false)
