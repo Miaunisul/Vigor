@@ -4,6 +4,8 @@ import br.edu.unisul.vigor.model.Membro;
 import br.edu.unisul.vigor.model.Treino;
 import br.edu.unisul.vigor.service.TreinoService;
 import br.edu.unisul.vigor.validation.CpfUtils;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -15,14 +17,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@SpringBootTest(properties = "spring.flyway.enabled=false")
+@SpringBootTest
 @Transactional
 @EnabledIfEnvironmentVariable(named = "DB_PASSWORD", matches = ".+")
 class TreinoPostgresIntegrationTest {
@@ -38,6 +43,9 @@ class TreinoPostgresIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Test
     void persisteTreinoVinculadoEConsultaPeloMembro() {
@@ -92,6 +100,56 @@ class TreinoPostgresIntegrationTest {
                 "INSERT INTO treinos (membro_id, tipo, descricao, duracao_minutos, data_inicio) "
                         + "VALUES (?, ?, ?, ?, ?)",
                 membro.getId(), "   ", "Treino de teste", 45, LocalDate.now()));
+    }
+
+    @Test
+    void consultaTreinoPorIdRetornaOsDadosPersistidos() {
+        Membro membro = membroParaTeste();
+        Treino salvo = treinoService.cadastrar(treinoValido(), membro.getId());
+        treinoRepository.flush();
+        entityManager.clear();
+
+        Treino consultado = treinoRepository.findById(salvo.getId()).orElseThrow();
+
+        assertNotSame(salvo, consultado);
+        assertEquals(salvo.getId(), consultado.getId());
+        assertEquals(membro.getId(), consultado.getMembro().getId());
+        assertEquals("Musculação", consultado.getTipo());
+        assertEquals("Treino de força", consultado.getDescricao());
+        assertEquals(45, consultado.getDuracaoMinutos());
+        assertEquals(LocalDate.of(2026, 1, 10), consultado.getDataInicio());
+    }
+
+    @Test
+    void consultaTreinoPorIdInexistenteRetornaVazio() {
+        // Os IDs gerados pela coluna IDENTITY são positivos; -1 nunca existe na tabela.
+        assertTrue(treinoRepository.findById(-1L).isEmpty());
+    }
+
+    @Test
+    void consultaPorMembroNaoRetornaTreinosDeOutroMembro() {
+        Membro primeiro = criarMembroTransitorio();
+        Membro segundo = criarMembroTransitorio();
+        Treino primeiroTreino = treinoService.cadastrar(treinoValido(), primeiro.getId());
+        Treino segundoTreino = treinoService.cadastrar(treinoValido(), primeiro.getId());
+        Treino treinoDoSegundo = treinoService.cadastrar(treinoValido(), segundo.getId());
+        treinoRepository.flush();
+        entityManager.clear();
+
+        List<Treino> doPrimeiro = treinoService.consultarPorMembro(primeiro.getId());
+        List<Treino> doSegundo = treinoService.consultarPorMembro(segundo.getId());
+
+        assertEquals(Set.of(primeiroTreino.getId(), segundoTreino.getId()),
+                idsDosTreinos(doPrimeiro));
+        assertEquals(Set.of(treinoDoSegundo.getId()), idsDosTreinos(doSegundo));
+        assertTrue(doPrimeiro.stream()
+                .allMatch(treino -> treino.getMembro().getId().equals(primeiro.getId())));
+        assertTrue(doSegundo.stream()
+                .allMatch(treino -> treino.getMembro().getId().equals(segundo.getId())));
+    }
+
+    private Set<Long> idsDosTreinos(List<Treino> treinos) {
+        return treinos.stream().map(Treino::getId).collect(Collectors.toSet());
     }
 
     private Membro membroParaTeste() {
