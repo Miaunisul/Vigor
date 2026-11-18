@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -138,6 +139,32 @@ class PagamentoPostgresIntegrationTest {
         assertEquals(segundo.getId(), doSegundo.get(0).getMembro().getId());
         assertEquals(0, doSegundo.get(0).getValor().compareTo(new BigDecimal("80.00")));
         assertEquals("PAGO", doSegundo.get(0).getStatus());
+    }
+
+    @Test
+    void consultaPagamentoPersistidoRetornaValorDataEStatusGravados() {
+        Membro membro = criarMembroTransitorio();
+        Pagamento salvo = pagamentoService.registrar(pagamentoValido(), membro.getId());
+        pagamentoRepository.flush();
+        entityManager.clear();
+
+        Pagamento consultado = pagamentoRepository.findById(salvo.getId()).orElseThrow();
+
+        assertNotSame(salvo, consultado);
+        assertEquals(membro.getId(), consultado.getMembro().getId());
+        assertEquals(0, consultado.getValor().compareTo(new BigDecimal("125.50")));
+        assertEquals(LocalDate.of(2026, 11, 10), consultado.getDataPagamento());
+        assertEquals("PAGO", consultado.getStatus());
+    }
+
+    @Test
+    void constraintDoBancoRejeitaValorNegativo() {
+        Membro membro = membroParaTeste();
+
+        assertThrows(DataIntegrityViolationException.class, () -> jdbcTemplate.update(
+                "INSERT INTO pagamentos (membro_id, valor, data_pagamento, status) "
+                        + "VALUES (?, ?, ?, ?)",
+                membro.getId(), new BigDecimal("-1.00"), LocalDate.now(), "PAGO"));
     }
 
     private Set<Long> idsDosPagamentos(List<Pagamento> pagamentos) {
