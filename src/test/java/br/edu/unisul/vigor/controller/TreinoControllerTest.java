@@ -223,7 +223,9 @@ class TreinoControllerTest {
                         .param("duracaoMinutos", "quarenta")
                         .param("dataInicio", "2026-11-20"))
                 .andExpect(status().isOk())
-                .andExpect(model().attributeHasFieldErrors("treino", "duracaoMinutos"));
+                .andExpect(model().attributeHasFieldErrors("treino", "duracaoMinutos"))
+                .andExpect(model().attributeHasFieldErrorCode("treino", "duracaoMinutos",
+                        "typeMismatch"));
 
         verifyNoInteractions(treinoService);
     }
@@ -238,6 +240,20 @@ class TreinoControllerTest {
                         .param("dataInicio", "20/11/2026"))
                 .andExpect(status().isOk())
                 .andExpect(model().attributeHasFieldErrors("treino", "dataInicio"));
+
+        verifyNoInteractions(treinoService);
+    }
+
+    @Test
+    void rejeitaIdentificadorDeMembroQueNaoSejaNumerico() throws Exception {
+        mockMvc.perform(post("/treinos")
+                        .param("membroId", "membro-invalido")
+                        .param("tipo", "Musculação")
+                        .param("descricao", "Treino de força")
+                        .param("duracaoMinutos", "45")
+                        .param("dataInicio", "2026-11-20"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeHasFieldErrors("treino", "membro.id"));
 
         verifyNoInteractions(treinoService);
     }
