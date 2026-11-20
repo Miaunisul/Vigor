@@ -25,6 +25,10 @@ import java.util.Set;
 public class MembroController {
 
     private static final String CONSTRAINT_CPF_UNICO = "uk_membros_cpf";
+    private static final String MENSAGEM_CPF_DUPLICADO =
+            "Já existe um membro cadastrado com este CPF.";
+    private static final String MENSAGEM_MEMBRO_NAO_ENCONTRADO =
+            "Membro não encontrado.";
 
     private final MembroService membroService;
 
@@ -32,9 +36,16 @@ public class MembroController {
         this.membroService = membroService;
     }
 
+    @ModelAttribute
+    public void configurarFormularioPadrao(Model model) {
+        model.addAttribute("editando", false);
+        model.addAttribute("formAction", "/membros");
+    }
+
     @InitBinder("membro")
     public void normalizarCamposTextuais(WebDataBinder binder) {
         binder.registerCustomEditor(String.class, new StringTrimmerEditor(false));
+        binder.setAllowedFields("nome", "cpf", "telefone", "endereco");
     }
 
     @GetMapping
@@ -60,6 +71,24 @@ public class MembroController {
         return "membros/formulario";
     }
 
+    @GetMapping("/{id}/editar")
+    public String editar(
+            @PathVariable Long id,
+            Model model,
+            RedirectAttributes atributos) {
+        try {
+            model.addAttribute("membro", membroService.buscarPorId(id));
+            configurarFormularioEdicao(model, id);
+            return "membros/formulario";
+        } catch (IllegalArgumentException e) {
+            if (!MENSAGEM_MEMBRO_NAO_ENCONTRADO.equals(e.getMessage())) {
+                throw e;
+            }
+            atributos.addFlashAttribute("erro", e.getMessage());
+            return "redirect:/membros";
+        }
+    }
+
     @PostMapping
     public String cadastrar(
             @Valid @ModelAttribute("membro") Membro membro,
@@ -78,6 +107,9 @@ public class MembroController {
             );
             return "redirect:/membros";
         } catch (IllegalArgumentException e) {
+            if (!ehCpfDuplicado(e)) {
+                throw e;
+            }
             membro.setCpf(cpfInformado);
             rejeitarCpf(resultado, e.getMessage());
             return "membros/formulario";
@@ -95,6 +127,58 @@ public class MembroController {
                     "Já existe um membro cadastrado com este CPF.");
             return "membros/formulario";
         }
+    }
+
+    @PostMapping("/{id}/editar")
+    public String atualizar(
+            @PathVariable Long id,
+            @Valid @ModelAttribute("membro") Membro membro,
+            BindingResult resultado,
+            Model model,
+            RedirectAttributes atributos) {
+        configurarFormularioEdicao(model, id);
+
+        if (resultado.hasErrors()) {
+            return "membros/formulario";
+        }
+
+        String cpfInformado = membro.getCpf();
+        try {
+            membroService.atualizar(id, membro);
+            atributos.addFlashAttribute(
+                    "sucesso", "Membro atualizado com sucesso!");
+            return "redirect:/membros";
+        } catch (ConstraintViolationException e) {
+            membro.setCpf(cpfInformado);
+            adicionarViolacoes(resultado, e.getConstraintViolations());
+        } catch (IllegalArgumentException e) {
+            if (ehCpfDuplicado(e)) {
+                membro.setCpf(cpfInformado);
+                rejeitarCpf(resultado, e.getMessage());
+            } else if (MENSAGEM_MEMBRO_NAO_ENCONTRADO.equals(e.getMessage())) {
+                atributos.addFlashAttribute("erro", e.getMessage());
+                return "redirect:/membros";
+            } else {
+                throw e;
+            }
+        } catch (DataIntegrityViolationException e) {
+            if (!ehViolacaoDaConstraintCpf(e)) {
+                throw e;
+            }
+
+            membro.setCpf(cpfInformado);
+            rejeitarCpf(resultado, MENSAGEM_CPF_DUPLICADO);
+        }
+        return "membros/formulario";
+    }
+
+    private void configurarFormularioEdicao(Model model, Long id) {
+        model.addAttribute("editando", true);
+        model.addAttribute("formAction", "/membros/" + id + "/editar");
+    }
+
+    private boolean ehCpfDuplicado(IllegalArgumentException excecao) {
+        return MENSAGEM_CPF_DUPLICADO.equals(excecao.getMessage());
     }
 
     private void adicionarViolacoes(
