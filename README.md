@@ -239,7 +239,7 @@ Estas são frentes de trabalho planejadas; não atribuem autoria individual de c
 
 ## Licença
 
-Não há arquivo LICENSE nem licença definida nos metadados do pom.xml. A definição depende da confirmação do enunciado da A3 e da decisão da equipe; nenhuma licença é presumida neste README.
+Este projeto está licenciado sob a Licença MIT. Consulte o arquivo [LICENSE](LICENSE) para ver o texto completo da licença.
 
 ## Referências de qualidade
 
