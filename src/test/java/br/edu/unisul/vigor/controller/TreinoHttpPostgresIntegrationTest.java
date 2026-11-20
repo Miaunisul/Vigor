@@ -193,7 +193,7 @@ class TreinoHttpPostgresIntegrationTest {
         assertEquals(302, resposta.statusCode(), resposta::body);
         String destino = resposta.headers().firstValue("Location").orElseThrow();
         URI uri = URI.create(destino);
-        assertEquals("/treinos", uri.getPath());
+        assertEquals("/treinos", uri.getPath().split(";jsessionid=", 2)[0]);
         assertEquals("membroId=" + membroId, uri.getRawQuery());
     }
 }
