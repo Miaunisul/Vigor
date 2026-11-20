@@ -75,7 +75,7 @@ class PagamentoPostgresIntegrationTest {
 
     @Test
     void servicoRejeitaStatusInvalidoSemPersistirPagamento() {
-        Membro membro = membroParaTeste();
+        Membro membro = criarMembroTransitorio();
         Pagamento pagamento = pagamentoValido();
         pagamento.setStatus("PEND");
 
