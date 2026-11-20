@@ -238,6 +238,17 @@ As tabelas desta seção serão atualizadas à medida que novas tarefas forem at
 | Emely Santos da Silveira | Validação de CPF pelo fluxo HTTP integrado ao PostgreSQL e consolidação da qualidade. | [Validação de CPF pelo fluxo HTTP](https://github.com/Miaunisul/Vigor/pull/39). |
 | Luan Milian Martins | Relacionamentos, consultas e persistência de treinos, pagamentos e histórico. | [Validação de relacionamentos e consultas](https://github.com/Miaunisul/Vigor/pull/38). |
 
+### Testes automatizados e contribuições registradas
+
+A tabela abaixo relaciona as contribuições de cada integrante aos arquivos de teste e commits correspondentes. Um mesmo arquivo pode ter contribuições de mais de uma pessoa. Os links mostram o trabalho registrado; os resultados de execução dos testes são apresentados nas evidências e no GitHub Actions.
+
+| Integrante | Contribuição registrada | Arquivos de teste | Commits relacionados |
+|---|---|---|---|
+| Millena Ferreira Rodrigues | Testes unitários do serviço de membros e da validação e normalização de CPF. | [MembroServiceTest](src/test/java/br/edu/unisul/vigor/service/MembroServiceTest.java) e [CpfUtilsTest](src/test/java/br/edu/unisul/vigor/validation/CpfUtilsTest.java) | [Testes do serviço](https://github.com/Miaunisul/Vigor/commit/8af9db4), [normalização](https://github.com/Miaunisul/Vigor/commit/ca2d1b7), [dígitos verificadores](https://github.com/Miaunisul/Vigor/commit/7c84452) e [validação customizada](https://github.com/Miaunisul/Vigor/commit/cbb26cb). |
+| Maria Eduarda Souza dos Santos Ferreira | Revisão documental das regras, critérios de aceitação e cenários de teste de CPF. Autoria de testes automatizados ainda não identificada no histórico consultado. | [Plano de testes](docs/testing/plano-de-testes.md) e [critérios de aceitação](docs/requirements/criterios-de-aceite.md), como documentação de planejamento e revisão. | [PR de alinhamento documental do CPF](https://github.com/Miaunisul/Vigor/pull/37). |
+| Emely Santos da Silveira | Teste integrado de CPF pelo fluxo HTTP com PostgreSQL e ajustes na aplicação das migrations na suíte de integração. | [MembroCpfHttpPostgresIntegrationTest](src/test/java/br/edu/unisul/vigor/controller/MembroCpfHttpPostgresIntegrationTest.java) e [MembroCpfPostgresIntegrationTest](src/test/java/br/edu/unisul/vigor/repository/MembroCpfPostgresIntegrationTest.java). | [Teste HTTP integrado](https://github.com/Miaunisul/Vigor/commit/fd84999) e [ajuste das migrations](https://github.com/Miaunisul/Vigor/commit/dbb477e). |
+| Luan Milian Martins | Complementação dos testes de consultas por identificador, por membro e de isolamento entre membros; ajuste da configuração Flyway nos testes de integração. | [HistoricoAtividadePostgresIntegrationTest](src/test/java/br/edu/unisul/vigor/repository/HistoricoAtividadePostgresIntegrationTest.java), [PagamentoPostgresIntegrationTest](src/test/java/br/edu/unisul/vigor/repository/PagamentoPostgresIntegrationTest.java) e [TreinoPostgresIntegrationTest](src/test/java/br/edu/unisul/vigor/repository/TreinoPostgresIntegrationTest.java). | [Complementação das consultas](https://github.com/Miaunisul/Vigor/commit/70910f6) e [configuração Flyway](https://github.com/Miaunisul/Vigor/commit/b5a4bb3). |
+
 ## Documentação complementar
 
 - [Requisitos funcionais e não funcionais](docs/requirements/requisitos.md)
