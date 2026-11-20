@@ -14,6 +14,8 @@ Em 16/11/2026, após a revisão do PR #38, foram adicionados cinco testes de int
 
 Em 18/11/2026, na task L02 (Issue #31), os testes de integração de treinos, pagamentos e histórico de atividades foram conferidos contra a checklist da issue, e seis testes com PostgreSQL foram adicionados para os itens que ainda não estavam comprovados no banco. As execuções locais de `mvn test` e `mvn clean verify` registraram 145 testes aprovados (EV18 e EV19).
 
+Em 20/11/2026, após a revisão do PR #41, o teste `servicoRejeitaStatusInvalidoSemPersistirPagamento` passou a usar um membro criado no próprio teste, e a tabela da seção 3 foi reorganizada para reunir as evidências EV01 a EV19 em ordem, com as subseções de detalhe da EV17 e da EV18 abaixo dela. Também foi registrada a execução #52 da CI, aprovada com 145 testes (EV20).
+
 ## 3. Evidências de execução
 
 | ID | Verificação | CT/VN e cenário a registrar | Evidência esperada | Situação |
@@ -37,6 +39,7 @@ Em 18/11/2026, na task L02 (Issue #31), os testes de integração de treinos, pa
 | EV17 | Cadastro HTTP e persistência de CPF | CT01, CT03 e CT04 nos cenários abaixo | Oito cenários em `MembroCpfHttpPostgresIntegrationTest` | Aprovado localmente e na CI |
 | EV18 | Testes automatizados | Execuções locais `mvn test` e `mvn clean verify`, branch `test/validacao-persistencia-modulos`, 18/11/2026 | 145 executados em 16 classes; 0 falhas; 0 erros; 0 ignorados. Inclui 49 testes de integração com PostgreSQL: 41 em classes do pacote `repository` e 8 em `MembroCpfHttpPostgresIntegrationTest`. Detalhamento abaixo. | Executado com sucesso |
 | EV19 | Cobertura de código | Medição local: `mvn clean verify`, JaCoCo 0.8.16, 18/11/2026 | Instruções 83% (1.001/1.192); branches 68% (92/134); linhas 281/322; métodos 92/104; classes 15/15 | Meta de instruções (75%) atendida |
+| EV20 | Integração contínua | Workflow `CI - VIGOR`, execução #52 (PR #41), commit `2097438`, branch `test/validacao-persistencia-modulos`, 18/11/2026, imagem `ubuntu-26.04`, PostgreSQL 18.7 | Flyway aplicou V1 a V5 no banco vazio; 145 executados; 0 falhas; 0 erros; 0 ignorados; `All coverage checks have been met.`; `BUILD SUCCESS`; relatório JaCoCo publicado como artefato `relatorio-jacoco` | Executado com sucesso |
 
 ### EV17 — Validação de CPF pelo fluxo HTTP
 
@@ -93,6 +96,8 @@ Os testes de cada módulo estão em `TreinoPostgresIntegrationTest`, `PagamentoP
 Execuções locais em 18/11/2026, com Windows 11, JDK 21.0.13 e PostgreSQL 18 local: `mvn test` e `mvn clean verify` concluíram com 145 testes, 0 falhas, 0 erros e 0 ignorados, `All coverage checks have been met.` e `BUILD SUCCESS`. Os relatórios Surefire registraram 10 testes em `TreinoPostgresIntegrationTest`, 9 em `PagamentoPostgresIntegrationTest` e 10 em `HistoricoAtividadePostgresIntegrationTest`.
 
 Observação para a equipe, sem alteração nesta task: `servicoRejeitaStatusInvalidoSemPersistirPagamento` confere que o membro obtido por `membroParaTeste()` não possui pagamentos. Como esse método reutiliza o primeiro membro existente no banco, o teste falharia, sem defeito real, em um banco em que esse membro já tenha pagamentos.
+
+Ajuste após a revisão do PR #41, em 20/11/2026: o teste passou a usar um membro exclusivo, criado com `criarMembroTransitorio()`, e a verificação de que nenhum pagamento foi registrado deixou de depender dos dados existentes no banco. Após o ajuste, `mvn test` e `mvn clean verify` concluíram com 145 testes, 0 falhas, 0 erros e 0 ignorados, e `BUILD SUCCESS`.
 
 ## 4. Validação de persistência PostgreSQL — Task L07
 
@@ -330,6 +335,7 @@ Na medição local de 18/11/2026 (EV19), a cobertura de instruções foi de 83% 
 | 16/11/2026 | Complementação da task L07 após a revisão do PR #38: cinco testes de integração, nova execução de `mvn clean verify` (131 testes), cobertura JaCoCo, registro da falha da CI e correção sobre `findByCpf` (EV11 a EV15 e seção 4.11); diagnóstico e correção da falha da CI; registro das execuções #38 e #39 da CI aprovadas | Luan Milian Martins |
 | 16/11/2026 | Registro da validação HTTP de CPF com PostgreSQL e dos resultados da suíte local e da CI | Execução da issue #28 |
 | 18/11/2026 | Registro da validação de persistência dos módulos da task L02 (Issue #31): seis testes de integração com PostgreSQL, execuções locais com 145 testes e cobertura JaCoCo (EV18 e EV19) | Luan Milian Martins |
+| 20/11/2026 | Ajustes da revisão do PR #41: reorganização da tabela de evidências da seção 3, sem alteração do conteúdo das evidências; membro exclusivo no teste de status do pagamento; registro da execução #52 da CI (EV20) | Luan Milian Martins |
 
 Atualizar este histórico conforme novas evidências forem produzidas.
 
@@ -338,3 +344,5 @@ Atualizar este histórico conforme novas evidências forem produzidas.
 Os resultados do build, dos testes automatizados, da medição JaCoCo, da primeira execução da CI e da validação de persistência PostgreSQL da task L07, incluindo a complementação de 16/11/2026, estão registrados. A falha da CI nas execuções #35 a #37 está registrada com a causa identificada; após a correção, as execuções #38 e #39 concluíram com sucesso. A seção 4 associa os testes automatizados aos CT relacionados, sem substituir a execução individual dos CT. A EV17 registra os cenários de cadastro e validação de CPF executados por HTTP. As demais verificações funcionais e de usabilidade seguem pendentes até a execução individual.
 
 A EV18 registra a validação de persistência e consultas de treinos, pagamentos e histórico de atividades da task L02.
+
+A EV20 registra a execução da CI do PR #41, da task L02.

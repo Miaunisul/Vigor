@@ -5,6 +5,7 @@
 - **Data da conferência:** 13/11/2026
 - **Complementação:** 16/11/2026, conforme a revisão do PR #38 (seção 8)
 - **Validação da task L02:** 18/11/2026, Issue #31, branch `test/validacao-persistencia-modulos` (seção 9)
+- **Ajustes da revisão do PR #41:** 20/11/2026 (seção 9.7)
 - **Branch:** `feat/revisao-relacionamentos-banco`, criada a partir da `develop` atualizada
 - **Evidências relacionadas:** [evidencias.md](evidencias.md), EV07 a EV10 e seção 4
 
@@ -359,7 +360,7 @@ As lacunas encontradas foram agrupadas em quatro blocos e avaliadas antes de qua
 | A | Testes que gravam, leem do banco e comparam todos os campos de um pagamento e de uma atividade | Aprovado e implementado |
 | B | Testes de valor negativo em pagamentos e de tempo negativo no histórico, direto no banco | Aprovado e implementado |
 | C | Testes de descrição vazia e de data de início nula em treinos, direto no banco | Aprovado e implementado |
-| D | Tornar `servicoRejeitaStatusInvalidoSemPersistirPagamento` independente dos dados do banco, o que exigiria alterar uma linha existente | Não implementado; registrado como observação (seção 9.5) |
+| D | Tornar `servicoRejeitaStatusInvalidoSemPersistirPagamento` independente dos dados do banco, o que exigiria alterar uma linha existente | Não implementado na entrega inicial; implementado em 20/11/2026, após a revisão do PR #41 (seção 9.7) |
 
 ### 9.3. Testes adicionados
 
@@ -415,12 +416,23 @@ Uma primeira execução, feita antes da atualização da branch, estava baseada 
 
 ### 9.5. Observações
 
-- `servicoRejeitaStatusInvalidoSemPersistirPagamento` confere que o membro obtido por `membroParaTeste()` não possui pagamentos. Como esse método reutiliza o primeiro membro existente no banco, o teste falharia, sem defeito real, em um banco em que esse membro já tenha pagamentos. O teste não foi alterado nesta task (bloco D).
-- Em `evidencias.md`, a subseção da EV17 foi inserida entre as linhas da tabela de evidências, e por isso as linhas EV07 a EV16 deixam de ser exibidas como tabela. O conteúdo existente não foi alterado nesta task; a EV18 e a EV19 foram registradas em uma tabela própria.
+- `servicoRejeitaStatusInvalidoSemPersistirPagamento` confere que o membro obtido por `membroParaTeste()` não possui pagamentos. Como esse método reutiliza o primeiro membro existente no banco, o teste falharia, sem defeito real, em um banco em que esse membro já tenha pagamentos. O teste não foi alterado na entrega inicial (bloco D); foi ajustado em 20/11/2026, após a revisão do PR #41 (seção 9.7).
+- Em `evidencias.md`, a subseção da EV17 foi inserida entre as linhas da tabela de evidências, e por isso as linhas EV07 a EV16 deixam de ser exibidas como tabela. O conteúdo existente não foi alterado na entrega inicial, e a EV18 e a EV19 foram registradas em uma tabela própria. A tabela foi reorganizada em 20/11/2026, após a revisão do PR #41 (seção 9.7).
 
 ### 9.6. Integração contínua
 
-Situação em 18/11/2026: a registrar após o envio da branch e a abertura do PR para a `develop`.
+A execução #52 da CI (PR #41, commit `2097438`, 18/11/2026) concluiu com sucesso na imagem `ubuntu-26.04`, com PostgreSQL 18.7. O Flyway aplicou as migrations V1 a V5 no banco vazio, e o resultado foi `Tests run: 145, Failures: 0, Errors: 0, Skipped: 0`, `All coverage checks have been met.` e `BUILD SUCCESS`.
+
+### 9.7. Ajustes da revisão do PR #41 (20/11/2026)
+
+A revisão aprovou os seis testes e a CI e solicitou dois ajustes, feitos na mesma branch, sem alterar migrations ou código de produção:
+
+| Ajuste | O que foi feito |
+|---|---|
+| Membro exclusivo no teste de status | Em `servicoRejeitaStatusInvalidoSemPersistirPagamento`, `membroParaTeste()` foi substituído por `criarMembroTransitorio()`. O teste passou a criar um membro com CPF válido e inédito, desfeito ao final da transação, e a verificação de que nenhum pagamento foi registrado deixou de depender dos dados existentes no banco. A alteração foi de uma linha. |
+| Organização do `evidencias.md` | A tabela da seção 3 foi reorganizada para reunir as evidências EV01 a EV19 em ordem, seguida das subseções de detalhe da EV17 e da EV18. O conteúdo das evidências foi mantido; foram removidas apenas as duas linhas de cabeçalho da tabela própria da EV18, que deixou de ser necessária. |
+
+Execução após os ajustes, em 20/11/2026: `mvn test` e `mvn clean verify` concluíram com 145 testes, 0 falhas, 0 erros e 0 ignorados, e `BUILD SUCCESS`. A `PagamentoPostgresIntegrationTest` registrou 9 testes aprovados, e a cobertura permaneceu em 83% de instruções (1.001/1.192) e 68% de branches (92/134). A CI será executada novamente com o envio dos ajustes ao PR #41.
 
 ---
 
@@ -580,3 +592,4 @@ O banco rejeitou a exclusão do membro com treino vinculado, e o `ROLLBACK` desf
 | 13/11/2026 | Criação do relatório de validação da task L07 | Luan Milian Martins |
 | 16/11/2026 | Complementação solicitada na revisão do PR #38: cinco testes de integração, nova execução de `mvn clean verify`, correção do achado 2, diagnóstico e correção da falha da integração contínua | Luan Milian Martins |
 | 18/11/2026 | Validação dos módulos da task L02 (Issue #31): conferência da checklist, seis testes de integração com PostgreSQL e execuções de `mvn test` e `mvn clean verify` com 145 testes (seção 9) | Luan Milian Martins |
+| 20/11/2026 | Ajustes da revisão do PR #41: membro exclusivo no teste de status do pagamento, reorganização da tabela do `evidencias.md` e registro da execução #52 da CI (seções 9.2, 9.5, 9.6 e 9.7) | Luan Milian Martins |
