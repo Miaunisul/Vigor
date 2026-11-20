@@ -18,14 +18,14 @@ O sistema atende à necessidade de manter dados de membros e informações relac
 - Cadastro de membros pela página de formulário.
 - Listagem dos membros cadastrados, com informações cadastrais.
 - Exclusão de membro sem registros vinculados; a interface apresenta o resultado e o serviço bloqueia a operação quando há treinos, pagamentos ou atividades associados.
+- Gerenciamento de treinos: cadastro vinculado a membro existente e consulta dos treinos do membro selecionado.
 
-As rotas implementadas incluem GET /membros, GET /membros/novo, POST /membros, GET e POST /membros/{id}/editar e POST /membros/{id}/excluir. A rota / não está mapeada. Os templates existentes são membros/lista.html e membros/formulario.html.
+As rotas implementadas incluem GET /membros, GET /membros/novo, POST /membros, GET e POST /membros/{id}/editar, POST /membros/{id}/excluir, GET /treinos, GET /treinos/novo e POST /treinos. A rota / não está mapeada. Os templates ficam em membros/lista.html, membros/formulario.html, treinos/lista.html e treinos/formulario.html.
 
 ### Implementadas em serviço e persistência, sem fluxo web
 
 - **Membros:** cadastro, listagem, busca por identificador, validação e normalização de CPF, prevenção de duplicidade e exclusão segura.
 - **Funcionários:** serviço que procura login normalizado e compara senha com hash BCrypt. Não há tela de login, controle de sessão/autorização das rotas nem operação de cadastro no serviço.
-- **Treinos:** serviço para cadastrar treino associado a membro existente e consultar treinos por membro.
 - **Pagamentos:** serviço para registrar e consultar pagamentos associados a membro; o status aceito é PAGO.
 - **Histórico de atividades:** serviço para registrar e consultar atividades por membro ou funcionário responsável. O registro pela interface está fora do escopo da A3; os requisitos preveem dados disponibilizados por carga técnica documentada.
 
@@ -35,7 +35,7 @@ Os cinco modelos JPA, seus repositórios e as migrations V1 a V5 estão presente
 
 - Autenticação web de funcionários e proteção das rotas internas.
 - Atualização de membros (RF04).
-- Telas e endpoints web para cadastro e consulta de treinos, registro de pagamentos e consulta do histórico.
+- Telas e endpoints web para registro de pagamentos e consulta do histórico.
 - Procedimento documentado e automatizado para provisionar funcionários e disponibilizar dados iniciais do histórico.
 - Testes de aceitação e usabilidade executados individualmente com evidências registradas; os CT/VN documentados continuam planejados até haver evidência específica.
 
@@ -50,8 +50,8 @@ Os requisitos oficiais estão em [requisitos.md](docs/requirements/requisitos.md
 | RF03 | Consultar membros | — | Listagem disponível na interface; busca por ID disponível no serviço. |
 | RF04 | Atualizar membros | RN01–RN05 | Pendente; não há operação de atualização no controller ou serviço. |
 | RF05 | Excluir membros | RN06 | Exclusão disponível na interface; bloqueio por vínculos no serviço e no banco. |
-| RF06 | Cadastrar treinos | RN07–RN09 | Serviço e persistência implementados; interface pendente. |
-| RF07 | Consultar treinos | RN07–RN09 | Consulta por membro implementada no serviço; interface pendente. |
+| RF06 | Cadastrar treinos | RN07–RN09 | Formulário web vincula o treino a membro existente; validações da entidade e do serviço são reaproveitadas. |
+| RF07 | Consultar treinos | RN07–RN09 | Listagem web consulta somente os treinos do membro selecionado. |
 | RF08 | Registrar pagamentos | RN10–RN13 | Serviço e persistência implementados para pagamentos recebidos (PAGO); interface pendente. |
 | RF09 | Consultar histórico de atividades | RN14–RN17 | Serviço e persistência implementados; interface pendente. |
 
@@ -163,10 +163,12 @@ verify executa os testes, gera os relatórios JaCoCo e avalia o quality gate. Re
 
 - Unitários de serviços: MembroServiceTest, FuncionarioServiceTest, TreinoServiceTest, PagamentoServiceTest e HistoricoAtividadeServiceTest.
 - Validação de entidade e utilitário: FuncionarioValidationTest e CpfUtilsTest.
-- Controller web: MembroControllerTest e MembroTemplateRenderingTest.
-- PostgreSQL/contexto: VigorApplicationTests, MembroCpfHttpPostgresIntegrationTest, FuncionarioPostgresIntegrationTest, TreinoPostgresIntegrationTest, PagamentoPostgresIntegrationTest, HistoricoAtividadePostgresIntegrationTest, MembroCpfPostgresIntegrationTest, MembroAtualizacaoPostgresIntegrationTest e MembroExclusaoPostgresIntegrationTest.
+- Controller web: MembroControllerTest, MembroTemplateRenderingTest, TreinoControllerTest e TreinoTemplateRenderingTest.
+- PostgreSQL/contexto: VigorApplicationTests, MembroCpfHttpPostgresIntegrationTest, TreinoHttpPostgresIntegrationTest, FuncionarioPostgresIntegrationTest, TreinoPostgresIntegrationTest, PagamentoPostgresIntegrationTest, HistoricoAtividadePostgresIntegrationTest, MembroCpfPostgresIntegrationTest, MembroAtualizacaoPostgresIntegrationTest e MembroExclusaoPostgresIntegrationTest.
 
 A suíte automatizada informada para 10/11/2026 executou **126 testes**, com **0 falhas, 0 erros e 0 ignorados**; o build terminou com sucesso, o JaCoCo analisou **15 classes** e o quality gate foi aprovado. Não informamos percentual total de cobertura aqui porque não foi confirmado um percentual correspondente ao relatório desta execução. Esses resultados globais não comprovam, por si sós, que cada critério de aceitação ou teste manual esteja individualmente aprovado. O histórico detalhado está em [evidencias.md](docs/testing/evidencias.md).
+
+Os testes e a cobertura da implementação M07 estão registrados em [relatorio-m07.md](docs/testing/relatorio-m07.md).
 
 ## Integração contínua
 
@@ -201,7 +203,9 @@ A evidência histórica registrada para o run #27, em 10/11/2026, relata 37 test
     │   │   │   └── validation/
     │   │   └── resources/
     │   │       ├── db/migration/
-    │   │       └── templates/membros/
+    │   │       └── templates/
+    │   │           ├── membros/
+    │   │           └── treinos/
     │   └── test/java/br/edu/unisul/vigor/
     │       ├── controller/
     │       ├── model/
