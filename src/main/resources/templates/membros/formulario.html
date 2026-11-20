@@ -1,37 +1,87 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastrar membro | VIGOR</title>
+    <title th:text="${editando} ? 'Editar membro | VIGOR' : 'Cadastrar membro | VIGOR'">
+        Membro | VIGOR
+    </title>
+    <link rel="stylesheet" th:href="@{/css/membros.css}">
 </head>
 <body>
-    <main>
-        <h1>Cadastrar membro</h1>
+    <header class="site-header">
+        <a class="brand" th:href="@{/membros}">VIGOR</a>
+        <span>Sistema de gestão de academia</span>
+    </header>
 
-        <form th:action="@{/membros}" th:object="${membro}" method="post">
-            <label for="nome">Nome completo</label>
-            <input id="nome" type="text" th:field="*{nome}" maxlength="150" required>
-            <small th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></small>
+    <main class="page-shell">
+        <a class="back-link" th:href="@{/membros}">← Voltar para membros</a>
 
-            <label for="cpf">CPF</label>
-            <input id="cpf" type="text" th:field="*{cpf}"
-                   required>
-            <small th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}"></small>
+        <section class="page-heading">
+            <p class="eyebrow">Gestão de membros</p>
+            <h1 th:text="${editando} ? 'Editar membro' : 'Cadastrar membro'">Membro</h1>
+            <p th:text="${editando} ? 'Atualize os dados cadastrais do membro.' : 'Preencha os dados para cadastrar um novo membro.'">
+                Dados cadastrais do membro.
+            </p>
+        </section>
 
-            <label for="telefone">Telefone</label>
-            <input id="telefone" type="text" th:field="*{telefone}" maxlength="20" required>
-            <small th:if="${#fields.hasErrors('telefone')}" th:errors="*{telefone}"></small>
+        <p class="feedback feedback--success" role="status" th:if="${sucesso}" th:text="${sucesso}"></p>
+        <p class="feedback feedback--error" role="alert" th:if="${erro}" th:text="${erro}"></p>
 
-            <label for="endereco">Endereço</label>
-            <input id="endereco" type="text" th:field="*{endereco}" maxlength="255" required>
-            <small th:if="${#fields.hasErrors('endereco')}" th:errors="*{endereco}"></small>
+        <section class="panel">
+            <div class="record-meta" th:if="${editando}">
+                <span>ID do membro <strong th:text="${membro.id}"></strong></span>
+                <span>Data de cadastro <strong th:text="${membro.dataCadastro}"></strong></span>
+            </div>
 
-            <button type="submit">Cadastrar membro</button>
-        </form>
+            <form th:action="@{${formAction}}" th:object="${membro}" method="post" novalidate>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="nome">Nome completo</label>
+                        <input id="nome" type="text" th:field="*{nome}" maxlength="150" required
+                               th:classappend="${#fields.hasErrors('nome')} ? 'field-input--invalid' : ''"
+                               th:attr="aria-invalid=${#fields.hasErrors('nome')}">
+                        <small class="field-error" role="alert" th:if="${#fields.hasErrors('nome')}"
+                               th:errors="*{nome}"></small>
+                    </div>
 
-        <a th:href="@{/membros}">Voltar para a lista</a>
+                    <div class="form-field">
+                        <label for="cpf">CPF</label>
+                        <input id="cpf" type="text" th:field="*{cpf}" inputmode="numeric" required
+                               th:classappend="${#fields.hasErrors('cpf')} ? 'field-input--invalid' : ''"
+                               th:attr="aria-invalid=${#fields.hasErrors('cpf')}">
+                        <small class="field-error" role="alert" th:if="${#fields.hasErrors('cpf')}"
+                               th:errors="*{cpf}"></small>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="telefone">Telefone</label>
+                        <input id="telefone" type="text" th:field="*{telefone}" maxlength="20" required
+                               th:classappend="${#fields.hasErrors('telefone')} ? 'field-input--invalid' : ''"
+                               th:attr="aria-invalid=${#fields.hasErrors('telefone')}">
+                        <small class="field-error" role="alert" th:if="${#fields.hasErrors('telefone')}"
+                               th:errors="*{telefone}"></small>
+                    </div>
+
+                    <div class="form-field form-field--wide">
+                        <label for="endereco">Endereço</label>
+                        <input id="endereco" type="text" th:field="*{endereco}" maxlength="255" required
+                               th:classappend="${#fields.hasErrors('endereco')} ? 'field-input--invalid' : ''"
+                               th:attr="aria-invalid=${#fields.hasErrors('endereco')}">
+                        <small class="field-error" role="alert" th:if="${#fields.hasErrors('endereco')}"
+                               th:errors="*{endereco}"></small>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button class="button button--primary" type="submit"
+                            th:text="${editando} ? 'Salvar alterações' : 'Cadastrar membro'">
+                        Salvar
+                    </button>
+                    <a class="button button--secondary" th:href="@{/membros}">Cancelar</a>
+                </div>
+            </form>
+        </section>
     </main>
 </body>
 </html>
