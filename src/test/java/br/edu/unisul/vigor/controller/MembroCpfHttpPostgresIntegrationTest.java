@@ -5,6 +5,7 @@ import br.edu.unisul.vigor.service.MembroService;
 import br.edu.unisul.vigor.validation.CpfUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@EnabledIfEnvironmentVariable(named = "DB_PASSWORD", matches = ".+")
 class MembroCpfHttpPostgresIntegrationTest {
 
     private final String nomeTeste = "Membro teste CPF HTTP " + UUID.randomUUID();
