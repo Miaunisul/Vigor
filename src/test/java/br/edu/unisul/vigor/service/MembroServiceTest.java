@@ -103,6 +103,90 @@ class MembroServiceTest {
     }
 
     @Test
+    void deveAtualizarDadosMantendoENormalizandoProprioCpf() {
+        Membro original = membroValido("52998224725");
+        original.setNome("Nome original");
+        original.setTelefone("Telefone original");
+        original.setEndereco("Endereço original");
+        java.time.LocalDate dataCadastroOriginal = original.getDataCadastro();
+        Membro dadosAtualizados = membroValido(" 529.982.247-25 ");
+        dadosAtualizados.setNome("  Nome atualizado  ");
+        dadosAtualizados.setTelefone("  Telefone atualizado  ");
+        dadosAtualizados.setEndereco("  Endereço atualizado  ");
+
+        when(membroRepository.findById(42L))
+                .thenReturn(java.util.Optional.of(original));
+        when(membroRepository.existsByCpfAndIdNot("52998224725", 42L))
+                .thenReturn(false);
+        when(membroRepository.saveAndFlush(original)).thenReturn(original);
+
+        Membro resultado = membroService.atualizar(42L, dadosAtualizados);
+
+        assertSame(original, resultado);
+        assertEquals("Nome atualizado", original.getNome());
+        assertEquals("52998224725", original.getCpf());
+        assertEquals("Telefone atualizado", original.getTelefone());
+        assertEquals("Endereço atualizado", original.getEndereco());
+        assertEquals(dataCadastroOriginal, original.getDataCadastro());
+        verify(membroRepository).existsByCpfAndIdNot("52998224725", 42L);
+        verify(membroRepository).saveAndFlush(original);
+    }
+
+    @Test
+    void deveAtualizarParaCpfDisponivelNormalizadoSemPontuacao() {
+        Membro original = membroValido("52998224725");
+        Membro dadosAtualizados = membroValido("168.995.350-09");
+        when(membroRepository.findById(42L))
+                .thenReturn(java.util.Optional.of(original));
+        when(membroRepository.existsByCpfAndIdNot("16899535009", 42L))
+                .thenReturn(false);
+        when(membroRepository.saveAndFlush(original)).thenReturn(original);
+
+        membroService.atualizar(42L, dadosAtualizados);
+
+        assertEquals("16899535009", original.getCpf());
+        verify(membroRepository).existsByCpfAndIdNot("16899535009", 42L);
+        verify(membroRepository).saveAndFlush(original);
+    }
+
+    @Test
+    void deveRejeitarCpfInvalidoSemAlterarMembroOriginal() {
+        Membro original = membroValido("52998224725");
+        original.setNome("Nome original");
+        Membro dadosAtualizados = membroValido("52998224726");
+        dadosAtualizados.setNome("Nome novo");
+        when(membroRepository.findById(42L))
+                .thenReturn(java.util.Optional.of(original));
+
+        assertThrows(ConstraintViolationException.class,
+                () -> membroService.atualizar(42L, dadosAtualizados));
+
+        assertEquals("Nome original", original.getNome());
+        assertEquals("52998224725", original.getCpf());
+        verify(membroRepository, never()).existsByCpfAndIdNot(anyString(), anyLong());
+        verify(membroRepository, never()).saveAndFlush(any(Membro.class));
+    }
+
+    @Test
+    void deveRejeitarCpfDeOutroMembroSemAlterarMembroOriginal() {
+        Membro original = membroValido("52998224725");
+        original.setNome("Nome original");
+        Membro dadosAtualizados = membroValido("16899535009");
+        dadosAtualizados.setNome("Nome novo");
+        when(membroRepository.findById(42L))
+                .thenReturn(java.util.Optional.of(original));
+        when(membroRepository.existsByCpfAndIdNot("16899535009", 42L))
+                .thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> membroService.atualizar(42L, dadosAtualizados));
+
+        assertEquals("Nome original", original.getNome());
+        assertEquals("52998224725", original.getCpf());
+        verify(membroRepository, never()).saveAndFlush(any(Membro.class));
+    }
+
+    @Test
     void deveRejeitarCpfComDigitosVerificadoresInvalidosAntesDePersistir() {
         Membro membro = membroValido("52998224726");
 
