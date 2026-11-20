@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treinos | VIGOR</title>
+    <link rel="stylesheet" th:href="@{/css/membros.css}">
+</head>
+<body>
+    <header class="site-header">
+        <a class="brand" th:href="@{/membros}">VIGOR</a>
+        <span>Sistema de gestão de academia</span>
+        <nav class="site-nav" aria-label="Navegação principal">
+            <a th:href="@{/membros}">Membros</a>
+        </nav>
+    </header>
+
+    <main class="page-shell">
+        <section class="page-heading page-heading--with-action">
+            <div>
+                <p class="eyebrow">Gestão de treinos</p>
+                <h1>Treinos cadastrados</h1>
+                <p>Consulte os treinos de um membro ou cadastre um novo.</p>
+            </div>
+            <a class="button button--primary" th:href="@{/treinos/novo}">Cadastrar treino</a>
+        </section>
+
+        <p class="feedback feedback--success" role="status" th:if="${sucesso}" th:text="${sucesso}"></p>
+        <p class="feedback feedback--error" role="alert" th:if="${erro}" th:text="${erro}"></p>
+
+        <section class="panel">
+            <form class="filter-form" th:action="@{/treinos}" method="get">
+                <div class="form-field">
+                    <label for="membroId">Membro</label>
+                    <select id="membroId" name="membroId" required>
+                        <option value="">Selecione um membro</option>
+                        <option th:each="membro : ${membros}"
+                                th:value="${membro.id}"
+                                th:text="${membro.nome}"
+                                th:selected="${membroSelecionadoId != null and membro.id == membroSelecionadoId}">
+                            Membro cadastrado
+                        </option>
+                    </select>
+                </div>
+                <button class="button button--secondary" type="submit">Consultar treinos</button>
+            </form>
+        </section>
+
+        <section class="panel empty-state" th:if="${#lists.isEmpty(membros)}">
+            <h2>Nenhum membro cadastrado</h2>
+            <p>Cadastre um membro antes de consultar ou registrar treinos.</p>
+            <a class="button button--secondary" th:href="@{/membros/novo}">Cadastrar membro</a>
+        </section>
+
+        <section class="panel empty-state"
+                 th:if="${!#lists.isEmpty(membros) and membroSelecionadoId == null}">
+            <h2>Selecione um membro</h2>
+            <p>Os treinos serão exibidos somente para o membro selecionado.</p>
+        </section>
+
+        <section class="panel empty-state"
+                 th:if="${membroSelecionadoId != null and #lists.isEmpty(treinos)}">
+            <h2>Nenhum treino cadastrado para este membro</h2>
+            <p>Você pode registrar um treino para o membro selecionado.</p>
+            <a class="button button--secondary" th:href="@{/treinos/novo}">Cadastrar treino</a>
+        </section>
+
+        <section class="panel table-panel"
+                 th:if="${membroSelecionadoId != null and !#lists.isEmpty(treinos)}">
+            <div class="table-scroll">
+                <table class="data-table training-table">
+                    <caption class="visually-hidden">Treinos do membro selecionado</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Tipo</th>
+                            <th scope="col">Descrição</th>
+                            <th scope="col">Duração (minutos)</th>
+                            <th scope="col">Data de início</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="treino : ${treinos}">
+                            <td th:text="${treino.tipo}"></td>
+                            <td th:text="${treino.descricao}"></td>
+                            <td th:text="${treino.duracaoMinutos}"></td>
+                            <td th:text="${treino.dataInicio}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
