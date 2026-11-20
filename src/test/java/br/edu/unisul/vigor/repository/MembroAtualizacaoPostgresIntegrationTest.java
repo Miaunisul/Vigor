@@ -55,6 +55,8 @@ class MembroAtualizacaoPostgresIntegrationTest {
         entityManager.clear();
 
         Membro dados = novoMembro(" atualizado", formatarCpf(original.getCpf()));
+        dados.setTelefone("(48) 99999-1234");
+        dados.setEndereco("Rua atualizada, 2");
         Membro atualizado = membroService.atualizar(idOriginal, dados);
 
         assertEquals(idOriginal, atualizado.getId());
