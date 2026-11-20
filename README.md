@@ -19,7 +19,7 @@ O sistema atende à necessidade de manter dados de membros e informações relac
 - Listagem dos membros cadastrados, com informações cadastrais.
 - Exclusão de membro sem registros vinculados; a interface apresenta o resultado e o serviço bloqueia a operação quando há treinos, pagamentos ou atividades associados.
 
-As rotas implementadas são GET /membros, GET /membros/novo, POST /membros e POST /membros/{id}/excluir. A rota / não está mapeada. Os templates existentes são membros/lista.html e membros/formulario.html.
+As rotas implementadas incluem GET /membros, GET /membros/novo, POST /membros, GET e POST /membros/{id}/editar e POST /membros/{id}/excluir. A rota / não está mapeada. Os templates existentes são membros/lista.html e membros/formulario.html.
 
 ### Implementadas em serviço e persistência, sem fluxo web
 
@@ -164,7 +164,7 @@ verify executa os testes, gera os relatórios JaCoCo e avalia o quality gate. Re
 - Unitários de serviços: MembroServiceTest, FuncionarioServiceTest, TreinoServiceTest, PagamentoServiceTest e HistoricoAtividadeServiceTest.
 - Validação de entidade e utilitário: FuncionarioValidationTest e CpfUtilsTest.
 - Controller web: MembroControllerTest.
-- PostgreSQL/contexto: VigorApplicationTests, FuncionarioPostgresIntegrationTest, TreinoPostgresIntegrationTest, PagamentoPostgresIntegrationTest, HistoricoAtividadePostgresIntegrationTest, MembroCpfPostgresIntegrationTest e MembroExclusaoPostgresIntegrationTest.
+- PostgreSQL/contexto: VigorApplicationTests, MembroCpfHttpPostgresIntegrationTest, FuncionarioPostgresIntegrationTest, TreinoPostgresIntegrationTest, PagamentoPostgresIntegrationTest, HistoricoAtividadePostgresIntegrationTest, MembroCpfPostgresIntegrationTest, MembroAtualizacaoPostgresIntegrationTest e MembroExclusaoPostgresIntegrationTest.
 
 A suíte automatizada informada para 10/11/2026 executou **126 testes**, com **0 falhas, 0 erros e 0 ignorados**; o build terminou com sucesso, o JaCoCo analisou **15 classes** e o quality gate foi aprovado. Não informamos percentual total de cobertura aqui porque não foi confirmado um percentual correspondente ao relatório desta execução. Esses resultados globais não comprovam, por si sós, que cada critério de aceitação ou teste manual esteja individualmente aprovado. O histórico detalhado está em [evidencias.md](docs/testing/evidencias.md).
 
