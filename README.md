@@ -163,7 +163,7 @@ verify executa os testes, gera os relatórios JaCoCo e avalia o quality gate. Re
 
 - Unitários de serviços: MembroServiceTest, FuncionarioServiceTest, TreinoServiceTest, PagamentoServiceTest e HistoricoAtividadeServiceTest.
 - Validação de entidade e utilitário: FuncionarioValidationTest e CpfUtilsTest.
-- Controller web: MembroControllerTest.
+- Controller web: MembroControllerTest e MembroTemplateRenderingTest.
 - PostgreSQL/contexto: VigorApplicationTests, MembroCpfHttpPostgresIntegrationTest, FuncionarioPostgresIntegrationTest, TreinoPostgresIntegrationTest, PagamentoPostgresIntegrationTest, HistoricoAtividadePostgresIntegrationTest, MembroCpfPostgresIntegrationTest, MembroAtualizacaoPostgresIntegrationTest e MembroExclusaoPostgresIntegrationTest.
 
 A suíte automatizada informada para 10/11/2026 executou **126 testes**, com **0 falhas, 0 erros e 0 ignorados**; o build terminou com sucesso, o JaCoCo analisou **15 classes** e o quality gate foi aprovado. Não informamos percentual total de cobertura aqui porque não foi confirmado um percentual correspondente ao relatório desta execução. Esses resultados globais não comprovam, por si sós, que cada critério de aceitação ou teste manual esteja individualmente aprovado. O histórico detalhado está em [evidencias.md](docs/testing/evidencias.md).
