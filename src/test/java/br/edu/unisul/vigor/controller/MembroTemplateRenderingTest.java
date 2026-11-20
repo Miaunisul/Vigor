@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+import org.unbescape.html.HtmlEscape;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.spring6.view.ThymeleafViewResolver;
 import org.thymeleaf.templatemode.TemplateMode;
@@ -62,13 +63,15 @@ class MembroTemplateRenderingTest {
 
     @Test
     void renderizaFormularioDeEdicaoComDadosEAcaoDoMembro() throws Exception {
-        Membro membro = membroValido("Nome atual");
+        String nomeAtual = "Membro teste CPF HTTP 123e4567-e89b-12d3-a456-426614174000 edição";
+        Membro membro = membroValido(nomeAtual);
         when(membroService.buscarPorId(42L)).thenReturn(membro);
 
         mockMvc.perform(get("/membros/{id}/editar", 42L))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Editar membro")))
-                .andExpect(content().string(containsString("value=\"Nome atual\"")))
+                .andExpect(content().string(containsString(
+                        "value=\"" + HtmlEscape.escapeHtml5(nomeAtual) + "\"")))
                 .andExpect(content().string(containsString("value=\"52998224725\"")))
                 .andExpect(content().string(containsString("action=\"/membros/42/editar\"")))
                 .andExpect(content().string(containsString("ID do membro")))

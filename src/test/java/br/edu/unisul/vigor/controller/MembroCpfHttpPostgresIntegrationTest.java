@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.unbescape.html.HtmlEscape;
 
 import java.io.IOException;
 import java.net.URI;
@@ -93,7 +94,8 @@ class MembroCpfHttpPostgresIntegrationTest {
 
         assertEquals(200, resposta.statusCode(), resposta::body);
         assertTrue(resposta.body().contains("Editar membro"), resposta::body);
-        assertTrue(resposta.body().contains("value=\"" + membro.getNome() + "\""), resposta::body);
+        assertTrue(resposta.body().contains(
+                "value=\"" + HtmlEscape.escapeHtml5(membro.getNome()) + "\""), resposta::body);
         assertTrue(resposta.body().contains("value=\"" + membro.getCpf() + "\""), resposta::body);
         assertTrue(resposta.body().contains("ID do membro"), resposta::body);
         assertTrue(resposta.body().contains("Data de cadastro"), resposta::body);
