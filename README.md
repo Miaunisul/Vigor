@@ -174,7 +174,7 @@ Os testes e a cobertura da implementação M07 estão registrados em [relatorio-
 
 O workflow [ci.yml](.github/workflows/ci.yml), chamado CI - VIGOR, roda em push para feat/**, develop e main, e em Pull Requests destinados a develop ou main. Usa Ubuntu, Java 21 (Temurin), serviço PostgreSQL postgres:18, credencial CI_DB_PASSWORD armazenada como secret e executa mvn --batch-mode --no-transfer-progress clean verify. O JaCoCo exige pelo menos 75% de instruções; o relatório é publicado como artefato relatorio-jacoco.
 
-A evidência histórica registrada para o run #27, em 10/11/2026, relata 37 testes, PostgreSQL 18.6, execução da V1 e aprovação do gate. Essa execução antecede a suíte atual de 126 testes e não deve ser confundida com ela. O percentual exato da CI não está registrado.
+A evidência histórica registrada para o run # 27, em 10/11/2026, relata 37 testes, PostgreSQL 18.6, execução da V1 e aprovação do gate. Essa execução antecede a suíte atual de 126 testes e não deve ser confundida com ela. O percentual exato da CI não está registrado.
 
 ## Estrutura do repositório
 
@@ -219,16 +219,39 @@ A evidência histórica registrada para o run #27, em 10/11/2026, relata 37 test
     ├── HELP.md
     └── README.md
 
-## Equipe e responsabilidades planejadas
 
-Estas são frentes de trabalho planejadas; não atribuem autoria individual de código, testes, commits ou evidências.
+## Equipe e responsabilidades
 
-| Integrante | Responsabilidades planejadas |
-|---|---|
-| Millena Ferreira Rodrigues | Interface web, protótipo Figma e integração dos fluxos de cadastro e consulta. |
-| Maria Eduarda Souza dos Santos Ferreira | Requisitos, regras de negócio e validações. |
-| Luan Milian Martins | Modelo de domínio, persistência e consultas. |
-| Emely Santos da Silveira | Testes de integração, CI, cobertura e evidências de qualidade. |
+A distribuição de tarefas e responsabilidades é atualizada continuamente conforme as demandas do projeto, a criação e atribuição de issues e a realização das entregas. Por isso, pode diferir da divisão inicialmente registrada no plano de testes piloto, que representa o planejamento daquela etapa.
+
+As tabelas desta seção serão atualizadas à medida que novas tarefas forem atribuídas e novas contribuições forem realizadas, incluindo os links dos PRs, das implementações e dos testes correspondentes. As atividades planejadas ou em andamento serão diferenciadas das entregas concluídas, preservando o registro da contribuição efetiva de cada integrante.
+
+| Integrante | Responsabilidades | Issues relacionadas |
+|---|---|---|
+| Millena Ferreira Rodrigues | Documentação de arquitetura e banco de dados, consolidação do README, persistência PostgreSQL e implementação das interfaces de membros, treinos, pagamentos, login e histórico. | M01 (#13), M02 (#14), M03 (auditoria dos casos de teste, compartilhada com Maria Eduarda), M04 (#23), M05 (#24), M06 (#30), M07 (#32), M08 (#34) e M09 (#35). |
+| Maria Eduarda Souza dos Santos Ferreira | Requisitos, regras de negócio, critérios de aceitação, protótipo Figma e auditoria documental dos casos de teste. | D01 (#11), D02 (#12), D03 (#27), D04 (#33) e participação na M03. |
+| Emely Santos da Silveira | Validação integrada de CPF pelo fluxo HTTP e PostgreSQL; consolidação dos testes, evidências, cobertura e matriz de rastreabilidade. | E01 (#28) e E02 (#36). |
+| Luan Milian Martins | Revisão dos relacionamentos e consultas do banco; validação da persistência de treinos, pagamentos e histórico. | L01 (#29) e L02 (#31). |
+
+### Acompanhamento por integrante, funcionalidade e testes
+
+| Aluno | Funcionalidade ou contribuição sob sua responsabilidade | Links dos testes e contribuições |
+|---|---|---|
+| Millena Ferreira Rodrigues | Persistência e interfaces de membros, treinos, pagamentos, login e histórico. | [README v1](https://github.com/Miaunisul/Vigor/pull/2), [Organiza diagramas e modelos de dados](https://github.com/Miaunisul/Vigor/pull/19), [Consolida arquitetura e BD](https://github.com/Miaunisul/Vigor/pull/22) e [Persistência PostgreSQL](https://github.com/Miaunisul/Vigor/pull/26). |
+| Maria Eduarda Souza dos Santos Ferreira | Requisitos, protótipo, regras de CPF e revisão dos critérios e casos de teste. | [RFs, RNFs, RNs e CAs](https://github.com/Miaunisul/Vigor/pull/16), [Protótipo](https://github.com/Miaunisul/Vigor/pull/17), [Alinhamento de regras e validação de CPF](https://github.com/Miaunisul/Vigor/pull/37), [Plano de testes](docs/testing/plano-de-testes.md) e [Critérios de aceitação](docs/requirements/criterios-de-aceite.md). |
+| Emely Santos da Silveira | Validação de CPF pelo fluxo HTTP integrado ao PostgreSQL e consolidação da qualidade. | [Validação de CPF pelo fluxo HTTP](https://github.com/Miaunisul/Vigor/pull/39). |
+| Luan Milian Martins | Relacionamentos, consultas e persistência de treinos, pagamentos e histórico. | [Validação de relacionamentos e consultas](https://github.com/Miaunisul/Vigor/pull/38). |
+
+### Testes automatizados e contribuições registradas
+
+A tabela abaixo relaciona as contribuições de cada integrante aos arquivos de teste e commits correspondentes. Um mesmo arquivo pode ter contribuições de mais de uma pessoa. Os links mostram o trabalho registrado; os resultados de execução dos testes são apresentados nas evidências e no GitHub Actions.
+
+| Integrante | Contribuição registrada | Arquivos de teste | Commits relacionados |
+|---|---|---|---|
+| Millena Ferreira Rodrigues | Testes unitários do serviço de membros e da validação e normalização de CPF. | [MembroServiceTest](src/test/java/br/edu/unisul/vigor/service/MembroServiceTest.java) e [CpfUtilsTest](src/test/java/br/edu/unisul/vigor/validation/CpfUtilsTest.java) | [Testes do serviço](https://github.com/Miaunisul/Vigor/commit/8af9db4), [normalização](https://github.com/Miaunisul/Vigor/commit/ca2d1b7), [dígitos verificadores](https://github.com/Miaunisul/Vigor/commit/7c84452) e [validação customizada](https://github.com/Miaunisul/Vigor/commit/cbb26cb). |
+| Maria Eduarda Souza dos Santos Ferreira | Revisão documental das regras, critérios de aceitação e cenários de teste de CPF. Autoria de testes automatizados ainda não identificada no histórico consultado. | [Plano de testes](docs/testing/plano-de-testes.md) e [critérios de aceitação](docs/requirements/criterios-de-aceite.md), como documentação de planejamento e revisão. | [PR de alinhamento documental do CPF](https://github.com/Miaunisul/Vigor/pull/37). |
+| Emely Santos da Silveira | Teste integrado de CPF pelo fluxo HTTP com PostgreSQL e ajustes na aplicação das migrations na suíte de integração. | [MembroCpfHttpPostgresIntegrationTest](src/test/java/br/edu/unisul/vigor/controller/MembroCpfHttpPostgresIntegrationTest.java) e [MembroCpfPostgresIntegrationTest](src/test/java/br/edu/unisul/vigor/repository/MembroCpfPostgresIntegrationTest.java). | [Teste HTTP integrado](https://github.com/Miaunisul/Vigor/commit/fd84999) e [ajuste das migrations](https://github.com/Miaunisul/Vigor/commit/dbb477e). |
+| Luan Milian Martins | Complementação dos testes de consultas por identificador, por membro e de isolamento entre membros; ajuste da configuração Flyway nos testes de integração. | [HistoricoAtividadePostgresIntegrationTest](src/test/java/br/edu/unisul/vigor/repository/HistoricoAtividadePostgresIntegrationTest.java), [PagamentoPostgresIntegrationTest](src/test/java/br/edu/unisul/vigor/repository/PagamentoPostgresIntegrationTest.java) e [TreinoPostgresIntegrationTest](src/test/java/br/edu/unisul/vigor/repository/TreinoPostgresIntegrationTest.java). | [Complementação das consultas](https://github.com/Miaunisul/Vigor/commit/70910f6) e [configuração Flyway](https://github.com/Miaunisul/Vigor/commit/b5a4bb3). |
 
 ## Documentação complementar
 
