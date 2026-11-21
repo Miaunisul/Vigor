@@ -4,6 +4,8 @@
 - **Task:** L07 — Validar persistência e consultas de treinos, pagamentos e histórico de atividades.
 - **Data da conferência:** 13/11/2026
 - **Complementação:** 16/11/2026, conforme a revisão do PR #38 (seção 8)
+- **Validação da task L02:** 18/11/2026, Issue #31, branch `test/validacao-persistencia-modulos` (seção 9)
+- **Ajustes da revisão do PR #41:** 20/11/2026 (seção 9.7)
 - **Branch:** `feat/revisao-relacionamentos-banco`, criada a partir da `develop` atualizada
 - **Evidências relacionadas:** [evidencias.md](evidencias.md), EV07 a EV10 e seção 4
 
@@ -22,6 +24,8 @@ Na revisão do PR #38, três itens estavam pendentes por falta de teste específ
 | **Total** | **17** | **17** | **0** | **0** |
 
 Nenhum item foi reprovado. Dois achados da revisão foram registrados para avaliação da equipe (seção 6.3). A falha da integração contínua observada no PR está descrita na seção 6.5.
+
+Em 18/11/2026, na task L02 (Issue #31), os testes de treinos, pagamentos e histórico de atividades foram conferidos item a item contra a checklist da issue. Os itens que ainda não estavam comprovados no PostgreSQL foram complementados com seis testes de integração, e a suíte passou a ter 145 testes, todos aprovados (seção 9).
 
 ## Ambiente e método
 
@@ -313,6 +317,123 @@ O ambiente foi o mesmo descrito em "Ambiente e método".
 
 A causa e a correção estão descritas na seção 6.5. Situação em 16/11/2026: as execuções #38 e #39 da CI concluíram com sucesso (131 testes, 0 falhas, 0 erros).
 
+## 9. Validação dos módulos — Task L02 (18/11/2026)
+
+A Issue #31 (L02) solicitou comprovar que os dados de treinos, pagamentos e histórico de atividades são salvos e consultados corretamente no PostgreSQL, respeitando os vínculos com membros e funcionários, e que as consultas isolam os dados de cada membro. A conferência partiu da `develop` no commit `70b2d00`, que já inclui os testes da seção 8.
+
+Orientações seguidas: as migrations V3, V4 e V5, a estrutura do banco e o código de produção não foram alterados; nenhuma migration nova foi criada; nenhum dado do banco foi apagado; cada alteração foi aprovada antes de ser gravada.
+
+### 9.1. Conferência da checklist
+
+| Parte | Item da checklist | Situação na conferência | Testes que comprovam |
+|---|---|---|---|
+| 2. Treinos | Cria um membro válido para relacionar ao treino | Coberto | Métodos auxiliares `membroParaTeste` e `criarMembroTransitorio` |
+| 2. Treinos | Treino é salvo no banco | Coberto | `persisteTreinoVinculadoEConsultaPeloMembro` |
+| 2. Treinos | Treino pode ser consultado pelo ID | Coberto | `consultaTreinoPorIdRetornaOsDadosPersistidos`; `consultaTreinoPorIdInexistenteRetornaVazio` |
+| 2. Treinos | Consulta por membro retorna somente os treinos daquele membro | Coberto | `consultaPorMembroNaoRetornaTreinosDeOutroMembro` |
+| 2. Treinos | Não é possível salvar treino com membro inexistente | Coberto | `chaveEstrangeiraRejeitaMembroInexistente` |
+| 2. Treinos | Duração precisa ser positiva | Coberto | `servicoRejeitaDuracaoInvalidaSemPersistirTreino`; `checkDoBancoRejeitaDuracaoNaoPositiva` |
+| 2. Treinos | Campos obrigatórios rejeitados quando inválidos | Parcial: no PostgreSQL, apenas tipo vazio | `checkDoBancoRejeitaTipoVazio`; `checkDoBancoRejeitaDescricaoVazia` (novo); `bancoExigeDataDeInicio` (novo) |
+| 3. Pagamentos | Pagamento é salvo com valor positivo | Coberto | `persistePagamentoEConsultaVinculoComOMembro`; `consultaPagamentoPersistidoRetornaValorDataEStatusGravados` (novo) |
+| 3. Pagamentos | Data de pagamento é persistida | Lacuna: nenhum teste lia a data de volta do banco | `consultaPagamentoPersistidoRetornaValorDataEStatusGravados` (novo) |
+| 3. Pagamentos | Status salvo é `PAGO` | Coberto | `consultaPorMembroRetornaSomenteOsPagamentosDoMembro`; `consultaPagamentoPersistidoRetornaValorDataEStatusGravados` (novo) |
+| 3. Pagamentos | Consulta por membro retorna os pagamentos corretos | Coberto | `consultaPorMembroRetornaSomenteOsPagamentosDoMembro` |
+| 3. Pagamentos | Não é possível registrar pagamento para membro inexistente | Coberto | `chaveEstrangeiraRejeitaMembroInexistente` |
+| 3. Pagamentos | Valores zero ou negativos são rejeitados | Parcial: no PostgreSQL, apenas zero | `servicoRejeitaValorInvalidoSemPersistirPagamento`; `constraintDoBancoRejeitaValorNaoPositivo`; `constraintDoBancoRejeitaValorNegativo` (novo) |
+| 3. Pagamentos | Banco impede status diferente de `PAGO` | Coberto | `constraintDoBancoRejeitaStatusDiferenteDePago` |
+| 4. Histórico | Histórico é vinculado ao membro correto | Coberto | `persisteAtividadeComMembroEFuncionarioEConsultaPorAmbos`; `consultaPorMembroNaoRetornaAtividadesDeOutroMembro` |
+| 4. Histórico | Funcionário responsável é obrigatório | Coberto | `chaveEstrangeiraTambemExigeFuncionarioResponsavel` |
+| 4. Histórico | Atividade é salva corretamente | Parcial: o texto da atividade não era lido de volta do banco | `consultaAtividadePersistidaRetornaDescricaoDataETempoGravados` (novo) |
+| 4. Histórico | Data e tempo de execução são persistidos | Lacuna: nenhum teste lia esses valores de volta do banco | `consultaAtividadePersistidaRetornaDescricaoDataETempoGravados` (novo) |
+| 4. Histórico | Consulta por membro retorna somente o histórico daquele membro | Coberto | `consultaPorMembroNaoRetornaAtividadesDeOutroMembro` |
+| 4. Histórico | Não é possível salvar histórico com membro inexistente | Coberto | `chaveEstrangeiraRejeitaMembroInexistente` |
+| 4. Histórico | Não é possível salvar histórico com funcionário inexistente | Coberto | `chaveEstrangeiraRejeitaFuncionarioInexistente` |
+| 4. Histórico | Tempo de execução zero ou negativo é rejeitado | Parcial: no PostgreSQL, apenas zero | `servicoRejeitaDadosInvalidosSemPersistirAtividade`; `checkDoBancoRejeitaTempoNaoPositivo`; `checkDoBancoRejeitaTempoNegativo` (novo) |
+| 5. Isolamento | Registros para os membros A e B; a consulta de A não retorna registros de B; repetido nos três módulos | Coberto | `TreinoPostgresIntegrationTest.consultaPorMembroNaoRetornaTreinosDeOutroMembro`; `PagamentoPostgresIntegrationTest.consultaPorMembroRetornaSomenteOsPagamentosDoMembro`; `HistoricoAtividadePostgresIntegrationTest.consultaPorMembroNaoRetornaAtividadesDeOutroMembro` |
+
+### 9.2. Decisões
+
+As lacunas encontradas foram agrupadas em quatro blocos e avaliadas antes de qualquer alteração:
+
+| Bloco | Proposta | Decisão |
+|---|---|---|
+| A | Testes que gravam, leem do banco e comparam todos os campos de um pagamento e de uma atividade | Aprovado e implementado |
+| B | Testes de valor negativo em pagamentos e de tempo negativo no histórico, direto no banco | Aprovado e implementado |
+| C | Testes de descrição vazia e de data de início nula em treinos, direto no banco | Aprovado e implementado |
+| D | Tornar `servicoRejeitaStatusInvalidoSemPersistirPagamento` independente dos dados do banco, o que exigiria alterar uma linha existente | Não implementado na entrega inicial; implementado em 20/11/2026, após a revisão do PR #41 (seção 9.7) |
+
+### 9.3. Testes adicionados
+
+| Classe | Teste | O que verifica | Item atendido |
+|---|---|---|---|
+| `TreinoPostgresIntegrationTest` | `checkDoBancoRejeitaDescricaoVazia` | Insere um treino com descrição composta apenas de espaços direto no banco e confirma a rejeição pelo `CHECK` da V3 | Campos obrigatórios de treino |
+| `TreinoPostgresIntegrationTest` | `bancoExigeDataDeInicio` | Insere um treino sem data de início direto no banco e confirma a rejeição pela obrigatoriedade da coluna | Campos obrigatórios de treino |
+| `PagamentoPostgresIntegrationTest` | `consultaPagamentoPersistidoRetornaValorDataEStatusGravados` | Grava um pagamento, consulta pelo ID no PostgreSQL e compara membro, valor, data de pagamento e status com os valores gravados | Valor positivo, data de pagamento e status `PAGO` |
+| `PagamentoPostgresIntegrationTest` | `constraintDoBancoRejeitaValorNegativo` | Insere um pagamento com valor `-1.00` direto no banco e confirma a rejeição pelo `CHECK` da V4 | Valores negativos rejeitados |
+| `HistoricoAtividadePostgresIntegrationTest` | `consultaAtividadePersistidaRetornaDescricaoDataETempoGravados` | Grava uma atividade, consulta pelo ID no PostgreSQL e compara membro, funcionário responsável, atividade, data e tempo de execução com os valores gravados | Atividade, data e tempo de execução persistidos |
+| `HistoricoAtividadePostgresIntegrationTest` | `checkDoBancoRejeitaTempoNegativo` | Insere uma atividade com tempo de execução `-1` direto no banco e confirma a rejeição pelo `CHECK` da V5 | Tempo de execução negativo rejeitado |
+
+Características comuns:
+
+- Todos os testes rodam dentro de uma transação desfeita ao final (`@Transactional`). Não deixam registros no banco nem alteram dados existentes.
+- Nos testes de leitura, as alterações são enviadas ao banco (`flush`) e o contexto de persistência é limpo (`EntityManager.clear()`) antes da consulta pelo ID, para que os dados sejam lidos do PostgreSQL e não do cache do Hibernate. Esses testes criam um membro novo, sem depender dos membros existentes no banco.
+- Os testes de rejeição inserem os dados com SQL direto (`JdbcTemplate`), sem passar pelo service, para comprovar que a própria estrutura do banco impede o registro inválido.
+- Os testes foram incluídos sem modificar ou remover linhas existentes: 20 linhas em `TreinoPostgresIntegrationTest`, 27 em `PagamentoPostgresIntegrationTest` e 30 em `HistoricoAtividadePostgresIntegrationTest`.
+
+### 9.4. Execução
+
+**Comandos:** `mvn test` e `mvn clean verify` (executados com `.\mvnw.cmd test` e `.\mvnw.cmd clean verify`), em 18/11/2026
+
+- Testes executados: 145
+- Falhas: 0
+- Erros: 0
+- Ignorados: 0
+- Cobertura: instruções 83% (1.001/1.192); branches 68% (92/134); linhas 281/322; métodos 92/104; classes 15/15. Verificação `jacoco:check` aprovada (`All coverage checks have been met.`).
+- Resultado: `BUILD SUCCESS`
+
+| Classe | Testes em 16/11/2026 | Testes em 18/11/2026 |
+|---|---|---|
+| `TreinoPostgresIntegrationTest` | 8 | 10 |
+| `PagamentoPostgresIntegrationTest` | 7 | 9 |
+| `HistoricoAtividadePostgresIntegrationTest` | 8 | 10 |
+| `MembroCpfHttpPostgresIntegrationTest` | — | 8 |
+| Demais 12 classes | 108 | 108 |
+| **Total** | **131** | **145** |
+
+A classe `MembroCpfHttpPostgresIntegrationTest` foi incluída na `develop` pelo PR #39 e não faz parte desta task. Os testes de integração com PostgreSQL do pacote `repository` passaram de 35 para 41.
+
+| Pacote | Instruções | Branches |
+|---|---|---|
+| `br.edu.unisul.vigor.service` | 79% | 65% |
+| `br.edu.unisul.vigor.controller` | 76% | 65% |
+| `br.edu.unisul.vigor.model` | 98% | n/a |
+| `br.edu.unisul.vigor.validation` | 100% | 85% |
+| `br.edu.unisul.vigor.config` | 100% | n/a |
+| `br.edu.unisul.vigor` | 37% | n/a |
+| **Total** | **83%** | **68%** |
+
+Uma primeira execução, feita antes da atualização da branch, estava baseada em uma versão anterior da `develop`, sem a classe `MembroCpfHttpPostgresIntegrationTest`, e registrou 137 testes aprovados. A branch foi atualizada para o commit `70b2d00` antes da execução registrada acima. O ambiente foi o mesmo descrito em "Ambiente e método".
+
+### 9.5. Observações
+
+- `servicoRejeitaStatusInvalidoSemPersistirPagamento` confere que o membro obtido por `membroParaTeste()` não possui pagamentos. Como esse método reutiliza o primeiro membro existente no banco, o teste falharia, sem defeito real, em um banco em que esse membro já tenha pagamentos. O teste não foi alterado na entrega inicial (bloco D); foi ajustado em 20/11/2026, após a revisão do PR #41 (seção 9.7).
+- Em `evidencias.md`, a subseção da EV17 foi inserida entre as linhas da tabela de evidências, e por isso as linhas EV07 a EV16 deixam de ser exibidas como tabela. O conteúdo existente não foi alterado na entrega inicial, e a EV18 e a EV19 foram registradas em uma tabela própria. A tabela foi reorganizada em 20/11/2026, após a revisão do PR #41 (seção 9.7).
+
+### 9.6. Integração contínua
+
+A execução #52 da CI (PR #41, commit `2097438`, 18/11/2026) concluiu com sucesso na imagem `ubuntu-26.04`, com PostgreSQL 18.7. O Flyway aplicou as migrations V1 a V5 no banco vazio, e o resultado foi `Tests run: 145, Failures: 0, Errors: 0, Skipped: 0`, `All coverage checks have been met.` e `BUILD SUCCESS`.
+
+### 9.7. Ajustes da revisão do PR #41 (20/11/2026)
+
+A revisão aprovou os seis testes e a CI e solicitou dois ajustes, feitos na mesma branch, sem alterar migrations ou código de produção:
+
+| Ajuste | O que foi feito |
+|---|---|
+| Membro exclusivo no teste de status | Em `servicoRejeitaStatusInvalidoSemPersistirPagamento`, `membroParaTeste()` foi substituído por `criarMembroTransitorio()`. O teste passou a criar um membro com CPF válido e inédito, desfeito ao final da transação, e a verificação de que nenhum pagamento foi registrado deixou de depender dos dados existentes no banco. A alteração foi de uma linha. |
+| Organização do `evidencias.md` | A tabela da seção 3 foi reorganizada para reunir as evidências EV01 a EV19 em ordem, seguida das subseções de detalhe da EV17 e da EV18. O conteúdo das evidências foi mantido; foram removidas apenas as duas linhas de cabeçalho da tabela própria da EV18, que deixou de ser necessária. |
+
+Execução após os ajustes, em 20/11/2026: `mvn test` e `mvn clean verify` concluíram com 145 testes, 0 falhas, 0 erros e 0 ignorados, e `BUILD SUCCESS`. A `PagamentoPostgresIntegrationTest` registrou 9 testes aprovados, e a cobertura permaneceu em 83% de instruções (1.001/1.192) e 68% de branches (92/134). A CI será executada novamente com o envio dos ajustes ao PR #41.
+
 ---
 
 ## Anexo A — Entidades × migrations
@@ -470,3 +591,5 @@ O banco rejeitou a exclusão do membro com treino vinculado, e o `ROLLBACK` desf
 |---|---|---|
 | 13/11/2026 | Criação do relatório de validação da task L07 | Luan Milian Martins |
 | 16/11/2026 | Complementação solicitada na revisão do PR #38: cinco testes de integração, nova execução de `mvn clean verify`, correção do achado 2, diagnóstico e correção da falha da integração contínua | Luan Milian Martins |
+| 18/11/2026 | Validação dos módulos da task L02 (Issue #31): conferência da checklist, seis testes de integração com PostgreSQL e execuções de `mvn test` e `mvn clean verify` com 145 testes (seção 9) | Luan Milian Martins |
+| 20/11/2026 | Ajustes da revisão do PR #41: membro exclusivo no teste de status do pagamento, reorganização da tabela do `evidencias.md` e registro da execução #52 da CI (seções 9.2, 9.5, 9.6 e 9.7) | Luan Milian Martins |

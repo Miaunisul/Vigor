@@ -1,51 +1,73 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Membros | VIGOR</title>
+    <link rel="stylesheet" th:href="@{/css/membros.css}">
 </head>
 <body>
-    <main>
-        <h1>Membros cadastrados</h1>
+    <header class="site-header">
+        <a class="brand" th:href="@{/membros}">VIGOR</a>
+        <span>Sistema de gestão de academia</span>
+        <nav class="site-nav" aria-label="Navegação principal">
+            <a th:href="@{/treinos}">Treinos</a>
+        </nav>
+    </header>
 
-        <p th:if="${sucesso}" th:text="${sucesso}"></p>
-        <p th:if="${erro}" th:text="${erro}"></p>
+    <main class="page-shell">
+        <section class="page-heading page-heading--with-action">
+            <div>
+                <p class="eyebrow">Gestão de membros</p>
+                <h1>Membros cadastrados</h1>
+                <p>Consulte e atualize os dados cadastrais.</p>
+            </div>
+            <a class="button button--primary" th:href="@{/membros/novo}">Cadastrar novo membro</a>
+        </section>
 
-        <a th:href="@{/membros/novo}">Cadastrar novo membro</a>
+        <p class="feedback feedback--success" role="status" th:if="${sucesso}" th:text="${sucesso}"></p>
+        <p class="feedback feedback--error" role="alert" th:if="${erro}" th:text="${erro}"></p>
 
-        <p th:if="${#lists.isEmpty(membros)}">
-            Nenhum membro cadastrado ainda.
-        </p>
+        <section class="panel empty-state" th:if="${#lists.isEmpty(membros)}">
+            <h2>Nenhum membro cadastrado</h2>
+            <p>Cadastre o primeiro membro para começar.</p>
+        </section>
 
-        <table th:unless="${#lists.isEmpty(membros)}">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome</th>
-                    <th>CPF</th>
-                    <th>Telefone</th>
-                    <th>Data de cadastro</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="membro : ${membros}">
-                    <td th:text="${membro.id}"></td>
-                    <td th:text="${membro.nome}"></td>
-                    <td th:text="${membro.cpf}"></td>
-                    <td th:text="${membro.telefone}"></td>
-                    <td th:text="${membro.dataCadastro}"></td>
-                    <td>
-                        <form th:action="@{/membros/{id}/excluir(id=${membro.id})}" method="post"
-                              onsubmit="return confirm('Confirma a exclusão deste membro?')">
-                            <button type="submit">Excluir</button>
-                        </form>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <section class="panel table-panel" th:unless="${#lists.isEmpty(membros)}">
+            <div class="table-scroll">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Nome</th>
+                            <th scope="col">CPF</th>
+                            <th scope="col">Telefone</th>
+                            <th scope="col">Endereço</th>
+                            <th scope="col">Data de cadastro</th>
+                            <th scope="col">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="membro : ${membros}">
+                            <td th:text="${membro.id}"></td>
+                            <td th:text="${membro.nome}"></td>
+                            <td th:text="${membro.cpf}"></td>
+                            <td th:text="${membro.telefone}"></td>
+                            <td th:text="${membro.endereco}"></td>
+                            <td th:text="${membro.dataCadastro}"></td>
+                            <td class="table-actions">
+                                <a class="button button--small button--secondary"
+                                   th:href="@{/membros/{id}/editar(id=${membro.id})}">Editar</a>
+                                <form th:action="@{/membros/{id}/excluir(id=${membro.id})}" method="post"
+                                      onsubmit="return confirm('Confirma a exclusão deste membro?')">
+                                    <button class="button button--small button--danger" type="submit">Excluir</button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </main>
 </body>
 </html>

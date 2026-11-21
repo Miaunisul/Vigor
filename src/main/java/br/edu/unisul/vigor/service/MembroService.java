@@ -68,6 +68,35 @@ public class MembroService {
         return membroRepository.save(membro);
     }
 
+    @Transactional
+    public Membro atualizar(Long id, Membro dadosAtualizados) {
+        Membro original = membroRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Membro não encontrado."));
+
+        Membro candidato = new Membro();
+        candidato.setNome(normalizarTexto(dadosAtualizados.getNome()));
+        candidato.setCpf(CpfUtils.normalizar(dadosAtualizados.getCpf()));
+        candidato.setTelefone(normalizarTexto(dadosAtualizados.getTelefone()));
+        candidato.setEndereco(normalizarTexto(dadosAtualizados.getEndereco()));
+
+        Set<ConstraintViolation<Membro>> violacoes = validator.validate(candidato);
+        if (!violacoes.isEmpty()) {
+            throw new ConstraintViolationException(violacoes);
+        }
+
+        if (membroRepository.existsByCpfAndIdNot(candidato.getCpf(), id)) {
+            throw new IllegalArgumentException(
+                    "Já existe um membro cadastrado com este CPF.");
+        }
+
+        original.setNome(candidato.getNome());
+        original.setCpf(candidato.getCpf());
+        original.setTelefone(candidato.getTelefone());
+        original.setEndereco(candidato.getEndereco());
+        return membroRepository.saveAndFlush(original);
+    }
+
     private String normalizarTexto(String valor) {
         return valor == null ? null : valor.strip();
     }

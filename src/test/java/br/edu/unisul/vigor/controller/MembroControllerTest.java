@@ -10,6 +10,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -17,12 +18,17 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -180,6 +186,121 @@ class MembroControllerTest {
                 .andExpect(flash().attribute("erro", mensagem));
 
         verify(membroService).excluir(42L);
+    }
+
+    @Test
+    void deveExibirFormularioDeEdicaoComDadosAtuaisDoMembro() throws Exception {
+        Membro membro = membroValido("52998224725");
+        membro.setNome("Nome atual");
+        when(membroService.buscarPorId(42L)).thenReturn(membro);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .get("/membros/{id}/editar", 42L))
+                .andExpect(status().isOk())
+                .andExpect(view().name("membros/formulario"))
+                .andExpect(model().attribute("editando", true))
+                .andExpect(model().attribute("formAction", "/membros/42/editar"))
+                .andExpect(model().attribute("membro",
+                        hasProperty("nome", equalTo("Nome atual"))))
+                .andExpect(model().attribute("membro",
+                        hasProperty("cpf", equalTo("52998224725"))));
+
+        verify(membroService).buscarPorId(42L);
+    }
+
+    @Test
+    void deveRedirecionarComMensagemAoAbrirEdicaoDeMembroInexistente() throws Exception {
+        when(membroService.buscarPorId(404L))
+                .thenThrow(new IllegalArgumentException("Membro não encontrado."));
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .get("/membros/{id}/editar", 404L))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/membros"))
+                .andExpect(flash().attribute("erro", "Membro não encontrado."));
+    }
+
+    @Test
+    void deveAtualizarMembroRedirecionarEIgnorarIdEDataEnviadosNoFormulario()
+            throws Exception {
+        when(membroService.atualizar(eq(42L), any(Membro.class)))
+                .thenAnswer(invocacao -> invocacao.getArgument(1));
+
+        mockMvc.perform(post("/membros/{id}/editar", 42L)
+                        .param("nome", "Nome atualizado")
+                        .param("cpf", "529.982.247-25")
+                        .param("telefone", "(48) 99999-1111")
+                        .param("endereco", "Rua Atualizada, 20")
+                        .param("id", "999")
+                        .param("dataCadastro", "2000-01-01"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/membros"))
+                .andExpect(flash().attribute("sucesso", "Membro atualizado com sucesso!"));
+
+        ArgumentCaptor<Membro> captor = ArgumentCaptor.forClass(Membro.class);
+        verify(membroService).atualizar(eq(42L), captor.capture());
+        Membro dados = captor.getValue();
+        assertEquals("Nome atualizado", dados.getNome());
+        assertEquals("529.982.247-25", dados.getCpf());
+        assertEquals("(48) 99999-1111", dados.getTelefone());
+        assertEquals("Rua Atualizada, 20", dados.getEndereco());
+        assertNull(dados.getId());
+        assertEquals(LocalDate.now(), dados.getDataCadastro());
+    }
+
+    @Test
+    void deveRetornarFormularioDeEdicaoComErroDeValidacaoPreservandoValores()
+            throws Exception {
+        mockMvc.perform(post("/membros/{id}/editar", 42L)
+                        .param("nome", "Nome enviado")
+                        .param("cpf", "529.982.247-26")
+                        .param("telefone", "Telefone enviado")
+                        .param("endereco", "Endereço enviado"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("membros/formulario"))
+                .andExpect(model().attribute("editando", true))
+                .andExpect(model().attribute("formAction", "/membros/42/editar"))
+                .andExpect(model().attributeHasFieldErrors("membro", "cpf"))
+                .andExpect(model().attribute("membro",
+                        hasProperty("cpf", equalTo("529.982.247-26"))))
+                .andExpect(model().attribute("membro",
+                        hasProperty("nome", equalTo("Nome enviado"))));
+
+        verifyNoInteractions(membroService);
+    }
+
+    @Test
+    void deveAssociarCpfDuplicadoAoCampoNaEdicao() throws Exception {
+        when(membroService.atualizar(eq(42L), any(Membro.class)))
+                .thenThrow(new IllegalArgumentException(
+                        "Já existe um membro cadastrado com este CPF."));
+
+        mockMvc.perform(post("/membros/{id}/editar", 42L)
+                        .param("nome", "Nome enviado")
+                        .param("cpf", "529.982.247-25")
+                        .param("telefone", "Telefone enviado")
+                        .param("endereco", "Endereço enviado"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("membros/formulario"))
+                .andExpect(model().attributeHasFieldErrors("membro", "cpf"))
+                .andExpect(model().attribute("membro",
+                        hasProperty("cpf", equalTo("529.982.247-25"))));
+    }
+
+    @Test
+    void deveAssociarViolacaoDaConstraintCpfAoCampoDuranteEdicao() throws Exception {
+        SQLException causaSql = new SQLException(
+                "duplicate key violates unique constraint \"uk_membros_cpf\"", "23505");
+        when(membroService.atualizar(eq(42L), any(Membro.class)))
+                .thenThrow(new DataIntegrityViolationException("could not execute statement", causaSql));
+
+        mockMvc.perform(post("/membros/{id}/editar", 42L)
+                        .param("nome", "Nome enviado")
+                        .param("cpf", "529.982.247-25")
+                        .param("telefone", "Telefone enviado")
+                        .param("endereco", "Endereço enviado"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeHasFieldErrors("membro", "cpf"));
     }
 
     @Test

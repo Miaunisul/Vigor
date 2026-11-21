@@ -11,4 +11,6 @@ public interface MembroRepository extends JpaRepository<Membro, Long> {
     Optional<Membro> findByCpf(String cpf);
 
     boolean existsByCpf(String cpf);
+
+    boolean existsByCpfAndIdNot(String cpf, Long id);
 }

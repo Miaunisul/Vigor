@@ -148,6 +148,44 @@ class TreinoPostgresIntegrationTest {
                 .allMatch(treino -> treino.getMembro().getId().equals(segundo.getId())));
     }
 
+    @Test
+    void consultaPorMembroSemTreinosRetornaListaVaziaMesmoComTreinoDeOutroMembro() {
+        Membro membroComTreino = criarMembroTransitorio();
+        Membro membroSemTreinos = criarMembroTransitorio();
+        Treino treinoDoPrimeiro = treinoService.cadastrar(
+                treinoValido(), membroComTreino.getId());
+        treinoRepository.flush();
+        entityManager.clear();
+
+        List<Treino> treinosDoPrimeiro =
+                treinoService.consultarPorMembro(membroComTreino.getId());
+        List<Treino> treinosDoSegundo =
+                treinoService.consultarPorMembro(membroSemTreinos.getId());
+
+        assertEquals(Set.of(treinoDoPrimeiro.getId()), idsDosTreinos(treinosDoPrimeiro));
+        assertTrue(treinosDoSegundo.isEmpty());
+    }
+
+    @Test
+    void checkDoBancoRejeitaDescricaoVazia() {
+        Membro membro = membroParaTeste();
+
+        assertThrows(DataIntegrityViolationException.class, () -> jdbcTemplate.update(
+                "INSERT INTO treinos (membro_id, tipo, descricao, duracao_minutos, data_inicio) "
+                        + "VALUES (?, ?, ?, ?, ?)",
+                membro.getId(), "Musculação", "   ", 45, LocalDate.now()));
+    }
+
+    @Test
+    void bancoExigeDataDeInicio() {
+        Membro membro = membroParaTeste();
+
+        assertThrows(DataIntegrityViolationException.class, () -> jdbcTemplate.update(
+                "INSERT INTO treinos (membro_id, tipo, descricao, duracao_minutos, data_inicio) "
+                        + "VALUES (?, ?, ?, ?, NULL)",
+                membro.getId(), "Musculação", "Treino de teste", 45));
+    }
+
     private Set<Long> idsDosTreinos(List<Treino> treinos) {
         return treinos.stream().map(Treino::getId).collect(Collectors.toSet());
     }
