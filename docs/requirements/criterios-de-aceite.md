@@ -100,11 +100,13 @@ Nos fluxos internos, o usuário é o funcionário autenticado. Os critérios de 
 
 ### CA11 — Registro de pagamento válido
 
-**Dado** que existe um membro cadastrado e foram informados valor maior que zero, com no máximo 10 dígitos inteiros e duas casas decimais, e data de pagamento válida,
+**Dado** que existe um membro cadastrado e foram informados valor maior que zero, com no máximo 10 dígitos na parte inteira e duas casas decimais, e data de pagamento válida,
 
-**Quando** o funcionário solicita o registro do pagamento recebido,
+**Quando** o funcionário solicita o registro do pagamento recebido, sem precisar informar o status,
 
-**Então** o sistema deve atribuir o status `PAGO`, salvar o pagamento associado ao membro, gerar um identificador único e apresentar a confirmação da operação.
+**Então** a aplicação deve atribuir automaticamente o status `PAGO` antes da persistência, salvar o pagamento associado ao membro, gerar um identificador único e apresentar a confirmação da operação.
+
+A ausência do campo status na solicitação do funcionário não deve causar rejeição do pagamento.
 
 ### CA12 — Dados de pagamento inválidos
 
@@ -114,7 +116,9 @@ Nos fluxos internos, o usuário é o funcionário autenticado. Os critérios de 
 
 **Então** o sistema deve rejeitar a operação, informar qual informação precisa ser corrigida e não persistir o pagamento.
 
-**E** tentativas de gravação com status ausente, vazio ou diferente de `PAGO` também devem ser rejeitadas na validação do registro. O funcionário não deve precisar preencher o status no fluxo normal, pois sua atribuição é responsabilidade do sistema.
+O status não é um campo de preenchimento do funcionário. A aplicação deve atribuir `PAGO` antes da persistência, conforme CA11. Um valor de status enviado pelo cliente não deve substituir essa atribuição automática.
+
+Na validação interna do registro, um status diferente de `PAGO` deve impedir a persistência. Essa verificação não deve ser confundida com a ausência do campo status na solicitação do funcionário, que é permitida.
 
 ## 7. Histórico de atividades
 
@@ -292,7 +296,9 @@ O CA25 exige verificar a permanência dos dados após reiniciar a aplicação. U
 
 Cada situação inválida descrita em um critério deve ser verificada separadamente, para identificar qual comportamento está sendo avaliado.
 
-Os testes de pagamento inválido devem contemplar valor ausente, não numérico, zero, negativo, com mais de 10 dígitos inteiros ou mais de duas casas decimais, data ausente ou inválida e tentativa de gravação com status ausente, vazio ou diferente de `PAGO`.
+Os testes de pagamento inválido devem contemplar valor ausente, não numérico, zero, negativo, com mais de 10 dígitos inteiros ou mais de duas casas decimais, data ausente ou inválida e referência de membro ausente ou inexistente.
+
+Os testes do fluxo de registro devem verificar que uma solicitação válida sem o campo status é aceita e que a aplicação atribui `PAGO` antes da persistência. Um status enviado pelo cliente não deve substituir o valor definido pela aplicação. A rejeição de status diferente de `PAGO` deve ser verificada na camada interna responsável pela validação do registro.
 
 A preparação dos dados de atividades deve respeitar as regras RN14 a RN16. A preparação dos dados de funcionários deve respeitar as regras RN18 e RN19.
 
