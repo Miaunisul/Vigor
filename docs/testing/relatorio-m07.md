@@ -24,15 +24,13 @@ O comando direcionado executado foi:
 mvn -Dtest=TreinoControllerTest,TreinoTemplateRenderingTest,TreinoHttpPostgresIntegrationTest,TreinoServiceTest,TreinoPostgresIntegrationTest test
 ```
 
-Resultado: 44 testes contabilizados, 0 falhas, 0 erros e 11 ignorados. `TreinoControllerTest` (16), `TreinoTemplateRenderingTest` (4) e `TreinoServiceTest` (13) passaram. Os oito testes de `TreinoPostgresIntegrationTest` e os três testes de `TreinoHttpPostgresIntegrationTest` foram ignorados porque `DB_PASSWORD` não estava disponível no processo Maven.
-
-O teste HTTP/PostgreSQL está preparado para cadastrar um treino pela rota, consultar os campos persistidos por JDBC, carregar membros no formulário e garantir isolamento entre as listagens de dois membros. Esse fluxo ainda precisa ser executado em um ambiente com PostgreSQL e `DB_PASSWORD` configurado.
+Resultado final: 44 testes, 0 falhas, 0 erros e 0 ignorados. `TreinoControllerTest` (16), `TreinoTemplateRenderingTest` (4), `TreinoServiceTest` (13), `TreinoPostgresIntegrationTest` (8) e `TreinoHttpPostgresIntegrationTest` (3) passaram. Com PostgreSQL configurado, os testes de integração exercitaram persistência via service e HTTP, carregamento de membros no formulário e isolamento entre listagens de membros distintos.
 
 ## Suíte completa e cobertura
 
-`mvn clean verify` terminou com `BUILD SUCCESS`: 178 testes contabilizados, 0 falhas, 0 erros e 50 ignorados. Dos ignorados, 49 testes são condicionados ao PostgreSQL e um é o teste de contexto da aplicação, também condicionado à configuração do banco.
+`mvn clean verify` terminou com `BUILD SUCCESS`: 184 testes, 0 falhas, 0 erros e 0 ignorados. Os testes condicionados ao PostgreSQL foram executados com o banco configurado.
 
-JaCoCo cobriu 1.497 de 1.846 instruções (**81,09%**). O quality gate de 75% foi aprovado. Como os testes PostgreSQL foram ignorados neste ambiente, este resultado não certifica a execução da persistência real do fluxo HTTP M07.
+JaCoCo cobriu 1.552 de 1.846 instruções (**84,07%**). O quality gate de 75% foi aprovado.
 
 ## Execução manual local
 
