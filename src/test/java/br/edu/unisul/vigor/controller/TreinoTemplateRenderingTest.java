@@ -99,6 +99,9 @@ class TreinoTemplateRenderingTest {
                 .andExpect(content().string(containsString("Treino de força")))
                 .andExpect(content().string(containsString("45")))
                 .andExpect(content().string(containsString("2026-11-20")))
+                .andExpect(content().string(containsString("method=\"get\"")))
+                .andExpect(content().string(containsString(
+                        "onchange=\"this.form.requestSubmit()\"")))
                 .andExpect(content().string(containsString("Consultar treinos")));
     }
 

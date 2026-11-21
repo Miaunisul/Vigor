@@ -32,7 +32,8 @@
             <form class="filter-form" th:action="@{/treinos}" method="get">
                 <div class="form-field">
                     <label for="membroId">Membro</label>
-                    <select id="membroId" name="membroId" required>
+                    <select id="membroId" name="membroId" required
+                            onchange="this.form.requestSubmit()">
                         <option value="">Selecione um membro</option>
                         <option th:each="membro : ${membros}"
                                 th:value="${membro.id}"
