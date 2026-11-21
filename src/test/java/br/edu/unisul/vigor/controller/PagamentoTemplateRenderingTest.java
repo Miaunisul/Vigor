@@ -14,21 +14,22 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.spring6.view.ThymeleafViewResolver;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import org.unbescape.html.HtmlEscape;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.regex.Pattern;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.xpath;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 class PagamentoTemplateRenderingTest {
@@ -82,28 +83,29 @@ class PagamentoTemplateRenderingTest {
     @Test
     void renderizaFormularioComMembroStatusSomenteLeituraEIdentidadeVisual()
             throws Exception {
-        mockMvc.perform(get("/pagamentos/novo"))
+        String html = mockMvc.perform(get("/pagamentos/novo"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(
-                        containsString("Registrar pagamento")))
-                .andExpect(content().string(
-                        containsString("/css/pagamentos.css")))
-                .andExpect(content().string(
-                        containsString("/images/vigor-logo-branca.png")))
-                .andExpect(xpath(
-                        "//form[@action='/pagamentos' and @method='post']")
-                        .exists())
-                .andExpect(xpath(
-                        "//select[@name='membroId']/option[@value='42']")
-                        .exists())
-                .andExpect(xpath("//input[@name='valor']").exists())
-                .andExpect(xpath("//input[@name='dataPagamento']").exists())
-                .andExpect(xpath(
-                        "//input[@id='statusExibido' and @readonly and @value='Pago']")
-                        .exists())
-                .andExpect(xpath("//input[@name='status']").doesNotExist())
-                .andExpect(xpath("//button[@type='submit' and @disabled]")
-                        .doesNotExist());
+                .andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+
+        assertTrue(html.contains("Registrar pagamento"));
+        assertTrue(html.contains("/css/pagamentos.css"));
+        assertTrue(html.contains("/images/vigor-logo-branca.png"));
+
+        assertTrue(possuiTag(html, "form",
+                "action=\"/pagamentos\"", "method=\"post\""));
+        assertTrue(possuiTag(html, "select", "name=\"membroId\""));
+        assertTrue(possuiTag(html, "option", "value=\"42\""));
+        assertTrue(html.contains("Membro Teste D05"));
+        assertTrue(possuiTag(html, "input", "name=\"valor\""));
+        assertTrue(possuiTag(html, "input", "name=\"dataPagamento\""));
+
+        assertTrue(possuiTag(html, "input",
+                "id=\"statusExibido\"", "readonly", "value=\"Pago\""));
+        assertFalse(possuiTag(html, "input", "name=\"status\""));
+        assertTrue(possuiTag(html, "button", "type=\"submit\""));
+        assertFalse(possuiTag(html, "button",
+                "type=\"submit\"", "disabled"));
 
         verifyNoInteractions(pagamentoService);
     }
@@ -112,11 +114,14 @@ class PagamentoTemplateRenderingTest {
     void desabilitaRegistroQuandoNaoExistemMembros() throws Exception {
         when(membroService.listarTodos()).thenReturn(List.of());
 
-        mockMvc.perform(get("/pagamentos/novo"))
+        String html = mockMvc.perform(get("/pagamentos/novo"))
                 .andExpect(status().isOk())
-                .andExpect(xpath("//button[@type='submit' and @disabled]")
-                        .exists())
-                .andExpect(xpath("//a[@href='/membros/novo']").exists());
+                .andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+
+        assertTrue(possuiTag(html, "button",
+                "type=\"submit\"", "disabled"));
+        assertTrue(possuiTag(html, "a", "href=\"/membros/novo\""));
 
         verifyNoInteractions(pagamentoService);
     }
@@ -125,12 +130,14 @@ class PagamentoTemplateRenderingTest {
     void renderizaListagemSemPagamentos() throws Exception {
         when(pagamentoService.listarTodos()).thenReturn(List.of());
 
-        mockMvc.perform(get("/pagamentos"))
+        String html = mockMvc.perform(get("/pagamentos"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(
-                        containsString("Ainda não existem pagamentos registrados.")))
-                .andExpect(xpath("//a[@href='/pagamentos/novo']").exists())
-                .andExpect(xpath("//select[@name='membroId']").exists());
+                .andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+
+        assertTrue(html.contains("Ainda não existem pagamentos registrados."));
+        assertTrue(possuiTag(html, "a", "href=\"/pagamentos/novo\""));
+        assertTrue(possuiTag(html, "select", "name=\"membroId\""));
     }
 
     @Test
@@ -138,12 +145,16 @@ class PagamentoTemplateRenderingTest {
         when(pagamentoService.listarTodos())
                 .thenReturn(List.of(pagamentoValido()));
 
-        mockMvc.perform(get("/pagamentos"))
+        String html = mockMvc.perform(get("/pagamentos"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Membro Teste D05")))
-                .andExpect(content().string(containsString("R$ 150,00")))
-                .andExpect(content().string(containsString("21/11/2026")))
-                .andExpect(xpath("//tbody/tr/td[4]//span").string("Pago"));
+                .andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+
+        assertTrue(html.contains("Membro Teste D05"));
+        assertTrue(html.contains("R$ 150,00"));
+        assertTrue(html.contains("21/11/2026"));
+        assertTrue(Pattern.compile("<span\\b[^>]*>\\s*Pago\\s*</span>")
+                .matcher(html).find());
     }
 
     @Test
@@ -151,33 +162,35 @@ class PagamentoTemplateRenderingTest {
         when(pagamentoService.consultarPorMembro(42L))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/pagamentos").param("membroId", "42"))
+        String html = mockMvc.perform(get("/pagamentos")
+                        .param("membroId", "42"))
                 .andExpect(status().isOk())
-                .andExpect(xpath(
-                        "//select[@name='membroId']/option[@value='42' and @selected]")
-                        .exists())
-                .andExpect(xpath("//tbody/tr/td[@colspan='4']").exists());
+                .andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+
+        assertTrue(possuiTag(html, "option",
+                "value=\"42\"", "selected"));
+        assertTrue(possuiTag(html, "td", "colspan=\"4\""));
     }
 
     @Test
     void renderizaErroDeValorPreservandoMembroEData() throws Exception {
-        mockMvc.perform(post("/pagamentos")
+        String html = mockMvc.perform(post("/pagamentos")
                         .param("membroId", "42")
                         .param("valor", "0")
                         .param("dataPagamento", "2026-11-21"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(
-                        containsString("O valor deve ser maior que zero.")))
-                .andExpect(xpath(
-                        "//input[@name='valor' and @aria-invalid='true']")
-                        .exists())
-                .andExpect(xpath(
-                        "//select[@name='membroId']/option[@value='42' and @selected]")
-                        .exists())
-                .andExpect(xpath(
-                        "//input[@name='dataPagamento' and @value='2026-11-21']")
-                        .exists())
-                .andExpect(xpath("//*[@role='alert']").exists());
+                .andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+
+        assertTrue(html.contains("O valor deve ser maior que zero."));
+        assertTrue(possuiTag(html, "input",
+                "name=\"valor\"", "aria-invalid=\"true\""));
+        assertTrue(possuiTag(html, "option",
+                "value=\"42\"", "selected"));
+        assertTrue(possuiTag(html, "input",
+                "name=\"dataPagamento\"", "value=\"2026-11-21\""));
+        assertTrue(html.contains("role=\"alert\""));
 
         verifyNoInteractions(pagamentoService);
     }
@@ -186,26 +199,74 @@ class PagamentoTemplateRenderingTest {
     void renderizaMensagemDeSucessoNaListagem() throws Exception {
         when(pagamentoService.listarTodos()).thenReturn(List.of());
 
-        mockMvc.perform(get("/pagamentos")
+        String html = mockMvc.perform(get("/pagamentos")
                         .flashAttr("sucesso", "Pagamento registrado com sucesso."))
                 .andExpect(status().isOk())
-                .andExpect(content().string(
-                        containsString("Pagamento registrado com sucesso.")))
-                .andExpect(xpath("//*[@role='status']").exists());
+                .andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+
+        assertTrue(html.contains("Pagamento registrado com sucesso."));
+        assertTrue(html.contains("role=\"status\""));
     }
 
     @Test
     void escapaNomeDoMembroSemRenderizarScript() throws Exception {
-        membro.setNome("<script>alert('teste')</script>");
+        String nome = "<script>alert('teste')</script>";
+        membro.setNome(nome);
+
         when(pagamentoService.listarTodos())
                 .thenReturn(List.of(pagamentoValido()));
 
-        mockMvc.perform(get("/pagamentos"))
+        String html = mockMvc.perform(get("/pagamentos"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(
-                        not(containsString("<script>alert('teste')</script>"))))
-                .andExpect(xpath("//tbody/tr/td[1]")
-                        .string("<script>alert('teste')</script>"));
+                .andReturn().getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+
+        assertFalse(html.contains(nome),
+                "O nome não deve aparecer como uma tag script no HTML.");
+
+        var celulas = Pattern.compile(
+                "<td\\b[^>]*>(.*?)</td>",
+                Pattern.DOTALL | Pattern.CASE_INSENSITIVE
+        ).matcher(html);
+
+        boolean encontrouNomeComoTexto = false;
+
+        while (celulas.find()) {
+            String conteudo = celulas.group(1).strip();
+
+            if (nome.equals(HtmlEscape.unescapeHtml(conteudo))) {
+                assertFalse(conteudo.contains("<"),
+                        "A célula deve conter texto escapado, sem tags HTML.");
+
+                encontrouNomeComoTexto = true;
+                break;
+            }
+        }
+
+        assertTrue(encontrouNomeComoTexto,
+                "A tabela deve apresentar o nome completo como texto escapado.");
+    }
+
+    /*
+     * Verifica atributos na mesma tag, sem depender da ordem
+     * em que o Thymeleaf os escreve e sem interpretar HTML como XML.
+     */
+    private boolean possuiTag(String html, String tag, String... atributos) {
+        StringBuilder expressao = new StringBuilder(
+                "<" + Pattern.quote(tag) + "\\b");
+
+        for (String atributo : atributos) {
+            expressao.append("(?=[^>]*\\s")
+                    .append(Pattern.quote(atributo))
+                    .append("(?=[\\s=>/]))");
+        }
+
+        expressao.append("[^>]*>");
+
+        return Pattern.compile(expressao.toString())
+                .matcher(html)
+                .find();
     }
 
     private Pagamento pagamentoValido() {
