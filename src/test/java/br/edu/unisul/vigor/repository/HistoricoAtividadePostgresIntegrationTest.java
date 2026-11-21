@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -156,6 +157,35 @@ class HistoricoAtividadePostgresIntegrationTest {
                 .allMatch(atividade -> atividade.getMembro().getId().equals(segundo.getId())));
         assertTrue(doPrimeiro.stream().allMatch(atividade ->
                 atividade.getFuncionarioResponsavel().getId().equals(funcionario.getId())));
+    }
+
+    @Test
+    void consultaAtividadePersistidaRetornaDescricaoDataETempoGravados() {
+        Membro membro = criarMembroTransitorio();
+        Funcionario funcionario = funcionarioParaTeste();
+        HistoricoAtividade salva = historicoService.registrar(
+                atividadeValida(), membro.getId(), funcionario.getId());
+        historicoRepository.flush();
+        entityManager.clear();
+
+        HistoricoAtividade consultada =
+                historicoRepository.findById(salva.getId()).orElseThrow();
+
+        assertNotSame(salva, consultada);
+        assertEquals(membro.getId(), consultada.getMembro().getId());
+        assertEquals(funcionario.getId(), consultada.getFuncionarioResponsavel().getId());
+        assertEquals("Acompanhamento de treino", consultada.getAtividade());
+        assertEquals(LocalDate.of(2026, 11, 10), consultada.getDataAtividade());
+        assertEquals(30, consultada.getTempoExecucaoMinutos());
+    }
+
+    @Test
+    void checkDoBancoRejeitaTempoNegativo() {
+        Membro membro = membroParaTeste();
+        Funcionario funcionario = funcionarioParaTeste();
+
+        assertThrows(DataIntegrityViolationException.class, () -> inserir(membro.getId(),
+                funcionario.getId(), "Atividade de teste", -1));
     }
 
     private Set<Long> idsDasAtividades(List<HistoricoAtividade> atividades) {
