@@ -51,6 +51,11 @@ public class PagamentoService {
     }
 
     @Transactional(readOnly = true)
+    public List<Pagamento> listarTodos() {
+        return pagamentoRepository.findAllByOrderByDataPagamentoDescIdDesc();
+    }
+
+    @Transactional(readOnly = true)
     public List<Pagamento> consultarPorMembro(Long membroId) {
         if (membroId == null) {
             throw new IllegalArgumentException("O membro é obrigatório.");
