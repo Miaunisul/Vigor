@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -102,6 +103,45 @@ class TreinoTemplateRenderingTest {
     }
 
     @Test
+    void renderizaTrocaParaMembroSemTreinosESelecionaOMembroConsultado() throws Exception {
+        Membro segundoMembro = membroComId(84L, "Membro sem treinos");
+        Treino treinoDoPrimeiro = treinoValido(membro);
+        when(membroService.listarTodos()).thenReturn(List.of(membro, segundoMembro));
+        when(treinoService.consultarPorMembro(42L)).thenReturn(List.of(treinoDoPrimeiro));
+        when(treinoService.consultarPorMembro(84L)).thenReturn(List.of());
+
+        String listaDoPrimeiro = mockMvc.perform(get("/treinos").param("membroId", "42"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Treino de força")))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertMembroSelecionado(listaDoPrimeiro, 42L);
+
+        String listaDoSegundo = mockMvc.perform(get("/treinos").param("membroId", "84"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(
+                        "Nenhum treino cadastrado para este membro")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        containsString("Treino de força"))))
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+        assertMembroSelecionado(listaDoSegundo, 84L);
+    }
+
+    @Test
+    void renderizaListaSemMembroSemExibirTodosOsTreinos() throws Exception {
+        mockMvc.perform(get("/treinos"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Selecione um membro")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        containsString("<table"))));
+
+        verifyNoInteractions(treinoService);
+    }
+
+    @Test
     void renderizaMensagensJuntoDosCamposInvalidos() throws Exception {
         mockMvc.perform(post("/treinos")
                         .param("tipo", "   ")
@@ -157,5 +197,14 @@ class TreinoTemplateRenderingTest {
         campoId.setAccessible(true);
         campoId.set(membro, id);
         return membro;
+    }
+
+    private void assertMembroSelecionado(String html, Long membroId) {
+        int indiceValor = html.indexOf("value=\"" + membroId + "\"");
+        assertTrue(indiceValor >= 0, html);
+        int inicioOpcao = html.lastIndexOf("<option", indiceValor);
+        int fimOpcao = html.indexOf('>', indiceValor);
+        assertTrue(inicioOpcao >= 0 && fimOpcao > indiceValor, html);
+        assertTrue(html.substring(inicioOpcao, fimOpcao).contains("selected"), html);
     }
 }

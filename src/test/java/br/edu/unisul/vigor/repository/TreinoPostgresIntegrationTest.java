@@ -149,6 +149,24 @@ class TreinoPostgresIntegrationTest {
     }
 
     @Test
+    void consultaPorMembroSemTreinosRetornaListaVaziaMesmoComTreinoDeOutroMembro() {
+        Membro membroComTreino = criarMembroTransitorio();
+        Membro membroSemTreinos = criarMembroTransitorio();
+        Treino treinoDoPrimeiro = treinoService.cadastrar(
+                treinoValido(), membroComTreino.getId());
+        treinoRepository.flush();
+        entityManager.clear();
+
+        List<Treino> treinosDoPrimeiro =
+                treinoService.consultarPorMembro(membroComTreino.getId());
+        List<Treino> treinosDoSegundo =
+                treinoService.consultarPorMembro(membroSemTreinos.getId());
+
+        assertEquals(Set.of(treinoDoPrimeiro.getId()), idsDosTreinos(treinosDoPrimeiro));
+        assertTrue(treinosDoSegundo.isEmpty());
+    }
+
+    @Test
     void checkDoBancoRejeitaDescricaoVazia() {
         Membro membro = membroParaTeste();
 

@@ -12,6 +12,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.IOException;
+import java.net.CookieManager;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -31,6 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TreinoHttpPostgresIntegrationTest {
 
     private final String nomeTeste = "Treino HTTP M07 " + UUID.randomUUID();
+    private final HttpClient cliente = HttpClient.newBuilder()
+            .cookieHandler(new CookieManager())
+            .build();
 
     @LocalServerPort
     private int porta;
@@ -48,6 +52,7 @@ class TreinoHttpPostgresIntegrationTest {
                         + "(SELECT id FROM membros WHERE nome LIKE ?)",
                 nomeTeste + "%");
         jdbcTemplate.update("DELETE FROM membros WHERE nome LIKE ?", nomeTeste + "%");
+        cliente.close();
     }
 
     @Test
@@ -71,9 +76,6 @@ class TreinoHttpPostgresIntegrationTest {
         HttpResponse<String> respostaPrimeiro = cadastrarTreino(
                 primeiro.getId(), "Força", "Treino exclusivo do primeiro membro", 50);
         assertRedirecionaParaMembro(respostaPrimeiro, primeiro.getId());
-        HttpResponse<String> respostaSegundo = cadastrarTreino(
-                segundo.getId(), "Mobilidade", "Treino exclusivo do segundo membro", 35);
-        assertRedirecionaParaMembro(respostaSegundo, segundo.getId());
 
         assertEquals(1, jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM treinos WHERE membro_id = ? AND tipo = ? "
@@ -86,6 +88,36 @@ class TreinoHttpPostgresIntegrationTest {
         HttpResponse<String> listaSegundo = get("/treinos?membroId=" + segundo.getId());
         assertEquals(200, listaPrimeiro.statusCode(), listaPrimeiro::body);
         assertEquals(200, listaSegundo.statusCode(), listaSegundo::body);
+        assertMembroSelecionado(listaPrimeiro.body(), primeiro.getId());
+        assertMembroSelecionado(listaSegundo.body(), segundo.getId());
+        assertTrue(listaPrimeiro.body().contains("Treino exclusivo do primeiro membro"),
+                listaPrimeiro::body);
+        assertFalse(listaPrimeiro.body().contains("Treino exclusivo do segundo membro"),
+                listaPrimeiro::body);
+        assertTrue(listaSegundo.body().contains("Nenhum treino cadastrado para este membro"),
+                listaSegundo::body);
+        assertFalse(listaSegundo.body().contains("Treino exclusivo do primeiro membro"),
+                listaSegundo::body);
+
+        HttpResponse<String> respostaSegundo = cadastrarTreino(
+                segundo.getId(), "Mobilidade", "Treino exclusivo do segundo membro", 35);
+        assertRedirecionaParaMembro(respostaSegundo, segundo.getId());
+        assertEquals(1, jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM treinos WHERE membro_id = ? AND tipo = ? "
+                        + "AND descricao = ? AND duracao_minutos = ? AND data_inicio = ?",
+                Integer.class, segundo.getId(), "Mobilidade",
+                "Treino exclusivo do segundo membro", 35,
+                java.sql.Date.valueOf("2026-11-20")));
+        assertEquals(0, jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM treinos WHERE membro_id = ? AND descricao = ?",
+                Integer.class, primeiro.getId(), "Treino exclusivo do segundo membro"));
+
+        listaPrimeiro = get("/treinos?membroId=" + primeiro.getId());
+        listaSegundo = get("/treinos?membroId=" + segundo.getId());
+        assertEquals(200, listaPrimeiro.statusCode(), listaPrimeiro::body);
+        assertEquals(200, listaSegundo.statusCode(), listaSegundo::body);
+        assertMembroSelecionado(listaPrimeiro.body(), primeiro.getId());
+        assertMembroSelecionado(listaSegundo.body(), segundo.getId());
         assertTrue(listaPrimeiro.body().contains("Treino exclusivo do primeiro membro"),
                 listaPrimeiro::body);
         assertFalse(listaPrimeiro.body().contains("Treino exclusivo do segundo membro"),
@@ -169,9 +201,7 @@ class TreinoHttpPostgresIntegrationTest {
                 .timeout(Duration.ofSeconds(10))
                 .POST(HttpRequest.BodyPublishers.ofString(formulario, StandardCharsets.UTF_8))
                 .build();
-        try (HttpClient cliente = HttpClient.newHttpClient()) {
-            return cliente.send(requisicao, HttpResponse.BodyHandlers.ofString());
-        }
+        return cliente.send(requisicao, HttpResponse.BodyHandlers.ofString());
     }
 
     private HttpResponse<String> get(String caminho) throws IOException, InterruptedException {
@@ -180,9 +210,7 @@ class TreinoHttpPostgresIntegrationTest {
                 .timeout(Duration.ofSeconds(10))
                 .GET()
                 .build();
-        try (HttpClient cliente = HttpClient.newHttpClient()) {
-            return cliente.send(requisicao, HttpResponse.BodyHandlers.ofString());
-        }
+        return cliente.send(requisicao, HttpResponse.BodyHandlers.ofString());
     }
 
     private String codificar(String valor) {
@@ -195,5 +223,14 @@ class TreinoHttpPostgresIntegrationTest {
         URI uri = URI.create(destino);
         assertEquals("/treinos", uri.getPath().split(";jsessionid=", 2)[0]);
         assertEquals("membroId=" + membroId, uri.getRawQuery());
+    }
+
+    private void assertMembroSelecionado(String html, Long membroId) {
+        int indiceValor = html.indexOf("value=\"" + membroId + "\"");
+        assertTrue(indiceValor >= 0, html);
+        int inicioOpcao = html.lastIndexOf("<option", indiceValor);
+        int fimOpcao = html.indexOf('>', indiceValor);
+        assertTrue(inicioOpcao >= 0 && fimOpcao > indiceValor, html);
+        assertTrue(html.substring(inicioOpcao, fimOpcao).contains("selected"), html);
     }
 }

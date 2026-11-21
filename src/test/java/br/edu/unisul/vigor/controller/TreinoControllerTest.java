@@ -92,6 +92,29 @@ class TreinoControllerTest {
     }
 
     @Test
+    void trocarDoMembroComTreinoParaMembroSemTreinoMostraListaVazia() throws Exception {
+        Long segundoMembroId = 84L;
+        Membro segundoMembro = membroComId(segundoMembroId, "Membro sem treinos");
+        Treino treinoDoPrimeiro = treinoValido();
+        when(membroService.listarTodos()).thenReturn(List.of(membro, segundoMembro));
+        when(treinoService.consultarPorMembro(MEMBRO_ID)).thenReturn(List.of(treinoDoPrimeiro));
+        when(treinoService.consultarPorMembro(segundoMembroId)).thenReturn(List.of());
+
+        mockMvc.perform(get("/treinos").param("membroId", MEMBRO_ID.toString()))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("membroSelecionadoId", MEMBRO_ID))
+                .andExpect(model().attribute("treinos", List.of(treinoDoPrimeiro)));
+
+        mockMvc.perform(get("/treinos").param("membroId", segundoMembroId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("membroSelecionadoId", segundoMembroId))
+                .andExpect(model().attribute("treinos", List.of()));
+
+        verify(treinoService).consultarPorMembro(MEMBRO_ID);
+        verify(treinoService).consultarPorMembro(segundoMembroId);
+    }
+
+    @Test
     void redirecionaComErroAoConsultarMembroInexistente() throws Exception {
         when(treinoService.consultarPorMembro(404L))
                 .thenThrow(new IllegalArgumentException("Membro não encontrado."));
