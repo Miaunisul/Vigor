@@ -41,10 +41,10 @@ As decisões de implementação estão explicitadas em `regras-de-negocio.md` e 
 | RF03 | Consultar membros | O sistema deve permitir listar os membros cadastrados e consultar suas informações. |
 | RF04 | Atualizar membros | O sistema deve permitir atualizar nome, CPF, telefone e endereço de um membro, validando os novos dados antes de salvá-los. |
 | RF05 | Excluir membros | O sistema deve permitir excluir membros sem registros vinculados e bloquear a exclusão quando houver treinos, pagamentos ou atividades associados. |
-| RF06 | Cadastrar treinos | O sistema deve permitir cadastrar um treino associado a um membro existente, informando tipo, descrição, duração em minutos e data de início. |
-| RF07 | Consultar treinos | O sistema deve permitir consultar os treinos associados a um membro, apresentando os dados cadastrados. |
-| RF08 | Registrar pagamentos | O sistema deve permitir registrar um pagamento recebido de um membro existente, informando valor e data do pagamento e atribuindo o status Pago. |
-| RF09 | Consultar histórico de atividades | O sistema deve permitir consultar as atividades registradas para um membro, apresentando atividade, data e tempo de execução. |
+| RF06 | Cadastrar treinos | O sistema deve permitir cadastrar um treino associado a um membro existente, informando obrigatoriamente tipo, descrição, duração em minutos inteiros positivos e data de início válida, gerando automaticamente seu identificador. |
+| RF07 | Consultar treinos | O sistema deve permitir consultar somente os treinos associados ao membro selecionado, apresentando tipo, descrição, duração em minutos e data de início, ou informando a ausência de registros. |
+| RF08 | Registrar pagamentos | O sistema deve permitir registrar um pagamento recebido de um membro existente, informando valor positivo dentro dos limites da RN12 e data do pagamento válida. O sistema deve atribuir o status PAGO e gerar automaticamente o identificador. |
+| RF09 | Consultar histórico de atividades | O sistema deve permitir consultar somente as atividades registradas para o membro selecionado, apresentando atividade, data e tempo de execução em minutos, ou informando a ausência de registros. Cada registro deve possuir vínculo com um membro e um funcionário responsável existentes. |
 
 ## 4. Requisitos não funcionais
 
@@ -73,7 +73,7 @@ O endereço pertence ao cadastro de membros. Não é previsto endereço para fun
 
 A referência ao funcionário responsável representa o relacionamento entre funcionários e atividades.
 
-O detalhamento das entidades e dos relacionamentos deve permanecer consistente com `docs/architecture/modelo-de-dados.md`.
+O detalhamento das entidades e dos relacionamentos deve permanecer consistente com `docs/architecture/database/modelo-de-dados.md`.
 
 ## 6. Critérios de aceitação e rastreabilidade
 
