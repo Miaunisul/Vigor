@@ -219,6 +219,22 @@ public class TreinoController {
         return "treinos/lista";
     }
 
+    @PostMapping(params = "acao=excluir")
+    public String excluir(
+            @RequestParam Long treinoId,
+            RedirectAttributes atributos) {
+        try {
+            treinoService.excluir(treinoId);
+            atributos.addFlashAttribute("sucesso", "Treino excluído com sucesso.");
+        } catch (IllegalArgumentException e) {
+            if (!MENSAGEM_TREINO_NAO_ENCONTRADO.equals(e.getMessage())) {
+                throw e;
+            }
+            atributos.addFlashAttribute("erro", e.getMessage());
+        }
+        return "redirect:/treinos";
+    }
+
     private String montarLista(
             Model model,
             String busca,

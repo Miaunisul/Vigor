@@ -106,6 +106,12 @@ public class TreinoService {
         return treinoRepository.saveAndFlush(original);
     }
 
+    @Transactional
+    public void excluir(Long id) {
+        Treino treino = buscarPorId(id);
+        treinoRepository.delete(treino);
+        treinoRepository.flush();
+    }
 
     private String normalizarTexto(String valor) {
         return valor == null ? null : valor.strip();
