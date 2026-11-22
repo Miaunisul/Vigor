@@ -6,6 +6,9 @@ import br.edu.unisul.vigor.repository.MembroRepository;
 import br.edu.unisul.vigor.repository.PagamentoRepository;
 import br.edu.unisul.vigor.repository.TreinoRepository;
 import br.edu.unisul.vigor.service.MembroService;
+import br.edu.unisul.vigor.service.HistoricoAtividadeService;
+import br.edu.unisul.vigor.service.PagamentoService;
+import br.edu.unisul.vigor.service.TreinoService;
 import jakarta.validation.ConstraintViolationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,15 +51,21 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standal
 class MembroControllerTest {
 
     private MembroService membroService;
+    private TreinoService treinoService;
+    private PagamentoService pagamentoService;
+    private HistoricoAtividadeService historicoAtividadeService;
     private LocalValidatorFactoryBean validator;
     private MockMvc mockMvc;
 
     @BeforeEach
     void configurar() {
         membroService = mock(MembroService.class);
+        treinoService = mock(TreinoService.class);
+        pagamentoService = mock(PagamentoService.class);
+        historicoAtividadeService = mock(HistoricoAtividadeService.class);
         validator = new LocalValidatorFactoryBean();
         validator.afterPropertiesSet();
-        mockMvc = standaloneSetup(new MembroController(membroService))
+        mockMvc = standaloneSetup(criarController())
                 .setValidator(validator)
                 .build();
     }
@@ -72,6 +81,9 @@ class MembroControllerTest {
         Membro membro = membroValido("52998224725");
         setId(membro, 42L);
         when(membroService.buscarPorId(42L)).thenReturn(membro);
+        when(treinoService.consultarPorMembro(42L)).thenReturn(List.of());
+        when(pagamentoService.consultarPorMembro(42L)).thenReturn(List.of());
+        when(historicoAtividadeService.consultarPorMembro(42L)).thenReturn(List.of());
 
         mockMvc.perform(get("/membros")
                         .param("acao", "detalhes")
@@ -79,9 +91,15 @@ class MembroControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("membros/lista"))
                 .andExpect(model().attribute("estado", "detalhes"))
-                .andExpect(model().attribute("membro", membro));
+                .andExpect(model().attribute("membro", membro))
+                .andExpect(model().attribute("treinos", List.of()))
+                .andExpect(model().attribute("pagamentos", List.of()))
+                .andExpect(model().attribute("atividades", List.of()));
 
         verify(membroService).buscarPorId(42L);
+        verify(treinoService).consultarPorMembro(42L);
+        verify(pagamentoService).consultarPorMembro(42L);
+        verify(historicoAtividadeService).consultarPorMembro(42L);
     }
 
     @Test
@@ -202,7 +220,7 @@ class MembroControllerTest {
                 mock(PagamentoRepository.class),
                 mock(HistoricoAtividadeRepository.class),
                 validator);
-        MockMvc mvcComServicoReal = standaloneSetup(new MembroController(serviceReal))
+        MockMvc mvcComServicoReal = standaloneSetup(criarController(serviceReal))
                 .setValidator(validator)
                 .build();
         when(repository.existsByCpf("52998224725")).thenReturn(false);
@@ -383,7 +401,7 @@ class MembroControllerTest {
 
         DataIntegrityViolationException propagada = assertThrows(
                 DataIntegrityViolationException.class,
-                () -> new MembroController(membroService).cadastrar(
+                () -> criarController().cadastrar(
                         membro, resultado, new ExtendedModelMap(),
                         new RedirectAttributesModelMap()));
 
@@ -397,6 +415,18 @@ class MembroControllerTest {
         membro.setTelefone("(48) 99999-0000");
         membro.setEndereco("Rua A, 10");
         return membro;
+    }
+
+    private MembroController criarController() {
+        return criarController(membroService);
+    }
+
+    private MembroController criarController(MembroService service) {
+        return new MembroController(
+                service,
+                treinoService,
+                pagamentoService,
+                historicoAtividadeService);
     }
 
     private void setId(Membro membro, Long id) throws ReflectiveOperationException {
