@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#101814">
+    <title>Acesso de funcionários | VIGOR</title>
+    <link rel="stylesheet" th:href="@{/css/login.css}">
+    <script th:src="@{/js/login.js}" defer></script>
+</head>
+<body class="login-page">
+<main class="login-layout">
+    <section class="apresentacao" aria-label="VIGOR Gestão de Academia">
+        <img class="marca-topo" th:src="@{/images/vigor-logo-branca.png}" alt="VIGOR">
+        <div class="simbolo-marca" aria-hidden="true">
+            <img th:src="@{/images/vigor-logo-branca.png}" alt="">
+        </div>
+        <div class="apresentacao-texto">
+            <h1>Mais energia para gerir sua academia.</h1>
+            <p>Membros, treinos, pagamentos e atividades em um só lugar.</p>
+        </div>
+        <small class="assinatura">Vigor - Gestão de Academia</small>
+    </section>
+
+    <section class="acesso" aria-labelledby="titulo-login">
+        <div class="cartao-login">
+            <p class="identificacao-acesso">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="5" y="10" width="14" height="11" rx="2"/>
+                    <path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/>
+                </svg>
+                Acesso de funcionários
+            </p>
+            <h2 id="titulo-login">Bem-vindo à Vigor</h2>
+            <p class="subtitulo-login">Acesse a gestão da sua academia.</p>
+
+            <div class="mensagem mensagem-erro" role="alert" th:if="${erro != null}" th:text="${erro}"></div>
+            <div class="mensagem mensagem-sucesso" role="status" th:if="${mensagem != null}" th:text="${mensagem}"></div>
+
+            <form class="formulario-login" method="post" th:action="@{/login}">
+                <div class="campo-login">
+                    <label for="login">Login</label>
+                    <input id="login" name="login" type="text" autocomplete="username"
+                           placeholder="Digite seu login" required autofocus>
+                </div>
+
+                <div class="campo-login">
+                    <label for="senha">Senha</label>
+                    <div class="campo-senha">
+                        <input id="senha" name="senha" type="password" autocomplete="current-password"
+                               placeholder="Digite sua senha" required>
+                        <button id="mostrar-senha" class="alternar-senha" type="button"
+                                aria-controls="senha" aria-pressed="false">Mostrar</button>
+                    </div>
+                </div>
+
+                <button class="botao-entrar" type="submit">Entrar</button>
+            </form>
+
+            <p class="ambiente-restrito">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="5" y="10" width="14" height="11" rx="2"/>
+                    <path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+                </svg>
+                Ambiente administrativo restrito
+            </p>
+        </div>
+    </section>
+</main>
+</body>
+</html>

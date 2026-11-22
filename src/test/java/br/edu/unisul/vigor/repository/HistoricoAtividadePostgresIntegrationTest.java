@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
@@ -46,6 +47,9 @@ class HistoricoAtividadePostgresIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -160,6 +164,63 @@ class HistoricoAtividadePostgresIntegrationTest {
     }
 
     @Test
+    void consultaFiltradaIsolaMembroCombinaCpfEPeriodoEOrdenaDatasIguais() {
+        Membro ana = criarMembroTransitorio();
+        ana.setNome("Ana Beatriz Integração");
+        membroRepository.saveAndFlush(ana);
+        Membro bruno = criarMembroTransitorio();
+        bruno.setNome("Bruno Integração");
+        membroRepository.saveAndFlush(bruno);
+        Membro semAtividades = criarMembroTransitorio();
+        semAtividades.setNome("Membro sem atividades");
+        membroRepository.saveAndFlush(semAtividades);
+        Funcionario funcionario = funcionarioParaTeste();
+
+        HistoricoAtividade antiga = historicoService.registrar(
+                atividadeValida(LocalDate.of(2026, 11, 9), "Esteira"),
+                ana.getId(), funcionario.getId());
+        HistoricoAtividade primeiraNaData = historicoService.registrar(
+                atividadeValida(LocalDate.of(2026, 11, 10), "Treino de força"),
+                ana.getId(), funcionario.getId());
+        HistoricoAtividade segundaNaData = historicoService.registrar(
+                atividadeValida(LocalDate.of(2026, 11, 10), "Bicicleta ergométrica"),
+                ana.getId(), funcionario.getId());
+        historicoService.registrar(
+                atividadeValida(LocalDate.of(2026, 11, 10), "Atividade de Bruno"),
+                bruno.getId(), funcionario.getId());
+        historicoRepository.flush();
+        entityManager.clear();
+
+        List<HistoricoAtividade> porMembro = historicoService.consultar(
+                ana.getId(), "Ana", null, null);
+        List<HistoricoAtividade> porCpfEPeriodo = historicoService.consultar(
+                ana.getId(),
+                ana.getCpf(),
+                LocalDate.of(2026, 11, 10),
+                LocalDate.of(2026, 11, 10));
+        List<HistoricoAtividade> desdeDataInicial = historicoService.consultar(
+                ana.getId(), "", LocalDate.of(2026, 11, 10), null);
+        List<HistoricoAtividade> ateDataFinal = historicoService.consultar(
+                ana.getId(), "", null, LocalDate.of(2026, 11, 9));
+        List<HistoricoAtividade> semAtividadesEncontradas = historicoService.consultar(
+                semAtividades.getId(), "", null, null);
+
+        assertEquals(Set.of(antiga.getId(), primeiraNaData.getId(), segundaNaData.getId()),
+                idsDasAtividades(porMembro));
+        assertTrue(porMembro.stream()
+                .allMatch(item -> item.getMembro().getId().equals(ana.getId())));
+        assertEquals(List.of(segundaNaData.getId(), primeiraNaData.getId()),
+                porCpfEPeriodo.stream().map(HistoricoAtividade::getId).toList());
+        assertEquals(List.of(segundaNaData.getId(), primeiraNaData.getId()),
+                desdeDataInicial.stream().map(HistoricoAtividade::getId).toList());
+        assertEquals(List.of(antiga.getId()),
+                ateDataFinal.stream().map(HistoricoAtividade::getId).toList());
+        assertTrue(semAtividadesEncontradas.isEmpty());
+        assertTrue(porCpfEPeriodo.stream().allMatch(item ->
+                item.getFuncionarioResponsavel().getNome().equals(funcionario.getNome())));
+    }
+
+    @Test
     void consultaAtividadePersistidaRetornaDescricaoDataETempoGravados() {
         Membro membro = criarMembroTransitorio();
         Funcionario funcionario = funcionarioParaTeste();
@@ -243,13 +304,17 @@ class HistoricoAtividadePostgresIntegrationTest {
                 .findFirst()
                 .orElseGet(() -> funcionarioRepository.saveAndFlush(
                         new Funcionario("Funcionário de integração", "Teste", "teste-integracao",
-                                "{bcrypt}$2a$10$hash-de-teste-nao-utilizavel")));
+                                passwordEncoder.encode(java.util.UUID.randomUUID().toString()))));
     }
 
     private HistoricoAtividade atividadeValida() {
+        return atividadeValida(LocalDate.of(2026, 11, 10), "Acompanhamento de treino");
+    }
+
+    private HistoricoAtividade atividadeValida(LocalDate data, String descricao) {
         HistoricoAtividade atividade = new HistoricoAtividade();
-        atividade.setAtividade("Acompanhamento de treino");
-        atividade.setDataAtividade(LocalDate.of(2026, 11, 10));
+        atividade.setAtividade(descricao);
+        atividade.setDataAtividade(data);
         atividade.setTempoExecucaoMinutos(30);
         return atividade;
     }

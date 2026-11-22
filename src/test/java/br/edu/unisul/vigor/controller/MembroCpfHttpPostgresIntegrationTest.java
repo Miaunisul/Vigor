@@ -1,9 +1,12 @@
 package br.edu.unisul.vigor.controller;
 
 import br.edu.unisul.vigor.model.Membro;
+import br.edu.unisul.vigor.model.Funcionario;
+import br.edu.unisul.vigor.repository.FuncionarioRepository;
 import br.edu.unisul.vigor.service.MembroService;
 import br.edu.unisul.vigor.validation.CpfUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -12,17 +15,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.unbescape.html.HtmlEscape;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -46,9 +47,37 @@ class MembroCpfHttpPostgresIntegrationTest {
     @Autowired
     private MembroService membroService;
 
+    @Autowired
+    private FuncionarioRepository funcionarioRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    private FuncionarioHttpTestClient cliente;
+    private Long funcionarioTesteId;
+
+    @BeforeEach
+    void autenticarFuncionarioDeTeste() throws IOException, InterruptedException {
+        String login = "http-membro-" + UUID.randomUUID();
+        String senha = "Senha-http-" + UUID.randomUUID();
+        Funcionario funcionario = funcionarioRepository.saveAndFlush(new Funcionario(
+                "Funcionário de teste HTTP", "Administradora", login,
+                passwordEncoder.encode(senha)));
+        funcionarioTesteId = funcionario.getId();
+
+        cliente = new FuncionarioHttpTestClient(porta);
+        cliente.autenticar(login, senha);
+    }
+
     @AfterEach
     void removerMembrosDoTeste() {
         jdbcTemplate.update("DELETE FROM membros WHERE nome LIKE ?", nomeTeste + "%");
+        if (funcionarioTesteId != null) {
+            jdbcTemplate.update("DELETE FROM funcionarios WHERE id = ?", funcionarioTesteId);
+        }
+        if (cliente != null) {
+            cliente.close();
+        }
     }
 
     @ParameterizedTest
@@ -181,28 +210,11 @@ class MembroCpfHttpPostgresIntegrationTest {
 
     private HttpResponse<String> post(String caminho, String formulario)
             throws IOException, InterruptedException {
-        HttpRequest requisicao = HttpRequest.newBuilder(
-                        URI.create("http://localhost:" + porta + caminho))
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .timeout(Duration.ofSeconds(10))
-                .POST(HttpRequest.BodyPublishers.ofString(formulario))
-                .build();
-
-        try (HttpClient cliente = HttpClient.newHttpClient()) {
-            return cliente.send(requisicao, HttpResponse.BodyHandlers.ofString());
-        }
+        return cliente.post(caminho, formulario);
     }
 
     private HttpResponse<String> get(String caminho) throws IOException, InterruptedException {
-        HttpRequest requisicao = HttpRequest.newBuilder(
-                        URI.create("http://localhost:" + porta + caminho))
-                .timeout(Duration.ofSeconds(10))
-                .GET()
-                .build();
-
-        try (HttpClient cliente = HttpClient.newHttpClient()) {
-            return cliente.send(requisicao, HttpResponse.BodyHandlers.ofString());
-        }
+        return cliente.get(caminho);
     }
 
     private String formulario(String nome, String cpf, String telefone, String endereco) {

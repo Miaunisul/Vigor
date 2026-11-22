@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Atividades | VIGOR</title>
+    <link rel="stylesheet" th:href="@{/css/pagamentos.css}">
+    <link rel="stylesheet" th:href="@{/css/atividades.css}">
+</head>
+<body>
+<a class="pular" href="#conteudo">Ir para o conteúdo</a>
+
+<aside th:replace="~{pagamentos/lista :: menuPagamentos}"></aside>
+
+<div class="area-principal">
+    <header th:replace="~{pagamentos/lista :: cabecalhoModulo('Atividades')}"></header>
+
+    <main id="conteudo" class="conteudo">
+        <div class="cabecalho">
+            <div>
+                <h1>Atividades</h1>
+                <p class="subtitulo">Consulte o histórico de atividades realizadas pelos membros.</p>
+            </div>
+        </div>
+
+        <div class="aviso aviso-erro" role="alert" th:if="${erro != null}" th:text="${erro}"></div>
+
+        <section class="painel consulta-atividades" aria-labelledby="titulo-consulta">
+            <h2 id="titulo-consulta">Consultar histórico</h2>
+            <form class="filtros-atividades" method="get" th:action="@{/atividades}">
+                <div class="campo campo-busca">
+                    <label for="buscaMembro">Buscar membro</label>
+                    <input id="buscaMembro" name="q" type="search"
+                           placeholder="Buscar membro por nome ou CPF" th:value="${busca}">
+                </div>
+                <div class="campo campo-selecao">
+                    <label for="membroId">Membro selecionado</label>
+                    <select id="membroId" name="membroId">
+                        <option value="" th:selected="${membroSelecionadoId == null}">Todos os membros</option>
+                        <option th:each="membro : ${membros}" th:value="${membro.id}"
+                                th:selected="${membro.id == membroSelecionadoId}"
+                                th:text="${membro.nome}">Membro cadastrado</option>
+                    </select>
+                </div>
+                <div class="campo campo-data">
+                    <label for="dataInicial">Data inicial</label>
+                    <input id="dataInicial" name="dataInicial" type="date" th:value="${dataInicial}">
+                </div>
+                <div class="campo campo-data">
+                    <label for="dataFinal">Data final</label>
+                    <input id="dataFinal" name="dataFinal" type="date" th:value="${dataFinal}">
+                </div>
+                <div class="acoes-filtros">
+                    <button class="botao botao-primario" type="submit">Filtrar</button>
+                    <a class="botao botao-secundario" th:href="@{/atividades}">Limpar</a>
+                </div>
+            </form>
+        </section>
+
+        <section class="painel tabela-atividades" aria-label="Histórico de atividades">
+            <div class="tabela-container">
+                <table>
+                    <caption class="visualmente-oculto">Atividades realizadas pelos membros</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Membro</th>
+                        <th scope="col">Atividade</th>
+                        <th scope="col">Data</th>
+                        <th scope="col">Tempo de execução</th>
+                        <th scope="col">Funcionário responsável</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="atividade : ${atividades}">
+                        <td th:text="${atividade.membro.nome}">Nome do membro</td>
+                        <td th:text="${atividade.atividade}">Atividade</td>
+                        <td th:text="${#temporals.format(atividade.dataAtividade, 'dd/MM/yyyy')}">Data</td>
+                        <td th:text="${atividade.tempoExecucaoMinutos + ' min'}">30 min</td>
+                        <td th:text="${atividade.funcionarioResponsavel.nome}">Funcionário</td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(atividades)}">
+                        <td class="vazio" colspan="5">Nenhuma atividade encontrada para os filtros informados.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <p class="nota-historico">O histórico é ordenado da atividade mais recente para a mais antiga.</p>
+    </main>
+</div>
+</body>
+</html>

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -138,10 +139,11 @@ class HistoricoAtividadeServiceTest {
     void consultaAtividadesPorMembroExistente() {
         List<HistoricoAtividade> esperadas = List.of(atividadeValida());
         when(membroRepository.existsById(10L)).thenReturn(true);
-        when(historicoRepository.findByMembro_Id(10L)).thenReturn(esperadas);
+        when(historicoRepository.findByMembro_IdOrderByDataAtividadeDescIdDesc(10L))
+                .thenReturn(esperadas);
 
         assertSame(esperadas, historicoService.consultarPorMembro(10L));
-        verify(historicoRepository).findByMembro_Id(10L);
+        verify(historicoRepository).findByMembro_IdOrderByDataAtividadeDescIdDesc(10L);
     }
 
     @Test
@@ -151,7 +153,48 @@ class HistoricoAtividadeServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> historicoService.consultarPorMembro(404L));
 
-        verify(historicoRepository, never()).findByMembro_Id(any());
+        verify(historicoRepository, never())
+                .findByMembro_IdOrderByDataAtividadeDescIdDesc(any());
+    }
+
+    @Test
+    void consultaHistoricoComMembroBuscaPorNomeCpfEPeriodo() {
+        LocalDate inicio = LocalDate.of(2026, 11, 1);
+        LocalDate fim = LocalDate.of(2026, 11, 30);
+        List<HistoricoAtividade> esperadas = List.of(atividadeValida());
+        when(membroRepository.existsById(10L)).thenReturn(true);
+        when(historicoRepository.findAll(any(Specification.class)))
+                .thenReturn(esperadas);
+
+        assertSame(esperadas, historicoService.consultar(
+                10L, " Ana Beatriz 529.982.247-25 ", inicio, fim));
+        verify(historicoRepository).findAll(any(Specification.class));
+    }
+
+    @Test
+    void consultaHistoricoSemFiltros() {
+        List<HistoricoAtividade> esperadas = List.of(atividadeValida());
+        when(historicoRepository.findAll(any(Specification.class))).thenReturn(esperadas);
+
+        assertSame(esperadas, historicoService.consultar(null, null, null, null));
+    }
+
+    @Test
+    void rejeitaPeriodoInvertidoAntesDeConsultarRepositorio() {
+        assertThrows(IllegalArgumentException.class, () -> historicoService.consultar(
+                null, "", LocalDate.of(2026, 11, 21), LocalDate.of(2026, 11, 20)));
+
+        verifyNoInteractions(historicoRepository, membroRepository);
+    }
+
+    @Test
+    void rejeitaMembroInexistenteNaConsultaFiltrada() {
+        when(membroRepository.existsById(404L)).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> historicoService.consultar(404L, "", null, null));
+
+        verify(historicoRepository, never()).findAll(any(Specification.class));
     }
 
     @Test

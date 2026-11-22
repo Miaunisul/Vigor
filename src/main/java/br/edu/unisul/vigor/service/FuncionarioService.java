@@ -2,9 +2,12 @@ package br.edu.unisul.vigor.service;
 
 import br.edu.unisul.vigor.model.Funcionario;
 import br.edu.unisul.vigor.repository.FuncionarioRepository;
+import br.edu.unisul.vigor.security.FuncionarioPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 public class FuncionarioService {
@@ -21,14 +24,27 @@ public class FuncionarioService {
 
     @Transactional(readOnly = true)
     public boolean autenticar(String login, String senha) {
+        return autenticarFuncionario(login, senha).isPresent();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<FuncionarioPrincipal> autenticarFuncionario(String login, String senha) {
         if (login == null || login.isBlank() || senha == null || senha.isBlank()) {
-            return false;
+            return Optional.empty();
         }
 
         String loginNormalizado = normalizarLogin(login);
         return funcionarioRepository.findByLoginNormalizado(loginNormalizado)
-                .map(funcionario -> senhaCorresponde(senha, funcionario.getSenhaHash()))
-                .orElse(false);
+                .filter(funcionario -> senhaCorresponde(senha, funcionario.getSenhaHash()))
+                .map(this::criarPrincipal);
+    }
+
+    private FuncionarioPrincipal criarPrincipal(Funcionario funcionario) {
+        return new FuncionarioPrincipal(
+                funcionario.getId(),
+                funcionario.getNome(),
+                funcionario.getCargo(),
+                funcionario.getLogin());
     }
 
     static String normalizarLogin(String login) {
