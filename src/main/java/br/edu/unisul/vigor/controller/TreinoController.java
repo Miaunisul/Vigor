@@ -26,6 +26,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.beans.PropertyEditorSupport;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
@@ -37,6 +38,9 @@ public class TreinoController {
             "Selecione um membro cadastrado.";
     private static final String MENSAGEM_MEMBRO_NAO_ENCONTRADO =
             "Membro não encontrado.";
+    private static final String MENSAGEM_TREINO_NAO_ENCONTRADO =
+            "Treino não encontrado.";
+    private static final int TAMANHO_PAGINA = 10;
 
     private final TreinoService treinoService;
     private final MembroService membroService;
@@ -117,17 +121,113 @@ public class TreinoController {
     }
 
     @GetMapping
-    public String listar(
+    public String tela(
+            @RequestParam(required = false) String acao,
+            @RequestParam(required = false) Long treinoId,
             @RequestParam(required = false) Long membroId,
+            @RequestParam(required = false, name = "q") String busca,
+            @RequestParam(defaultValue = "0") int page,
             Model model,
             RedirectAttributes atributos) {
-        model.addAttribute("membros", membroService.listarTodos());
-        model.addAttribute("membroSelecionadoId", membroId);
-        model.addAttribute("treinos", List.of());
+        prepararDadosBase(model, busca, membroId);
 
+        String visualizacao = normalizarAcao(acao);
+        if ("detalhes".equals(visualizacao) || "editar".equals(visualizacao)) {
+            if (treinoId == null || treinoId <= 0) {
+                atributos.addFlashAttribute("erro", MENSAGEM_TREINO_NAO_ENCONTRADO);
+                return "redirect:/treinos";
+            }
+            try {
+                Treino treino = treinoService.buscarPorId(treinoId);
+                model.addAttribute("treino", treino);
+                model.addAttribute("treinoId", treinoId);
+                model.addAttribute("membroSelecionadoId", treino.getMembro().getId());
+                model.addAttribute("membroIdFormulario", treino.getMembro().getId().toString());
+                model.addAttribute("visualizacao", visualizacao);
+                return "treinos/lista";
+            } catch (IllegalArgumentException e) {
+                if (!MENSAGEM_TREINO_NAO_ENCONTRADO.equals(e.getMessage())) {
+                    throw e;
+                }
+                atributos.addFlashAttribute("erro", e.getMessage());
+                return "redirect:/treinos";
+            }
+        }
+
+        if ("novo".equals(visualizacao)) {
+            model.addAttribute("visualizacao", visualizacao);
+            model.addAttribute("membroIdFormulario", membroId == null ? "" : membroId.toString());
+            return "treinos/lista";
+        }
+
+        return montarLista(model, busca, membroId, page, atributos);
+    }
+
+    @GetMapping("/novo")
+    public String novo() {
+        return "redirect:/treinos?acao=novo";
+    }
+
+    @PostMapping
+    public String salvar(
+            @Valid @ModelAttribute("treino") Treino treino,
+            BindingResult resultado,
+            @RequestParam(value = "acao", defaultValue = "novo") String acao,
+            @RequestParam(value = "treinoId", required = false) Long treinoId,
+            @RequestParam(value = "membroId", required = false) String membroIdInformado,
+            Model model,
+            RedirectAttributes atributos) {
+        if (treino.getMembro() == null) {
+            treino.setMembro(new Membro());
+        }
+        Long membroId = interpretarMembroId(membroIdInformado, resultado);
+        boolean editando = "editar".equals(acao);
+
+        if (editando && (treinoId == null || treinoId <= 0)) {
+            resultado.reject("treino.naoEncontrado", MENSAGEM_TREINO_NAO_ENCONTRADO);
+        }
+        if (resultado.hasErrors()) {
+            prepararFormulario(model, treino, editando ? "editar" : "novo",
+                    treinoId, membroIdInformado);
+            return "treinos/lista";
+        }
+
+        try {
+            if (editando) {
+                treinoService.atualizar(treinoId, treino, membroId);
+                atributos.addFlashAttribute("sucesso", "Treino atualizado com sucesso.");
+            } else {
+                treinoService.cadastrar(treino, membroId);
+                atributos.addFlashAttribute("sucesso", "Treino cadastrado com sucesso.");
+            }
+            return "redirect:/treinos";
+        } catch (ConstraintViolationException e) {
+            adicionarViolacoes(resultado, e.getConstraintViolations());
+        } catch (IllegalArgumentException e) {
+            if (MENSAGEM_MEMBRO_OBRIGATORIO.equals(e.getMessage())
+                    || MENSAGEM_MEMBRO_NAO_ENCONTRADO.equals(e.getMessage())) {
+                rejeitarMembro(resultado, e.getMessage());
+            } else if (MENSAGEM_TREINO_NAO_ENCONTRADO.equals(e.getMessage())) {
+                resultado.reject("treino.naoEncontrado", e.getMessage());
+            } else {
+                throw e;
+            }
+        }
+
+        prepararFormulario(model, treino, editando ? "editar" : "novo",
+                treinoId, membroIdInformado);
+        return "treinos/lista";
+    }
+
+    private String montarLista(
+            Model model,
+            String busca,
+            Long membroId,
+            int paginaSolicitada,
+            RedirectAttributes atributos) {
         if (membroId != null) {
             try {
-                model.addAttribute("treinos", treinoService.consultarPorMembro(membroId));
+                membroService.buscarPorId(membroId);
             } catch (IllegalArgumentException e) {
                 if (!MENSAGEM_MEMBRO_NAO_ENCONTRADO.equals(e.getMessage())) {
                     throw e;
@@ -137,54 +237,63 @@ public class TreinoController {
             }
         }
 
+        String termo = busca == null ? "" : busca.strip();
+        String termoMinusculo = termo.toLowerCase(Locale.ROOT);
+        String cpfTermo = termo.replaceAll("\\D", "");
+        List<Treino> filtrados = treinoService.listarTodos().stream()
+                .filter(treino -> membroId == null
+                        || treino.getMembro().getId().equals(membroId))
+                .filter(treino -> termo.isBlank()
+                        || treino.getMembro().getNome().toLowerCase(Locale.ROOT)
+                                .contains(termoMinusculo)
+                        || (!cpfTermo.isBlank() && treino.getMembro().getCpf() != null
+                                && treino.getMembro().getCpf().contains(cpfTermo)))
+                .toList();
+
+        int total = filtrados.size();
+        int totalPaginas = Math.max(1, (int) Math.ceil((double) total / TAMANHO_PAGINA));
+        int pagina = Math.max(0, Math.min(paginaSolicitada, totalPaginas - 1));
+        int inicioIndice = pagina * TAMANHO_PAGINA;
+        int fimIndice = Math.min(total, inicioIndice + TAMANHO_PAGINA);
+
+        model.addAttribute("treinos", filtrados.subList(inicioIndice, fimIndice));
+        model.addAttribute("visualizacao", "lista");
+        model.addAttribute("busca", termo);
+        model.addAttribute("membroSelecionadoId", membroId);
+        model.addAttribute("pagina", pagina);
+        model.addAttribute("totalPaginas", totalPaginas);
+        model.addAttribute("totalTreinos", total);
+        model.addAttribute("inicioLista", total == 0 ? 0 : inicioIndice + 1);
+        model.addAttribute("fimLista", fimIndice);
         return "treinos/lista";
     }
 
-    @GetMapping("/novo")
-    public String novo(Model model) {
-        prepararFormulario(model, null);
-        return "treinos/formulario";
-    }
-
-    @PostMapping
-    public String cadastrar(
-            @Valid @ModelAttribute("treino") Treino treino,
-            BindingResult resultado,
-            @RequestParam(value = "membroId", required = false) String membroIdInformado,
-            Model model,
-            RedirectAttributes atributos) {
-        if (treino.getMembro() == null) {
-            treino.setMembro(new Membro());
-        }
-        Long membroId = interpretarMembroId(membroIdInformado, resultado);
-
-        if (resultado.hasErrors()) {
-            prepararFormulario(model, membroIdInformado);
-            return "treinos/formulario";
-        }
-
-        try {
-            treinoService.cadastrar(treino, membroId);
-            atributos.addFlashAttribute("sucesso", "Treino cadastrado com sucesso.");
-            return "redirect:/treinos?membroId=" + membroId;
-        } catch (ConstraintViolationException e) {
-            adicionarViolacoes(resultado, e.getConstraintViolations());
-        } catch (IllegalArgumentException e) {
-            if (MENSAGEM_MEMBRO_OBRIGATORIO.equals(e.getMessage())
-                    || MENSAGEM_MEMBRO_NAO_ENCONTRADO.equals(e.getMessage())) {
-                rejeitarMembro(resultado, e.getMessage());
-            } else {
-                throw e;
-            }
-        }
-
-        prepararFormulario(model, membroIdInformado);
-        return "treinos/formulario";
-    }
-
-    private void prepararFormulario(Model model, String membroIdSelecionado) {
+    private void prepararDadosBase(Model model, String busca, Long membroId) {
         model.addAttribute("membros", membroService.listarTodos());
-        model.addAttribute("membroIdSelecionado", membroIdSelecionado);
+        model.addAttribute("busca", busca == null ? "" : busca);
+        model.addAttribute("membroSelecionadoId", membroId);
+        model.addAttribute("visualizacao", "lista");
+        model.addAttribute("moduloAtivo", "treinos");
+    }
+
+    private void prepararFormulario(
+            Model model,
+            Treino treino,
+            String visualizacao,
+            Long treinoId,
+            String membroIdSelecionado) {
+        prepararDadosBase(model, "", null);
+        model.addAttribute("treino", treino);
+        model.addAttribute("visualizacao", visualizacao);
+        model.addAttribute("treinoId", treinoId);
+        model.addAttribute("membroIdFormulario", membroIdSelecionado == null ? "" : membroIdSelecionado);
+    }
+
+    private String normalizarAcao(String acao) {
+        if ("novo".equals(acao) || "editar".equals(acao) || "detalhes".equals(acao)) {
+            return acao;
+        }
+        return "lista";
     }
 
     private Long interpretarMembroId(String valor, BindingResult resultado) {
