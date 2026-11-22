@@ -53,24 +53,29 @@ class PagamentoPostgresIntegrationTest {
         Pagamento pagamento = pagamentoValido();
 
         Pagamento salvo = pagamentoService.registrar(pagamento, membro.getId());
-        List<Pagamento> consultados = pagamentoService.consultarPorMembro(membro.getId());
+        List<Pagamento> consultados =
+                pagamentoService.consultarPorMembro(membro.getId());
 
         assertNotNull(salvo.getId());
         assertEquals(membro.getId(), salvo.getMembro().getId());
-        assertTrue(consultados.stream().anyMatch(item -> item.getId().equals(salvo.getId())));
+        assertTrue(consultados.stream()
+                .anyMatch(item -> item.getId().equals(salvo.getId())));
     }
 
     @Test
     void servicoRejeitaValorInvalidoSemPersistirPagamento() {
         Membro membro = membroParaTeste();
-        long quantidadeAntes = pagamentoRepository.findByMembro_Id(membro.getId()).size();
+        long quantidadeAntes =
+                pagamentoRepository.findByMembro_Id(membro.getId()).size();
+
         Pagamento pagamento = pagamentoValido();
         pagamento.setValor(BigDecimal.ZERO);
 
         assertThrows(jakarta.validation.ConstraintViolationException.class,
                 () -> pagamentoService.registrar(pagamento, membro.getId()));
 
-        assertEquals(quantidadeAntes, pagamentoRepository.findByMembro_Id(membro.getId()).size());
+        assertEquals(quantidadeAntes,
+                pagamentoRepository.findByMembro_Id(membro.getId()).size());
     }
 
     @Test
@@ -81,78 +86,117 @@ class PagamentoPostgresIntegrationTest {
 
         assertThrows(jakarta.validation.ConstraintViolationException.class,
                 () -> pagamentoService.registrar(pagamento, membro.getId()));
-        assertEquals(0, pagamentoRepository.findByMembro_Id(membro.getId()).size());
+
+        assertEquals(0,
+                pagamentoRepository.findByMembro_Id(membro.getId()).size());
     }
 
     @Test
     void constraintDoBancoRejeitaValorNaoPositivo() {
         Membro membro = membroParaTeste();
 
-        assertThrows(DataIntegrityViolationException.class, () -> jdbcTemplate.update(
-                "INSERT INTO pagamentos (membro_id, valor, data_pagamento, status) "
-                        + "VALUES (?, ?, ?, ?)",
-                membro.getId(), BigDecimal.ZERO, LocalDate.now(), "PAGO"));
+        assertThrows(DataIntegrityViolationException.class,
+                () -> jdbcTemplate.update(
+                        "INSERT INTO pagamentos "
+                                + "(membro_id, valor, data_pagamento, status) "
+                                + "VALUES (?, ?, ?, ?)",
+                        membro.getId(),
+                        BigDecimal.ZERO,
+                        LocalDate.now(),
+                        "PAGO"));
     }
 
     @Test
     void constraintDoBancoRejeitaStatusDiferenteDePago() {
         Membro membro = membroParaTeste();
 
-        assertThrows(DataIntegrityViolationException.class, () -> jdbcTemplate.update(
-                "INSERT INTO pagamentos (membro_id, valor, data_pagamento, status) "
-                        + "VALUES (?, ?, ?, ?)",
-                membro.getId(), new BigDecimal("10.00"), LocalDate.now(), "PEND"));
+        assertThrows(DataIntegrityViolationException.class,
+                () -> jdbcTemplate.update(
+                        "INSERT INTO pagamentos "
+                                + "(membro_id, valor, data_pagamento, status) "
+                                + "VALUES (?, ?, ?, ?)",
+                        membro.getId(),
+                        new BigDecimal("10.00"),
+                        LocalDate.now(),
+                        "PEND"));
     }
 
     @Test
     void chaveEstrangeiraRejeitaMembroInexistente() {
-        assertThrows(DataIntegrityViolationException.class, () -> jdbcTemplate.update(
-                "INSERT INTO pagamentos (membro_id, valor, data_pagamento, status) "
-                        + "VALUES (?, ?, ?, ?)",
-                -1L, new BigDecimal("10.00"), LocalDate.now(), "PAGO"));
+        assertThrows(DataIntegrityViolationException.class,
+                () -> jdbcTemplate.update(
+                        "INSERT INTO pagamentos "
+                                + "(membro_id, valor, data_pagamento, status) "
+                                + "VALUES (?, ?, ?, ?)",
+                        -1L,
+                        new BigDecimal("10.00"),
+                        LocalDate.now(),
+                        "PAGO"));
     }
 
     @Test
     void consultaPorMembroRetornaSomenteOsPagamentosDoMembro() {
         Membro primeiro = criarMembroTransitorio();
         Membro segundo = criarMembroTransitorio();
+
         Pagamento primeiroPagamento =
                 pagamentoService.registrar(pagamentoValido(), primeiro.getId());
+
         Pagamento segundoPagamento =
                 pagamentoService.registrar(pagamentoValido(), primeiro.getId());
+
         Pagamento pagamentoDoSegundo = pagamentoValido();
         pagamentoDoSegundo.setValor(new BigDecimal("80.00"));
-        pagamentoDoSegundo = pagamentoService.registrar(pagamentoDoSegundo, segundo.getId());
+        pagamentoDoSegundo =
+                pagamentoService.registrar(pagamentoDoSegundo, segundo.getId());
+
         pagamentoRepository.flush();
         entityManager.clear();
 
-        List<Pagamento> doPrimeiro = pagamentoService.consultarPorMembro(primeiro.getId());
-        List<Pagamento> doSegundo = pagamentoService.consultarPorMembro(segundo.getId());
+        List<Pagamento> doPrimeiro =
+                pagamentoService.consultarPorMembro(primeiro.getId());
 
-        assertEquals(Set.of(primeiroPagamento.getId(), segundoPagamento.getId()),
+        List<Pagamento> doSegundo =
+                pagamentoService.consultarPorMembro(segundo.getId());
+
+        assertEquals(
+                Set.of(primeiroPagamento.getId(), segundoPagamento.getId()),
                 idsDosPagamentos(doPrimeiro));
-        assertEquals(Set.of(pagamentoDoSegundo.getId()), idsDosPagamentos(doSegundo));
-        assertTrue(doPrimeiro.stream()
-                .allMatch(pagamento -> pagamento.getMembro().getId().equals(primeiro.getId())));
+
+        assertEquals(
+                Set.of(pagamentoDoSegundo.getId()),
+                idsDosPagamentos(doSegundo));
+
+        assertTrue(doPrimeiro.stream().allMatch(pagamento ->
+                pagamento.getMembro().getId().equals(primeiro.getId())));
+
         assertTrue(doPrimeiro.stream().allMatch(pagamento ->
                 pagamento.getValor().compareTo(new BigDecimal("125.50")) == 0));
+
         assertEquals(segundo.getId(), doSegundo.get(0).getMembro().getId());
-        assertEquals(0, doSegundo.get(0).getValor().compareTo(new BigDecimal("80.00")));
+        assertEquals(
+                0,
+                doSegundo.get(0).getValor().compareTo(new BigDecimal("80.00")));
         assertEquals("PAGO", doSegundo.get(0).getStatus());
     }
 
     @Test
     void consultaPagamentoPersistidoRetornaValorDataEStatusGravados() {
         Membro membro = criarMembroTransitorio();
-        Pagamento salvo = pagamentoService.registrar(pagamentoValido(), membro.getId());
+        Pagamento salvo =
+                pagamentoService.registrar(pagamentoValido(), membro.getId());
+
         pagamentoRepository.flush();
         entityManager.clear();
 
-        Pagamento consultado = pagamentoRepository.findById(salvo.getId()).orElseThrow();
+        Pagamento consultado =
+                pagamentoRepository.findById(salvo.getId()).orElseThrow();
 
         assertNotSame(salvo, consultado);
         assertEquals(membro.getId(), consultado.getMembro().getId());
-        assertEquals(0, consultado.getValor().compareTo(new BigDecimal("125.50")));
+        assertEquals(
+                0,
+                consultado.getValor().compareTo(new BigDecimal("125.50")));
         assertEquals(LocalDate.of(2026, 11, 10), consultado.getDataPagamento());
         assertEquals("PAGO", consultado.getStatus());
     }
@@ -161,14 +205,66 @@ class PagamentoPostgresIntegrationTest {
     void constraintDoBancoRejeitaValorNegativo() {
         Membro membro = membroParaTeste();
 
-        assertThrows(DataIntegrityViolationException.class, () -> jdbcTemplate.update(
-                "INSERT INTO pagamentos (membro_id, valor, data_pagamento, status) "
-                        + "VALUES (?, ?, ?, ?)",
-                membro.getId(), new BigDecimal("-1.00"), LocalDate.now(), "PAGO"));
+        assertThrows(DataIntegrityViolationException.class,
+                () -> jdbcTemplate.update(
+                        "INSERT INTO pagamentos "
+                                + "(membro_id, valor, data_pagamento, status) "
+                                + "VALUES (?, ?, ?, ?)",
+                        membro.getId(),
+                        new BigDecimal("-1.00"),
+                        LocalDate.now(),
+                        "PAGO"));
+    }
+
+    @Test
+    void listagemGeralOrdenaPorDataDecrescenteEPorIdNoDesempate() {
+        Membro membro = criarMembroTransitorio();
+
+        Pagamento antigo = pagamentoValido();
+        antigo.setDataPagamento(LocalDate.of(2026, 1, 10));
+        antigo = pagamentoService.registrar(antigo, membro.getId());
+
+        Pagamento recentePrimeiro = pagamentoValido();
+        recentePrimeiro.setDataPagamento(LocalDate.of(2026, 11, 20));
+        recentePrimeiro =
+                pagamentoService.registrar(recentePrimeiro, membro.getId());
+
+        Pagamento recenteSegundo = pagamentoValido();
+        recenteSegundo.setDataPagamento(LocalDate.of(2026, 11, 20));
+        recenteSegundo =
+                pagamentoService.registrar(recenteSegundo, membro.getId());
+
+        List<Long> ordemEsperada = List.of(
+                recenteSegundo.getId(),
+                recentePrimeiro.getId(),
+                antigo.getId());
+
+        pagamentoRepository.flush();
+        entityManager.clear();
+
+        List<Pagamento> resultado = pagamentoService.listarTodos();
+
+        List<Pagamento> pagamentosDoTeste = resultado.stream()
+                .filter(pagamento -> ordemEsperada.contains(pagamento.getId()))
+                .toList();
+
+        assertEquals(
+                ordemEsperada,
+                pagamentosDoTeste.stream().map(Pagamento::getId).toList());
+
+        assertTrue(pagamentosDoTeste.stream().allMatch(pagamento ->
+                entityManager.getEntityManagerFactory()
+                        .getPersistenceUnitUtil()
+                        .isLoaded(pagamento, "membro")));
+
+        assertTrue(pagamentosDoTeste.stream().allMatch(pagamento ->
+                pagamento.getMembro().getNome().equals(membro.getNome())));
     }
 
     private Set<Long> idsDosPagamentos(List<Pagamento> pagamentos) {
-        return pagamentos.stream().map(Pagamento::getId).collect(Collectors.toSet());
+        return pagamentos.stream()
+                .map(Pagamento::getId)
+                .collect(Collectors.toSet());
     }
 
     private Membro membroParaTeste() {
@@ -188,23 +284,32 @@ class PagamentoPostgresIntegrationTest {
 
     private String cpfDisponivel() {
         for (int tentativa = 0; tentativa < 100; tentativa++) {
-            String base = String.format("%09d",
-                    ThreadLocalRandom.current().nextInt(100_000_000, 1_000_000_000));
+            String base = String.format(
+                    "%09d",
+                    ThreadLocalRandom.current()
+                            .nextInt(100_000_000, 1_000_000_000));
+
             int primeiroDigito = calcularDigito(base, 10);
             int segundoDigito = calcularDigito(base + primeiroDigito, 11);
             String cpf = base + primeiroDigito + segundoDigito;
-            if (CpfUtils.ehValido(cpf) && !membroRepository.existsByCpf(cpf)) {
+
+            if (CpfUtils.ehValido(cpf)
+                    && !membroRepository.existsByCpf(cpf)) {
                 return cpf;
             }
         }
-        throw new IllegalStateException("Não foi possível gerar CPF de teste disponível.");
+
+        throw new IllegalStateException(
+                "Não foi possível gerar CPF de teste disponível.");
     }
 
     private int calcularDigito(String base, int pesoInicial) {
         int soma = 0;
+
         for (int indice = 0; indice < base.length(); indice++) {
             soma += (base.charAt(indice) - '0') * (pesoInicial - indice);
         }
+
         int resto = soma % 11;
         return resto < 2 ? 0 : 11 - resto;
     }

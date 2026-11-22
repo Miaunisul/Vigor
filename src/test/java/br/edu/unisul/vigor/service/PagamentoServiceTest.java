@@ -31,8 +31,8 @@ import static org.mockito.Mockito.when;
 
 class PagamentoServiceTest {
 
-    private static final ValidatorFactory VALIDATOR_FACTORY =
-            Validation.buildDefaultValidatorFactory();
+    private static final ValidatorFactory VALIDATOR_FACTORY
+            = Validation.buildDefaultValidatorFactory();
     private static final Validator VALIDATOR = VALIDATOR_FACTORY.getValidator();
 
     private PagamentoRepository pagamentoRepository;
@@ -63,6 +63,60 @@ class PagamentoServiceTest {
         assertSame(pagamento, resultado);
         assertSame(membro, resultado.getMembro());
         verify(pagamentoRepository).save(pagamento);
+    }
+
+    @Test
+    void listaTodosOsPagamentosPelaConsultaOrdenadaDoRepositorio() {
+        List<Pagamento> esperados = List.of(pagamentoValido());
+        when(pagamentoRepository.findAllByOrderByDataPagamentoDescIdDesc())
+                .thenReturn(esperados);
+
+        List<Pagamento> resultado = pagamentoService.listarTodos();
+
+        assertSame(esperados, resultado);
+        verify(pagamentoRepository).findAllByOrderByDataPagamentoDescIdDesc();
+        verifyNoInteractions(membroRepository);
+    }
+
+    @Test
+    void retornaListaVaziaQuandoNaoHaPagamentos() {
+        when(pagamentoRepository.findAllByOrderByDataPagamentoDescIdDesc())
+                .thenReturn(List.of());
+
+        List<Pagamento> resultado = pagamentoService.listarTodos();
+
+        assertEquals(List.of(), resultado);
+        verify(pagamentoRepository).findAllByOrderByDataPagamentoDescIdDesc();
+    }
+
+    @Test
+    void retornaListaVaziaParaMembroExistenteSemPagamentos() {
+        when(membroRepository.existsById(42L)).thenReturn(true);
+        when(pagamentoRepository.findByMembro_Id(42L)).thenReturn(List.of());
+
+        List<Pagamento> resultado = pagamentoService.consultarPorMembro(42L);
+
+        assertEquals(List.of(), resultado);
+        verify(pagamentoRepository).findByMembro_Id(42L);
+    }
+
+    @Test
+    void rejeitaConsultaSemMembro() {
+        assertThrows(IllegalArgumentException.class,
+                () -> pagamentoService.consultarPorMembro(null));
+
+        verifyNoInteractions(membroRepository, pagamentoRepository);
+    }
+
+    @Test
+    void rejeitaValorComMaisDeDezDigitosInteiros() {
+        rejeitarPagamentoInvalido(
+                pagamento -> pagamento.setValor(new BigDecimal("10000000000.00")));
+    }
+
+    @Test
+    void rejeitaStatusNulo() {
+        rejeitarPagamentoInvalido(pagamento -> pagamento.setStatus(null));
     }
 
     @ParameterizedTest

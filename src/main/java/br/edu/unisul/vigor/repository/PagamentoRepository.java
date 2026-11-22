@@ -9,6 +9,9 @@ import java.util.List;
 public interface PagamentoRepository extends JpaRepository<Pagamento, Long> {
 
     @EntityGraph(attributePaths = "membro")
+    List<Pagamento> findAllByOrderByDataPagamentoDescIdDesc();
+
+    @EntityGraph(attributePaths = "membro")
     List<Pagamento> findByMembro_Id(Long membroId);
 
     boolean existsByMembro_Id(Long membroId);

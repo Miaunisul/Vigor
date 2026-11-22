@@ -2,11 +2,11 @@
 
 ## 1. Objetivo
 
-Definir a estratégia de testes do VIGOR — Sistema de Cadastro de Academia, para verificar se as funcionalidades implementadas atendem aos requisitos funcionais, às regras de negócio e aos requisitos de qualidade estabelecidos para a A3 de Gestão e Qualidade de Software da UNISUL.
+Definir a estratégia de testes do VIGOR — Sistema de Gestão de Academia, para verificar se as funcionalidades implementadas atendem aos requisitos funcionais, às regras de negócio e aos requisitos de qualidade estabelecidos para a A3 de Gestão e Qualidade de Software da UNISUL.
 
 ## 2. Escopo dos testes
 
-Os testes contemplarão as funcionalidades RF01 a RF09 previstas para a entrega. Cada caso abaixo permanece planejado até que sua implementação ou execução seja confirmada. O CA13, registro de atividades por interface, está fora do escopo; os dados do histórico serão previamente disponibilizados por procedimento técnico documentado.
+Os testes contemplarão as funcionalidades RF01 a RF10 previstas para a entrega. A existência da implementação não significa aprovação do caso. Cada cenário permanece planejado ou parcialmente verificado até que sua execução e seus resultados sejam associados a evidências específicas. O CA13, registro de atividades por interface, está fora do escopo; os dados do histórico serão previamente disponibilizados por procedimento técnico documentado.
 
 ### 2.1. Cadastro de membros
 
@@ -36,9 +36,15 @@ Os testes contemplarão as funcionalidades RF01 a RF09 previstas para a entrega.
 
 ### 2.5. Pagamentos
 
-- Registro de pagamentos recebidos com status Pago.
-- Verificação da persistência do registro por leitura técnica de teste, sem depender de tela financeira (CT11).
-- Rejeição de dados inválidos e de status diferente de Pago (CT12).
+- Registro de pagamentos recebidos, com atribuição automática de `PAGO` pela aplicação.
+- Validação de membro, valor e data.
+- Verificação de que o status enviado pelo cliente não substitui o valor definido pela aplicação.
+- Rejeição de status inválido na validação interna do registro.
+- Persistência e leitura dos dados no PostgreSQL.
+- Listagem geral ordenada por data decrescente e identificador decrescente no desempate.
+- Consulta por membro, sem apresentar pagamentos de outros membros.
+- Mensagens para conjuntos sem pagamentos e referências inválidas.
+- Persistência dos pagamentos após reinício da aplicação.
 
 ### 2.6. Histórico de atividades
 
@@ -63,7 +69,7 @@ Os testes contemplarão as funcionalidades RF01 a RF09 previstas para a entrega.
 
 ## 3. Casos de teste funcionais
 
-Os casos desta seção estão **Planejados**. Os passos descrevem verificações a realizar, não resultados já observados. Os dados devem ser fictícios. Situações inválidas indicadas em um critério devem ser executadas separadamente.
+Os casos descrevem procedimentos e resultados esperados. A situação de cada caso deve distinguir execução integral, verificação parcial e planejamento. Testes automatizados de componentes e verificações manuais podem cobrir partes diferentes de um mesmo caso. Uma execução global bem-sucedida não aprova automaticamente todos os cenários. Os dados devem ser fictícios, e cada condição inválida deve ser verificada separadamente.
 
 ### CT01 — Cadastro válido e dados automáticos
 
@@ -147,19 +153,23 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 
 ### CT11 — Registro de pagamento válido
 
-- **Status:** Planejado.
+- **Status:** Parcialmente verificado; referências às verificações locais em EV21–EV24. Execução integrada com autenticação ainda não comprovada.
 - **RF/CA:** RF08; CA11.
-- **Pré-condições:** Funcionário autenticado; membro existente, valor positivo com no máximo duas casas decimais e data válida.
-- **Passos:** Registrar o pagamento recebido para o membro. Confirmar a operação e verificar a persistência por consulta técnica ao registro armazenado no PostgreSQL no ambiente de teste, comparando membro, valor, data, identificador e status Pago, sem usar uma tela financeira.
-- **Resultado esperado:** O registro persistido corresponde ao membro, valor e data informados, possui ID único e status Pago; a operação é confirmada. Esta verificação é de persistência do registro após gravação, sem reinício da aplicação.
+- **Regras:** RN10, RN11, RN12 e RN13.
+- **Pré-condições:** Membro existente; valor positivo com no máximo 10 dígitos inteiros e duas casas decimais; data válida. Para a verificação completa pela interface, funcionário autenticado.
+- **Passos:** Registrar o pagamento informando membro, valor e data, sem enviar status. Conferir a confirmação e consultar o registro armazenado, comparando membro, valor, data, identificador e status. Em teste separado do controller, enviar um status diferente e verificar que ele não substitui a atribuição automática.
+- **Resultado esperado:** O pagamento recebe ID único e status `PAGO`, mantém os dados válidos informados e a operação é confirmada. A ausência do status na solicitação é aceita. Um status enviado pelo cliente não altera o valor definido pela aplicação.
+- **Limite:** A leitura após gravação não comprova persistência após reinício; essa verificação pertence ao CT21.
 
 ### CT12 — Rejeição de pagamento inválido ou sem membro existente
 
-- **Status:** Planejado.
-- **RF/CA:** RF08; CA12, CA27. **Regras:** RN10, RN11, RN12 e RN13.
-- **Pré-condições:** Funcionário autenticado; membro cadastrado para validar os demais dados; dados de teste que permitam também enviar pagamento sem referência a membro e com referência a membro inexistente.
-- **Passos:** Em execuções separadas, tentar gravar pagamento sem referência a membro, com referência a membro inexistente, valor ausente, não numérico, igual a zero, negativo ou com mais de duas casas decimais, data ausente ou inválida e status diferente de Pago. Nos casos em que a interface prevê bloquear o envio, verificar o bloqueio; para os demais, exercitar a validação do servidor pelo mecanismo de teste disponível.
-- **Resultado esperado:** Cada tentativa é rejeitada e o pagamento não é persistido. A interface bloqueia o envio quando esse comportamento estiver previsto; em qualquer caso, a validação deve rejeitar os dados e identificar a informação a corrigir: selecionar membro cadastrado, informar valor numérico positivo com no máximo duas casas decimais, informar data válida ou manter status Pago.
+- **Status:** Parcialmente verificado; testes de controller, serviço e PostgreSQL relacionados em EV23. A execução integral de todas as variantes pela interface não está declarada.
+- **RF/CA:** RF08; CA12, CA27.
+- **Regras:** RN10, RN11, RN12, RN13 e RN21.
+- **Pré-condições:** Demais dados válidos para cada tentativa; membro existente para os cenários de valor e data.
+- **Passos:** Em execuções separadas, tentar registrar sem membro, com membro inexistente, valor ausente, não numérico, zero, negativo, com mais de 10 dígitos inteiros ou mais de duas casas decimais e data ausente ou inválida. Exercitar a validação do servidor mesmo quando o navegador impedir o envio. Separadamente, testar diretamente a validação interna de um registro com status nulo, vazio ou diferente de `PAGO`.
+- **Resultado esperado:** Cada entrada inválida é rejeitada sem persistência. No fluxo web, os erros identificam os dados a corrigir e preservam os dados válidos do formulário. Na validação interna, status inválido impede a persistência.
+- **Distinção:** Não enviar status no formulário é permitido, pois a aplicação o preenche. Enviar status pelo cliente não deve substituir `PAGO`, conforme CT11.
 
 ### CT13 — Consulta do histórico com atividades
 
@@ -179,12 +189,12 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 
 ### CT15 — Login válido e proteção por hash da senha
 
-- **Status:** Planejado; execução pendente da implementação de cadastro técnico de funcionários, autenticação e proteção de senha.
+- **Status:** Planejado como cenário completo; depende de provisionamento técnico documentado e verificação do fluxo integrado de autenticação.
 - **RF/CA:** RF01; CA15. **Regras:** RN18, RN19 e RN20. **RNF:** RNF01.
 - **Pré-condições:** Ambiente de teste isolado; disponíveis valores fictícios para preparar um funcionário e uma senha de teste. O mecanismo de codificação e verificação de senhas deve estar implementado para executar as verificações de hash.
-- **Passos:** 1. Preparar tecnicamente um funcionário de teste com identificador, nome, cargo, login e uma senha fictícia, sem criar uma tela de cadastro. 2. Conferir nos funcionários disponibilizados que os identificadores são únicos e que nome, cargo e login estão preenchidos e não contêm somente espaços; comparar a quantidade de funcionários com a quantidade de logins distintos. 3. Em ambiente controlado, consultar o valor armazenado no campo de senha do funcionário de teste, sem registrar o valor nem credenciais nas evidências. 4. Verificar que o valor armazenado não é igual à senha original e que seu formato corresponde a um hash produzido pelo mecanismo de codificação de senhas adotado pelo projeto. 5. Usar o mecanismo de verificação correspondente para confirmar que a senha original corresponde ao valor armazenado; não tentar reverter ou decodificar o hash. 6. Autenticar com a senha original e acessar uma funcionalidade interna.
+- **Passos:** 1. Preparar tecnicamente um funcionário de teste com identificador, nome, cargo, login e uma senha fictícia, sem criar uma tela de cadastro. 2. Conferir nos funcionários disponibilizados que os identificadores são únicos e que nome, cargo e login estão preenchidos e não contêm somente espaços; comparar a quantidade de funcionários com a quantidade de logins distintos após normalização equivalente a `lower(btrim(login))`, conforme o índice único do banco. 3. Em ambiente controlado, consultar o valor armazenado no campo de senha do funcionário de teste, sem registrar o valor nem credenciais nas evidências. 4. Verificar que o valor armazenado não é igual à senha original e que seu formato corresponde a um hash produzido pelo mecanismo de codificação de senhas adotado pelo projeto. 5. Usar o mecanismo de verificação correspondente para confirmar que a senha original corresponde ao valor armazenado; não tentar reverter ou decodificar o hash. 6. Autenticar com a senha original e acessar uma funcionalidade interna.
 - **Resultado esperado:** Dados obrigatórios do funcionário estão presentes, os identificadores e logins são únicos, o valor armazenado difere da senha original e corresponde ao formato e à verificação do mecanismo de hash adotado. A autenticação com a senha original permite o acesso interno. Nenhuma senha ou valor armazenado é exposto nas evidências.
-- **Situação da implementação:** Não foram encontrados no código uma entidade ou cadastro técnico de funcionário, componentes de autenticação, dependência de segurança ou mecanismo de codificação/verificação de senhas. O mecanismo efetivamente adotado ainda não pode ser identificado; portanto, este teste não pode ser executado nem considerado aprovado até que a implementação exista.
+- **Situação da implementação:** A revisão D04 identificou entidade e repositório de funcionários, configuração de `BCryptPasswordEncoder` e autenticação no serviço por `matches`. Isso não comprova provisionamento técnico documentado, sessão autenticada, tela de login ou proteção das rotas. A execução completa deste CT permanece dependente dessas verificações.
 
 ### CT16 — Login inválido e acesso sem autenticação
 
@@ -202,18 +212,52 @@ Os casos desta seção estão **Planejados**. Os passos descrevem verificações
 - **Passos:** Cadastrar um membro com dados válidos e registrar os valores apresentados, incluindo ID e data de cadastro. Atualizar validamente esse membro e registrar os valores atualizados. Encerrar e reiniciar efetivamente a aplicação mantendo o banco; autenticar novamente, consultar o membro e comparar ID, data de cadastro, nome, CPF, telefone e endereço com os valores registrados antes do reinício.
 - **Resultado esperado:** Os dados do membro criado e atualizado, incluindo ID e data de cadastro, permanecem disponíveis e correspondem aos valores anteriores ao reinício. Este CT verifica persistência após reinício somente para cadastro e atualização de membros; não verifica persistência após reinício de treinos, pagamentos, atividades ou funcionários.
 
+### CT18 — Listagem geral e ordenação de pagamentos
+
+- **Status:** Parcialmente verificado; testes automatizados relacionados em EV23 e consulta manual registrada em EV24. O fluxo com autenticação não está comprovado por esses testes.
+- **RF/CA:** RF10; CA31.
+- **Pré-condições:** Pagamentos de membros distintos, com datas diferentes e pelo menos dois registros com a mesma data.
+- **Passos:** Abrir a listagem sem selecionar membro. Comparar membro, valor, data e status com os registros armazenados. Conferir a ordem por data decrescente e identificador decrescente no desempate.
+- **Resultado esperado:** Todos os pagamentos do conjunto de teste são apresentados com seus dados corretos e na ordem definida. Valores são apresentados em reais, datas em DD/MM/AAAA e status como Pago.
+
+### CT19 — Consulta de pagamentos por membro e conjuntos vazios
+
+- **Status:** Parcialmente verificado; referências em EV23 e EV24. A ação de limpar e a execução integral com autenticação devem ter resultado específico registrado.
+- **RF/CA:** RF10; CA32, CA33.
+- **Pré-condições:** Dois membros com pagamentos e um terceiro sem pagamentos. Para o cenário geral vazio, usar um conjunto de teste isolado sem pagamentos.
+- **Passos:** Consultar separadamente os dois membros com pagamentos e comparar os resultados. Consultar o membro sem pagamentos. Limpar a seleção e conferir o retorno à listagem geral. Em cenário independente, abrir a listagem geral sem pagamentos.
+- **Resultado esperado:** A consulta apresenta somente pagamentos do membro selecionado e preserva a seleção. Os cenários vazios apresentam mensagem correspondente. Limpar a seleção restaura a listagem geral.
+
+### CT20 — Referência inválida na consulta de pagamentos
+
+- **Status:** Parcialmente verificado pelos testes do controller relacionados em EV23; execução completa com autenticação pendente.
+- **RF/CA:** RF10; CA34.
+- **Pré-condições:** Existirem pagamentos no ambiente para verificar que não são apresentados indevidamente.
+- **Passos:** Consultar com referência não numérica, zero, negativa, acima do limite de `Long` e com identificador inexistente, em tentativas separadas. Como controle, consultar sem informar membro.
+- **Resultado esperado:** Referências inválidas produzem mensagem de erro sem apresentar pagamentos. A consulta sem membro retorna a listagem geral.
+
+### CT21 — Persistência de pagamento após reinício
+
+- **Status:** Verificação manual parcial registrada em EV24: permanência do pagamento após reinício confirmada. A comparação detalhada de todos os campos e o fluxo com autenticação devem possuir registro específico para aprovação integral.
+- **RF/CA:** RF08, RF10; CA25.
+- **RNF:** RNF04.
+- **Pré-condições:** PostgreSQL configurado; pagamento válido registrado; identificação e dados do registro anotados.
+- **Passos:** Registrar membro, ID do pagamento, valor, data e status. Encerrar e reiniciar efetivamente a aplicação, mantendo o banco. Autenticar, consultar os pagamentos e comparar os dados com os valores anteriores ao reinício.
+- **Resultado esperado:** O mesmo pagamento permanece disponível, com ID, vínculo, valor, data e status preservados.
+- **Limite:** Este caso não verifica persistência após reinício das demais entidades.
+
 ## 4. Verificações planejadas de requisitos não funcionais
 
-As verificações abaixo complementam os CT funcionais, sem receber identificadores CT na matriz. Permanecem planejadas e seus resultados deverão ser registrados em `docs/testing/evidencias.md`.
+As verificações abaixo complementam os CT funcionais, sem receber identificadores CT na matriz. A situação individual distingue planejamento e verificação parcial. Seus resultados deverão ser registrados em `docs/testing/evidencias.md`.
 
 | ID | Requisito | Procedimento e resultado esperado | Status |
 |---|---|---|---|
 | VN01 | RNF01 | Usar CT15 e CT16 para verificar autenticação, bloqueio de acesso e senha armazenada por hash apropriado; não expor credenciais nas evidências. | Planejado |
 | VN02 | RNF02 | Registrar ambiente, volume de dados, tempos observados nas consultas e ocorrência de travamentos/timeouts, sem presumir limite numérico. | Planejado |
 | VN03 | RNF03 | Avaliar fluxos principais quanto a campos identificados, obrigatoriedade, clareza das mensagens e navegação; registrar dificuldades. | Planejado |
-| VN04 | RNF04 | Usar os CT funcionais para verificar rejeição/não persistência de dados inválidos e integridade dos vínculos; CT11 verifica persistência do pagamento após gravação; CT17 verifica persistência após reinício somente dos dados de membro criado/atualizado. Não atribuir ao CT17 persistência após reinício de treinos, pagamentos, atividades ou funcionários. | Planejado |
+| VN04 | RNF04 | Verificar rejeição de dados inválidos e integridade pelos CT funcionais. CT11 verifica a gravação de pagamento; CT17 verifica membros após reinício; CT21 verifica pagamentos após reinício. Não estender esses resultados às demais entidades. | Parcialmente verificado; ver evidências específicas. |
 | VN05 | RNF05 | Revisar separação de apresentação, regras de negócio e persistência; registrar análise estática e resultado do quality gate adotado. | Planejado |
-| VN06 | RNF06 | Executar `mvn test`, verificar execução na integração contínua e gerar relatório JaCoCo após sua configuração; registrar cobertura frente à meta planejada de 75%. | Planejado |
+| VN06 | RNF06 | Executar `./mvnw clean verify`, conferir testes executados e ignorados, relatório JaCoCo e limite mínimo de 75% de instruções. Conferir separadamente a execução na CI. | Validação local da D05 registrada em EV21–EV23; CI da D05 verificada na execução 44972713889: 238 testes sem falhas, erros ou ignorados, limite JaCoCo aprovado e relatório publicado. Referência em evidencias.md. |
 
 ## 5. Cobertura e rastreabilidade
 
@@ -228,9 +272,13 @@ As verificações abaixo complementam os CT funcionais, sem receber identificado
 | RF08: CA11, CA12, CA27 | CT11, CT12 |
 | RF09: CA14, CA22 | CT13, CT14 |
 | RF01: CA15, CA16, CA23 | CT15, CT16 |
-| RNF01 a RNF06 | VN01 a VN06; CT15, CT16 e CT17 complementam conforme indicado |
+| RNF01 a RNF06 | VN01 a VN06; CT15, CT16, CT17 e CT21 complementam conforme indicado |
+| RF10: CA31, CA32, CA33, CA34 | CT18, CT19, CT20 |
+| RF08, RF10 e RNF04 / CA25: pagamentos após reinício | CT21 |
+| RF09 / CA28, CA29: preparação técnica do histórico | Caso específico pendente de definição e vínculo. |
+| RF07 e RF09 / CA30: referência inválida na consulta | Caso específico pendente de definição e vínculo. |
 
-O CA13 é futuro e não se aplica aos testes desta entrega. Os identificadores CT01 a CT17 estão definidos no plano. CT13 e CT14 cobrem, respectivamente, histórico com e sem atividades. Todos os casos permanecem planejados.
+O CA13 permanece fora do escopo de registro pela interface. Os identificadores CT01 a CT21 estão definidos neste plano. CT13 e CT14 tratam das consultas do histórico; não comprovam integralmente os CA28–CA30. A definição dos casos específicos desses critérios permanece como acompanhamento da D04. A situação de cada CT deve seguir seus registros de execução e limitações.
 
 ## 6. Tipos de teste
 
@@ -340,9 +388,11 @@ Os testes automatizados e o relatório JaCoCo são executados pelo ciclo Maven `
 mvn clean verify
 ```
 
-No Windows, também pode ser usado `.\mvnw.cmd clean verify`; em Linux ou macOS, `./mvnw clean verify`. O JaCoCo 0.8.16 gera os relatórios HTML e XML em `target/site/jacoco/index.html` e `target/site/jacoco/jacoco.xml`.
+No Git Bash, Linux ou macOS: `./mvnw clean verify`. No PowerShell do Windows: `.\mvnw.cmd clean verify`. O JaCoCo 0.8.16 gera os relatórios HTML e XML em `target/site/jacoco/index.html` e `target/site/jacoco/jacoco.xml`.
 
-Os resultados reais da execução de 10/11/2026 estão registrados em [`evidencias.md`](evidencias.md). A aprovação do conjunto automatizado não altera automaticamente o estado dos CTs: cada cenário funcional continua planejado até que sua execução específica e evidência sejam registradas.
+Os resultados reais da execução de 10/11/2026 estão registrados em [`evidencias.md`](evidencias.md). A aprovação do conjunto automatizado não altera automaticamente o estado dos CTs: a execução específica e suas evidências devem ser registradas para justificar a situação de cada cenário.
+
+Na execução local da D05 de 21/11/2026, foram registrados 238 testes, sem falhas, erros ou testes ignorados. O JaCoCo apresentou 83% de cobertura de instruções e 64% de branches, com aprovação do limite configurado de 75% de instruções. Esses valores correspondem à execução registrada em EV21–EV23, anterior à atualização da branch com a D04; não representam automaticamente o resultado de uma execução posterior.
 
 ## 12. Responsabilidades
 
@@ -374,6 +424,9 @@ Este documento representa o planejamento dos cenários. A execução automatizad
 - Ampliar a associação entre testes automatizados e os CT/VN aplicáveis, sem inferir cobertura funcional pela execução global.
 - Registrar em `evidencias.md` os resultados individuais dos testes integrados de CPF descritos na seção 9.2 e ampliar os testes de persistência das demais funcionalidades conforme a implementação.
 - Realizar os testes de usabilidade.
-- Registrar as evidências pendentes de testes funcionais, usabilidade e CI.
-- Avaliar os indicadores de cobertura: instruções em 78% e branches em 73% na execução de 10/11/2026; a configuração ainda não aplica um limite automático.
+- Registrar as evidências ainda pendentes de testes funcionais, usabilidade e outras execuções de CI.
 - Relacionar cada integrante às funcionalidades e aos respectivos arquivos de teste.
+- Concluir a associação e a execução integral dos CT11, CT12 e CT18–CT21, respeitando as verificações parciais já registradas.
+- Definir e vincular os casos específicos dos CA28–CA30 na tarefa de acompanhamento da rastreabilidade.
+
+A validação local após o merge e a execução da CI da D05 foram concluídas com 238 testes, sem falhas, erros ou testes ignorados, e aprovação do limite automático de 75% de cobertura de instruções. O relatório JaCoCo foi publicado na execução [44972713889](https://github.com/Miaunisul/Vigor/actions/runs/44972713889). Os resultados e links estão registrados em `evidencias.md`.
