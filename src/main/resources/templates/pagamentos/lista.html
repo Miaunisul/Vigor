@@ -58,8 +58,9 @@
 </aside>
 
 <div class="area-principal">
-    <header class="topbar">
-        <span>Gestão da academia / Pagamentos</span>
+    <header class="topbar" th:fragment="cabecalhoModulo(nomeSecao)"
+            th:with="secao=${nomeSecao != null ? nomeSecao : 'Pagamentos'}">
+        <span>Gestão da academia / <span th:text="${secao}">Pagamentos</span></span>
         <span>Acesso de funcionários</span>
     </header>
 
