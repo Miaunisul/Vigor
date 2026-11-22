@@ -2,7 +2,7 @@
 
 ## 1. Objetivo
 
-Este documento define os critérios utilizados para verificar se as funcionalidades do VIGOR — Sistema de Cadastro de Academia atendem aos requisitos e às regras de negócio estabelecidos para o projeto.
+Este documento define os critérios utilizados para verificar se as funcionalidades do VIGOR — Sistema de Gestão de Academia atendem aos requisitos e às regras de negócio estabelecidos para o projeto.
 
 Os critérios serão utilizados durante a implementação, os testes e a validação do sistema.
 
@@ -82,37 +82,43 @@ Nos fluxos internos, o usuário é o funcionário autenticado. Os critérios de 
 
 ### CA09 — Cadastro de treino
 
-**Dado** que existe um membro cadastrado,
+**Dado** que existe um membro cadastrado e foram informados tipo e descrição preenchidos, duração inteira maior que zero em minutos e data de início válida,
 
-**Quando** o funcionário registra um treino com os dados obrigatórios válidos,
+**Quando** o funcionário solicita o cadastro do treino,
 
-**Então** o sistema deve associar o treino ao membro correspondente e salvar o registro com um identificador único gerado automaticamente.
+**Então** o sistema deve remover os espaços das extremidades de tipo e descrição, validar os dados e salvar o treino associado ao membro selecionado, com identificador único gerado automaticamente.
 
-### CA10 — Treino associado a membro inexistente
+### CA10 — Treino sem membro ou associado a membro inexistente
 
-**Dado** que o identificador informado não corresponde a um membro cadastrado,
+**Dado** que a referência ao membro está ausente ou não corresponde a um membro cadastrado,
 
-**Quando** é solicitada a gravação de um treino associado a esse identificador,
+**Quando** é solicitada a gravação de um treino,
 
-**Então** o sistema deve rejeitar a operação e não persistir o treino.
+**Então** o sistema deve rejeitar a operação, informar o problema e não persistir o treino.
 
 ## 6. Registro de pagamentos
 
 ### CA11 — Registro de pagamento válido
 
-**Dado** que existe um membro cadastrado e foram informados um valor maior que zero, com no máximo duas casas decimais, e uma data de pagamento válida,
+**Dado** que existe um membro cadastrado e foram informados valor maior que zero, com no máximo 10 dígitos na parte inteira e duas casas decimais, e data de pagamento válida,
 
-**Quando** o funcionário registra o pagamento,
+**Quando** o funcionário solicita o registro do pagamento recebido, sem precisar informar o status,
 
-**Então** o sistema deve salvar o pagamento associado ao membro, gerar um identificador único, atribuir o status Pago e apresentar a confirmação da operação.
+**Então** a aplicação deve atribuir automaticamente o status `PAGO` antes da persistência, salvar o pagamento associado ao membro, gerar um identificador único e apresentar a confirmação da operação.
+
+A ausência do campo status na solicitação do funcionário não deve causar rejeição do pagamento.
 
 ### CA12 — Dados de pagamento inválidos
 
-**Dado** que o pagamento apresenta referência de membro ausente ou inexistente, valor ausente, não numérico, igual a zero, negativo ou com mais de duas casas decimais, data ausente ou inválida, ou status diferente de Pago,
+**Dado** que o pagamento apresenta referência de membro ausente ou inexistente, valor ausente, não numérico, igual a zero, negativo, com mais de 10 dígitos inteiros ou mais de duas casas decimais, ou data ausente ou inválida,
 
 **Quando** é solicitada sua gravação,
 
-**Então** o sistema deve rejeitar a operação, não persistir o pagamento e informar qual informação precisa ser corrigida. Para que o registro seja aceito, deve haver referência a um membro existente, valor numérico positivo com no máximo duas casas decimais, data de pagamento válida e status Pago.
+**Então** o sistema deve rejeitar a operação, informar qual informação precisa ser corrigida e não persistir o pagamento.
+
+O status não é um campo de preenchimento do funcionário. A aplicação deve atribuir `PAGO` antes da persistência, conforme CA11. Um valor de status enviado pelo cliente não deve substituir essa atribuição automática.
+
+Na validação interna do registro, um status diferente de `PAGO` deve impedir a persistência. Essa verificação não deve ser confundida com a ausência do campo status na solicitação do funcionário, que é permitida.
 
 ## 7. Histórico de atividades
 
@@ -178,15 +184,17 @@ Essa exclusão se refere somente ao registro pela interface. A consulta do hist�
 
 ### CA20 — Consulta de treinos
 
-**Dado** que um membro está selecionado para consulta,
+**Dado** que um membro existente está selecionado para consulta,
 
 **Quando** o funcionário acessa seus treinos,
 
-**Então** o sistema deve apresentar somente os treinos associados a esse membro ou informar que não existem treinos cadastrados para ele.
+**Então** o sistema deve apresentar somente os treinos associados a esse membro, com tipo, descrição, duração em minutos e data de início correspondentes aos dados armazenados.
+
+**E** quando esse membro não possuir treinos, deve informar a ausência de registros.
 
 ### CA21 — Dados de treino inválidos
 
-**Dado** que o cadastro de um treino possui campos obrigatórios ausentes, tipo ou descrição vazios ou compostos apenas por espaços, duração que não seja um número inteiro positivo ou data de início inválida,
+**Dado** que o cadastro de um treino possui campos obrigatórios ausentes, tipo ou descrição vazios ou compostos apenas por espaços, duração que não seja um número inteiro maior que zero ou data de início ausente ou inválida,
 
 **Quando** é solicitada a gravação,
 
@@ -244,21 +252,103 @@ Essa exclusão se refere somente ao registro pela interface. A consulta do hist�
 
 **Então** o sistema deve rejeitar a operação e não persistir o pagamento.
 
+### CA28 — Registro técnico válido de histórico
+
+**Dado** que existem um membro e um funcionário responsável cadastrados, e os dados da atividade possuem nome preenchido, data válida e tempo de execução inteiro maior que zero em minutos,
+
+**Quando** o registro é incluído pelo procedimento técnico de carga,
+
+**Então** deve ser persistido com identificador único gerado automaticamente e com os vínculos corretos ao membro e ao funcionário responsável.
+
+**E** deve ficar disponível para consulta no histórico do membro correspondente.
+
+Este critério verifica a preparação dos dados do histórico e não exige uma tela de cadastro de atividades.
+
+### CA29 — Rejeição de dados inválidos do histórico
+
+**Dado** que os dados destinados ao histórico possuem referência de membro ou funcionário ausente ou inexistente, atividade ausente, vazia ou composta apenas por espaços, data ausente ou inválida, ou tempo de execução ausente, não inteiro, igual a zero ou negativo,
+
+**Quando** é tentada sua inclusão pelo procedimento técnico de carga,
+
+**Então** a inclusão inválida deve ser rejeitada, sem persistir o registro e sem alterar os registros válidos anteriormente armazenados.
+
+Cada condição inválida deve ser verificada separadamente, mantendo os demais dados válidos.
+
+### CA30 — Consulta com referência de membro inválida
+
+**Dado** que a referência ao membro está ausente ou não corresponde a um membro cadastrado,
+
+**Quando** é solicitada uma consulta de treinos ou histórico por esse membro,
+
+**Então** o sistema deve rejeitar a solicitação e informar o problema, sem apresentar registros de outros membros.
+
+Essa situação deve ser diferenciada da consulta de um membro existente que não possui registros.
+
+### CA31 — Listagem geral de pagamentos
+
+**Dado** que existem pagamentos registrados,
+
+**Quando** o funcionário acessa a listagem sem selecionar um membro,
+
+**Então** o sistema deve apresentar os pagamentos com membro, valor em reais, data do pagamento e status apresentado como Pago.
+
+**E** os registros devem estar ordenados por data do pagamento decrescente e, em caso de empate, por identificador decrescente.
+
+### CA32 — Consulta de pagamentos por membro
+
+**Dado** que existem pagamentos associados a membros distintos,
+
+**Quando** o funcionário seleciona um membro existente e solicita a consulta,
+
+**Então** o sistema deve apresentar somente os pagamentos desse membro, com os dados correspondentes aos registros armazenados, preservando a seleção realizada.
+
+**E** ao limpar a seleção, deve voltar à listagem geral.
+
+### CA33 — Consulta de pagamentos sem resultados
+
+**Dado** que não existem pagamentos registrados, ou que o membro existente selecionado não possui pagamentos,
+
+**Quando** o funcionário solicita a consulta correspondente,
+
+**Então** o sistema deve informar a ausência de pagamentos no conjunto consultado.
+
+**E** quando houver um membro selecionado, deve preservar essa seleção.
+
+Os cenários de listagem geral vazia e de membro existente sem pagamentos devem ser verificados separadamente.
+
+### CA34 — Consulta de pagamentos com referência inválida
+
+**Dado** que foi informada uma referência de membro não numérica, fora dos limites do identificador, igual a zero, negativa ou correspondente a um membro inexistente,
+
+**Quando** é solicitada a consulta de pagamentos,
+
+**Então** o sistema deve informar o problema e não apresentar pagamentos de outros membros.
+
+A ausência de seleção no formulário de consulta é permitida e corresponde à listagem geral, conforme CA31. Ela não deve ser tratada como referência inválida.
+
 ## 10. Validação e testes
 
 Os critérios de aceite devem orientar os testes unitários, de integração, de validação, de sistema e de usabilidade, conforme aplicável.
 
 Todos os critérios deste documento integram a entrega final da A3, exceto o CA13, identificado como futuro. A execução das verificações acompanhará as etapas de implementação.
 
-Os critérios CA17 a CA27 descrevem comportamentos esperados. Os identificadores CT01 a CT17 já estão definidos em `docs/testing/plano-de-testes.md`; isso não comprova implementação ou execução dos testes. Os cenários permanecem planejados até serem executados, e suas evidências devem ser registradas em `docs/testing/evidencias.md`.
+Os critérios CA17 a CA34 descrevem comportamentos esperados. Os identificadores CT01 a CT21 estão definidos em `docs/testing/plano-de-testes.md`. A existência de um caso de teste não comprova sua execução integral. Resultados e limitações devem ser associados às evidências registradas em `docs/testing/evidencias.md`.
 
 O CA25 exige verificar a permanência dos dados após reiniciar a aplicação. Um teste que apenas salva e consulta dados sem reiniciar a aplicação não comprova, por si só, o atendimento integral desse critério.
 
 Cada situação inválida descrita em um critério deve ser verificada separadamente, para identificar qual comportamento está sendo avaliado.
 
-Os testes de pagamento inválido devem contemplar valor ausente, não numérico, zero, negativo ou com mais de duas casas decimais, data ausente ou inválida e tentativa de gravação com status diferente de Pago.
+Os testes de pagamento inválido devem contemplar valor ausente, não numérico, zero, negativo, com mais de 10 dígitos inteiros ou mais de duas casas decimais, data ausente ou inválida e referência de membro ausente ou inexistente.
+
+Os testes do fluxo de registro devem verificar que uma solicitação válida sem o campo status é aceita e que a aplicação atribui `PAGO` antes da persistência. Um status enviado pelo cliente não deve substituir o valor definido pela aplicação. A rejeição de status diferente de `PAGO` deve ser verificada na camada interna responsável pela validação do registro.
 
 A preparação dos dados de atividades deve respeitar as regras RN14 a RN16. A preparação dos dados de funcionários deve respeitar as regras RN18 e RN19.
+
+Os critérios CA28 a CA30 foram explicitados na revisão D04. Sua associação aos casos de teste e à matriz de rastreabilidade permanece pendente de atualização; não se presume que os CT01 a CT17 já contemplem integralmente esses cenários.
+
+Entradas não numéricas, datas inválidas e valores fracionários em campos inteiros devem ser verificadas na camada que recebe e converte esses dados. Os serviços utilizam tipos Java como `BigDecimal`, `LocalDate` e `Integer`; a existência desses tipos não comprova o tratamento de erros na interface.
+
+Na implementação da D05, o `PagamentoController` atribui `PAGO` antes de chamar o serviço. O formulário recebe membro, valor e data; o status não integra os campos vinculados à entrada do usuário. O `PagamentoService` continua validando o status do registro recebido. Os testes do controller verificam a atribuição automática e que um status enviado pelo cliente não substitui o valor definido pela aplicação. Essas verificações não comprovam, por si só, autenticação ou proteção das rotas.
 
 Os requisitos não funcionais também devem ser verificados:
 

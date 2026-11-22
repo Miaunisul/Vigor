@@ -1,25 +1,24 @@
 package br.edu.unisul.vigor.controller;
 
 import br.edu.unisul.vigor.model.Membro;
+import br.edu.unisul.vigor.model.Funcionario;
+import br.edu.unisul.vigor.repository.FuncionarioRepository;
 import br.edu.unisul.vigor.service.MembroService;
 import br.edu.unisul.vigor.validation.CpfUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.IOException;
-import java.net.CookieManager;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -32,9 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class TreinoHttpPostgresIntegrationTest {
 
     private final String nomeTeste = "Treino HTTP M07 " + UUID.randomUUID();
-    private final HttpClient cliente = HttpClient.newBuilder()
-            .cookieHandler(new CookieManager())
-            .build();
+    private FuncionarioHttpTestClient cliente;
+    private Long funcionarioTesteId;
 
     @LocalServerPort
     private int porta;
@@ -45,6 +43,25 @@ class TreinoHttpPostgresIntegrationTest {
     @Autowired
     private MembroService membroService;
 
+    @Autowired
+    private FuncionarioRepository funcionarioRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @BeforeEach
+    void autenticarFuncionarioDeTeste() throws IOException, InterruptedException {
+        String login = "http-treino-" + UUID.randomUUID();
+        String senha = "Senha-http-" + UUID.randomUUID();
+        Funcionario funcionario = funcionarioRepository.saveAndFlush(new Funcionario(
+                "Funcionário de teste HTTP", "Administradora", login,
+                passwordEncoder.encode(senha)));
+        funcionarioTesteId = funcionario.getId();
+
+        cliente = new FuncionarioHttpTestClient(porta);
+        cliente.autenticar(login, senha);
+    }
+
     @AfterEach
     void removerDadosCriadosPeloTeste() {
         jdbcTemplate.update(
@@ -52,15 +69,28 @@ class TreinoHttpPostgresIntegrationTest {
                         + "(SELECT id FROM membros WHERE nome LIKE ?)",
                 nomeTeste + "%");
         jdbcTemplate.update("DELETE FROM membros WHERE nome LIKE ?", nomeTeste + "%");
-        cliente.close();
+        if (funcionarioTesteId != null) {
+            jdbcTemplate.update("DELETE FROM funcionarios WHERE id = ?", funcionarioTesteId);
+        }
+        if (cliente != null) {
+            cliente.close();
+        }
     }
 
     @Test
     void formularioHttpCarregaMembrosCadastrados() throws IOException, InterruptedException {
         Membro membro = membroParaTeste(" membro do formulário");
 
-        HttpResponse<String> resposta = get("/treinos/novo");
+        HttpResponse<String> redirecionamento = get("/treinos/novo");
 
+        assertEquals(302, redirecionamento.statusCode(), redirecionamento::body);
+        String destino = redirecionamento.headers().firstValue("Location").orElseThrow();
+        URI uriDestino = URI.create(destino);
+        assertEquals("/treinos", uriDestino.getPath());
+        assertEquals("acao=novo", uriDestino.getRawQuery());
+
+        HttpResponse<String> resposta = get(
+                uriDestino.getRawPath() + "?" + uriDestino.getRawQuery());
         assertEquals(200, resposta.statusCode(), resposta::body);
         assertTrue(resposta.body().contains("Cadastrar treino"), resposta::body);
         assertTrue(resposta.body().contains("value=\"" + membro.getId() + "\""), resposta::body);
@@ -90,14 +120,15 @@ class TreinoHttpPostgresIntegrationTest {
         assertEquals(200, listaSegundo.statusCode(), listaSegundo::body);
         assertMembroSelecionado(listaPrimeiro.body(), primeiro.getId());
         assertMembroSelecionado(listaSegundo.body(), segundo.getId());
-        assertTrue(listaPrimeiro.body().contains("Treino exclusivo do primeiro membro"),
-                listaPrimeiro::body);
-        assertFalse(listaPrimeiro.body().contains("Treino exclusivo do segundo membro"),
-                listaPrimeiro::body);
-        assertTrue(listaSegundo.body().contains("Nenhum treino cadastrado para este membro"),
+        assertTrue(listaPrimeiro.body().contains(
+                "data-label=\"Tipo de treino\">Força</td>"), listaPrimeiro::body);
+        assertFalse(listaPrimeiro.body().contains(
+                "data-label=\"Tipo de treino\">Mobilidade</td>"), listaPrimeiro::body);
+        assertTrue(listaSegundo.body().contains(
+                "Este membro ainda não possui treinos cadastrados."),
                 listaSegundo::body);
-        assertFalse(listaSegundo.body().contains("Treino exclusivo do primeiro membro"),
-                listaSegundo::body);
+        assertFalse(listaSegundo.body().contains(
+                "data-label=\"Tipo de treino\">Força</td>"), listaSegundo::body);
 
         HttpResponse<String> respostaSegundo = cadastrarTreino(
                 segundo.getId(), "Mobilidade", "Treino exclusivo do segundo membro", 35);
@@ -118,14 +149,14 @@ class TreinoHttpPostgresIntegrationTest {
         assertEquals(200, listaSegundo.statusCode(), listaSegundo::body);
         assertMembroSelecionado(listaPrimeiro.body(), primeiro.getId());
         assertMembroSelecionado(listaSegundo.body(), segundo.getId());
-        assertTrue(listaPrimeiro.body().contains("Treino exclusivo do primeiro membro"),
-                listaPrimeiro::body);
-        assertFalse(listaPrimeiro.body().contains("Treino exclusivo do segundo membro"),
-                listaPrimeiro::body);
-        assertTrue(listaSegundo.body().contains("Treino exclusivo do segundo membro"),
-                listaSegundo::body);
-        assertFalse(listaSegundo.body().contains("Treino exclusivo do primeiro membro"),
-                listaSegundo::body);
+        assertTrue(listaPrimeiro.body().contains(
+                "data-label=\"Tipo de treino\">Força</td>"), listaPrimeiro::body);
+        assertFalse(listaPrimeiro.body().contains(
+                "data-label=\"Tipo de treino\">Mobilidade</td>"), listaPrimeiro::body);
+        assertTrue(listaSegundo.body().contains(
+                "data-label=\"Tipo de treino\">Mobilidade</td>"), listaSegundo::body);
+        assertFalse(listaSegundo.body().contains(
+                "data-label=\"Tipo de treino\">Força</td>"), listaSegundo::body);
     }
 
     @Test
@@ -195,26 +226,15 @@ class TreinoHttpPostgresIntegrationTest {
 
     private HttpResponse<String> post(String caminho, String formulario)
             throws IOException, InterruptedException {
-        HttpRequest requisicao = HttpRequest.newBuilder(
-                        URI.create("http://localhost:" + porta + caminho))
-                .header("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-                .timeout(Duration.ofSeconds(10))
-                .POST(HttpRequest.BodyPublishers.ofString(formulario, StandardCharsets.UTF_8))
-                .build();
-        return cliente.send(requisicao, HttpResponse.BodyHandlers.ofString());
+        return cliente.post(caminho, formulario);
     }
 
     private HttpResponse<String> get(String caminho) throws IOException, InterruptedException {
-        HttpRequest requisicao = HttpRequest.newBuilder(
-                        URI.create("http://localhost:" + porta + caminho))
-                .timeout(Duration.ofSeconds(10))
-                .GET()
-                .build();
-        return cliente.send(requisicao, HttpResponse.BodyHandlers.ofString());
+        return cliente.get(caminho);
     }
 
     private String codificar(String valor) {
-        return URLEncoder.encode(valor, StandardCharsets.UTF_8);
+        return URLEncoder.encode(valor, java.nio.charset.StandardCharsets.UTF_8);
     }
 
     private void assertRedirecionaParaMembro(HttpResponse<String> resposta, Long membroId) {

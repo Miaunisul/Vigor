@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pagamentos | VIGOR</title>
+    <link rel="stylesheet" th:href="@{/css/pagamentos.css}">
+</head>
+<body>
+<a class="pular" href="#conteudo">Ir para o conteúdo</a>
+
+<aside class="sidebar" th:fragment="menuPagamentos">
+    <img class="logo"
+         th:src="@{/images/vigor-logo-branca.png}"
+         alt="VIGOR">
+
+    <nav class="menu" aria-label="Menu principal">
+        <a class="menu-item"
+           th:classappend="${moduloAtivo == 'membros'} ? ' ativo' : ''"
+           th:href="@{/membros}"
+           th:attr="aria-current=${moduloAtivo == 'membros' ? 'page' : null}">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="9" cy="7" r="3"/>
+                <path d="M3 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6M21 21v-3a6 6 0 0 0-3-5"/>
+            </svg>
+            Membros
+        </a>
+
+        <a class="menu-item"
+           th:classappend="${moduloAtivo == 'treinos'} ? ' ativo' : ''"
+           th:href="@{/treinos}"
+           th:attr="aria-current=${moduloAtivo == 'treinos' ? 'page' : null}">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m6 6 12 12M3 8l5-5M16 21l5-5M2 5l3-3M19 22l3-3M5 11l6-6M13 19l6-6"/>
+            </svg>
+            Treinos
+        </a>
+
+        <a class="menu-item"
+           th:classappend="${moduloAtivo == null or moduloAtivo == 'pagamentos'} ? ' ativo' : ''"
+           th:href="@{/pagamentos}"
+           th:attr="aria-current=${moduloAtivo == null or moduloAtivo == 'pagamentos' ? 'page' : null}">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 8V5H5a3 3 0 0 0 0 6h16v9H5a3 3 0 0 1-3-3V8"/>
+                <path d="M21 12h-6v5h6"/>
+                <path d="M17 14.5h.01"/>
+            </svg>
+            Pagamentos
+        </a>
+
+        <a class="menu-item"
+           th:classappend="${moduloAtivo == 'atividades'} ? ' ativo' : ''"
+           th:href="@{/atividades}"
+           th:attr="aria-current=${moduloAtivo == 'atividades' ? 'page' : null}">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="4" width="14" height="18" rx="2"/>
+                <path d="M9 4V2h6v2M9 10h6M9 14h6M9 18h4"/>
+            </svg>
+            Atividades
+        </a>
+    </nav>
+
+    <div class="sidebar-rodape" th:if="${funcionarioAutenticado != null}">
+        <div class="identidade-funcionario">
+            <strong th:text="${funcionarioAutenticado.nome}">Funcionário</strong>
+            <span th:text="${funcionarioAutenticado.cargo}">Cargo</span>
+        </div>
+        <form class="form-sair" method="post" th:action="@{/logout}">
+            <button class="botao-sair" type="submit">
+                <svg class="icone" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M10 17l5-5-5-5M15 12H3"/>
+                    <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/>
+                </svg>
+                Sair
+            </button>
+        </form>
+    </div>
+    <div class="sidebar-rodape" th:unless="${funcionarioAutenticado != null}">
+        Gestão da academia
+    </div>
+</aside>
+
+<div class="area-principal">
+    <header class="topbar" th:fragment="cabecalhoModulo(nomeSecao)"
+            th:with="secao=${nomeSecao != null ? nomeSecao : 'Pagamentos'}">
+        <span>Gestão da academia / <span th:text="${secao}">Pagamentos</span></span>
+        <span>Acesso de funcionários</span>
+    </header>
+
+    <main id="conteudo" class="conteudo">
+        <div class="cabecalho">
+            <div>
+                <h1>Pagamentos</h1>
+                <p class="subtitulo">Registre os valores já recebidos dos membros.</p>
+            </div>
+
+            <a class="botao botao-primario" th:href="@{/pagamentos/novo}">
+                <span aria-hidden="true">＋</span>
+                Registrar pagamento
+            </a>
+        </div>
+
+        <div class="aviso aviso-sucesso"
+             role="status"
+             th:if="${sucesso != null}"
+             th:text="${sucesso}">
+        </div>
+
+        <div class="aviso aviso-erro"
+             role="alert"
+             th:if="${erro != null}"
+             th:text="${erro}">
+        </div>
+
+        <section class="painel" aria-label="Consulta de pagamentos">
+            <form class="filtros" method="get" th:action="@{/pagamentos}">
+                <div class="campo">
+                    <label for="membroFiltro">Consultar por membro</label>
+                    <select id="membroFiltro" name="membroId">
+                        <option value="">Todos os membros</option>
+                        <option th:each="membro : ${membros}"
+                                th:value="${membro.id}"
+                                th:selected="${membro.id == membroSelecionado}"
+                                th:text="${membro.nome + ' — ID ' + membro.id}">
+                        </option>
+                    </select>
+                </div>
+
+                <button class="botao botao-primario" type="submit">
+                    Consultar
+                </button>
+
+                <a class="botao botao-secundario" th:href="@{/pagamentos}">
+                    Limpar
+                </a>
+            </form>
+
+            <div class="tabela-container" th:if="${erro == null}">
+                <table>
+                    <caption>Pagamentos registrados</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Membro</th>
+                        <th scope="col">Valor</th>
+                        <th scope="col">Data do pagamento</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="pagamento : ${pagamentos}">
+                        <td th:text="${pagamento.membro.nome}"></td>
+                        <td class="valor"
+                            th:text="${'R$ ' + #numbers.formatDecimal(pagamento.valor, 1, 'POINT', 2, 'COMMA')}">
+                        </td>
+                        <td th:text="${#temporals.format(pagamento.dataPagamento, 'dd/MM/yyyy')}">
+                        </td>
+                        <td>
+                            <span class="status"
+                                  th:text="${pagamento.status == 'PAGO' ? 'Pago' : pagamento.status}">
+                            </span>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(pagamentos)}">
+                        <td class="vazio"
+                            colspan="4"
+                            th:text="${membroSelecionado != null
+                                ? 'Não existem pagamentos registrados para este membro.'
+                                : 'Ainda não existem pagamentos registrados.'}">
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

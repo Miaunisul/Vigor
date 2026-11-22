@@ -1,90 +1,94 @@
-<!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${editando} ? 'Editar membro | VIGOR' : 'Cadastrar membro | VIGOR'">
-        Membro | VIGOR
-    </title>
-    <link rel="stylesheet" th:href="@{/css/membros.css}">
-</head>
-<body>
-    <header class="site-header">
-        <a class="brand" th:href="@{/membros}">VIGOR</a>
-        <span>Sistema de gestão de academia</span>
-        <nav class="site-nav" aria-label="Navegação principal">
-            <a th:href="@{/treinos}">Treinos</a>
-        </nav>
-    </header>
+<section class="painel painel-formulario" aria-labelledby="titulo-dados-membro"
+         th:fragment="formularioMembro">
+    <h2 id="titulo-dados-membro">Dados do membro</h2>
+    <p class="ajuda">Campos com * são obrigatórios.</p>
 
-    <main class="page-shell">
-        <a class="back-link" th:href="@{/membros}">← Voltar para membros</a>
+    <form class="formulario formulario-membro"
+          th:action="@{${formAction}}" th:object="${membro}" method="post" novalidate>
+        <div class="aviso aviso-erro" role="alert" th:if="${#fields.hasAnyErrors()}">
+            <p>Não foi possível salvar. Confira os campos indicados abaixo.</p>
+            <ul th:if="${#fields.hasGlobalErrors()}">
+                <li th:each="mensagem : ${#fields.globalErrors()}" th:text="${mensagem}"></li>
+            </ul>
+        </div>
 
-        <section class="page-heading">
-            <p class="eyebrow">Gestão de membros</p>
-            <h1 th:text="${editando} ? 'Editar membro' : 'Cadastrar membro'">Membro</h1>
-            <p th:text="${editando} ? 'Atualize os dados cadastrais do membro.' : 'Preencha os dados para cadastrar um novo membro.'">
-                Dados cadastrais do membro.
-            </p>
-        </section>
-
-        <p class="feedback feedback--success" role="status" th:if="${sucesso}" th:text="${sucesso}"></p>
-        <p class="feedback feedback--error" role="alert" th:if="${erro}" th:text="${erro}"></p>
-
-        <section class="panel">
-            <div class="record-meta" th:if="${editando}">
-                <span>ID do membro <strong th:text="${membro.id}"></strong></span>
-                <span>Data de cadastro <strong th:text="${membro.dataCadastro}"></strong></span>
+        <div class="grade grade-membro">
+            <div class="campo linha-inteira" th:if="${editando}">
+                <label for="codigoMembro">ID do membro</label>
+                <div class="campo-bloqueado">
+                    <input id="codigoMembro" type="text" readonly
+                           th:value="${'MB-' + #numbers.formatInteger(membroId, 3)}">
+                    <svg class="icone-lock" viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="5" y="10" width="14" height="11" rx="2"/>
+                        <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>
+                    </svg>
+                </div>
+                <p class="ajuda">Identificador do cadastro. Não pode ser alterado.</p>
             </div>
 
-            <form th:action="@{${formAction}}" th:object="${membro}" method="post" novalidate>
-                <div class="form-grid">
-                    <div class="form-field">
-                        <label for="nome">Nome completo</label>
-                        <input id="nome" type="text" th:field="*{nome}" maxlength="150" required
-                               th:classappend="${#fields.hasErrors('nome')} ? 'field-input--invalid' : ''"
-                               th:attr="aria-invalid=${#fields.hasErrors('nome')}">
-                        <small class="field-error" role="alert" th:if="${#fields.hasErrors('nome')}"
-                               th:errors="*{nome}"></small>
-                    </div>
+            <div class="campo">
+                <label for="nome">Nome completo *</label>
+                <input id="nome" type="text" th:field="*{nome}" maxlength="150" required
+                       th:classappend="${#fields.hasErrors('nome')} ? ' campo-invalido' : ''"
+                       th:attr="aria-invalid=${#fields.hasErrors('nome')}"
+                       aria-describedby="erro-nome">
+                <p id="erro-nome" class="erro-campo" role="alert"
+                   th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></p>
+            </div>
 
-                    <div class="form-field">
-                        <label for="cpf">CPF</label>
-                        <input id="cpf" type="text" th:field="*{cpf}" inputmode="numeric" required
-                               th:classappend="${#fields.hasErrors('cpf')} ? 'field-input--invalid' : ''"
-                               th:attr="aria-invalid=${#fields.hasErrors('cpf')}">
-                        <small class="field-error" role="alert" th:if="${#fields.hasErrors('cpf')}"
-                               th:errors="*{cpf}"></small>
-                    </div>
+            <div class="campo">
+                <label for="cpf">CPF *</label>
+                <input id="cpf" type="text" th:field="*{cpf}" inputmode="numeric" required
+                       th:classappend="${#fields.hasErrors('cpf')} ? ' campo-invalido' : ''"
+                       th:attr="aria-invalid=${#fields.hasErrors('cpf')}"
+                       aria-describedby="erro-cpf">
+                <p id="erro-cpf" class="erro-campo" role="alert"
+                   th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}"></p>
+            </div>
 
-                    <div class="form-field">
-                        <label for="telefone">Telefone</label>
-                        <input id="telefone" type="text" th:field="*{telefone}" maxlength="20" required
-                               th:classappend="${#fields.hasErrors('telefone')} ? 'field-input--invalid' : ''"
-                               th:attr="aria-invalid=${#fields.hasErrors('telefone')}">
-                        <small class="field-error" role="alert" th:if="${#fields.hasErrors('telefone')}"
-                               th:errors="*{telefone}"></small>
-                    </div>
+            <div class="campo">
+                <label for="telefone">Telefone *</label>
+                <input id="telefone" type="text" th:field="*{telefone}" maxlength="20" required
+                       th:classappend="${#fields.hasErrors('telefone')} ? ' campo-invalido' : ''"
+                       th:attr="aria-invalid=${#fields.hasErrors('telefone')}"
+                       aria-describedby="erro-telefone">
+                <p id="erro-telefone" class="erro-campo" role="alert"
+                   th:if="${#fields.hasErrors('telefone')}" th:errors="*{telefone}"></p>
+            </div>
 
-                    <div class="form-field form-field--wide">
-                        <label for="endereco">Endereço</label>
-                        <input id="endereco" type="text" th:field="*{endereco}" maxlength="255" required
-                               th:classappend="${#fields.hasErrors('endereco')} ? 'field-input--invalid' : ''"
-                               th:attr="aria-invalid=${#fields.hasErrors('endereco')}">
-                        <small class="field-error" role="alert" th:if="${#fields.hasErrors('endereco')}"
-                               th:errors="*{endereco}"></small>
-                    </div>
+            <div class="campo">
+                <label for="dataCadastro">Data de cadastro</label>
+                <div class="campo-bloqueado">
+                    <input id="dataCadastro" type="text" readonly
+                           th:value="${#temporals.format(membro.dataCadastro, 'dd/MM/yyyy')}"
+                           aria-describedby="ajuda-data-cadastro">
+                    <svg class="icone-lock" viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="5" y="10" width="14" height="11" rx="2"/>
+                        <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>
+                    </svg>
                 </div>
+                <p id="ajuda-data-cadastro" class="ajuda"
+                   th:text="${editando
+                        ? 'Data original do cadastro; não pode ser alterada.'
+                        : 'Preenchida automaticamente na data do cadastro.'}">
+                    Preenchida automaticamente na data do cadastro.
+                </p>
+            </div>
 
-                <div class="form-actions">
-                    <button class="button button--primary" type="submit"
-                            th:text="${editando} ? 'Salvar alterações' : 'Cadastrar membro'">
-                        Salvar
-                    </button>
-                    <a class="button button--secondary" th:href="@{/membros}">Cancelar</a>
-                </div>
-            </form>
-        </section>
-    </main>
-</body>
-</html>
+            <div class="campo linha-inteira">
+                <label for="endereco">Endereço *</label>
+                <input id="endereco" type="text" th:field="*{endereco}" maxlength="255" required
+                       th:classappend="${#fields.hasErrors('endereco')} ? ' campo-invalido' : ''"
+                       th:attr="aria-invalid=${#fields.hasErrors('endereco')}"
+                       aria-describedby="erro-endereco">
+                <p id="erro-endereco" class="erro-campo" role="alert"
+                   th:if="${#fields.hasErrors('endereco')}" th:errors="*{endereco}"></p>
+            </div>
+        </div>
+
+        <div class="acoes acoes-formulario">
+            <a class="botao botao-secundario" th:href="@{/membros}">Cancelar</a>
+            <button class="botao botao-primario" type="submit">Salvar membro</button>
+        </div>
+    </form>
+</section>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Registrar pagamento | VIGOR</title>
+    <link rel="stylesheet" th:href="@{/css/pagamentos.css}">
+</head>
+<body>
+<a class="pular" href="#conteudo">Ir para o conteúdo</a>
+
+<aside th:replace="~{pagamentos/lista :: menuPagamentos}"></aside>
+
+<div class="area-principal">
+    <header th:replace="~{pagamentos/lista :: cabecalhoModulo('Pagamentos')}"></header>
+
+    <main id="conteudo" class="conteudo">
+        <a class="voltar" th:href="@{/pagamentos}">
+            <span aria-hidden="true">←</span> Voltar para pagamentos
+        </a>
+
+        <div class="cabecalho">
+            <div>
+                <h1>Registrar pagamento</h1>
+                <p class="subtitulo">Informe o valor e a data do pagamento já recebido.</p>
+            </div>
+        </div>
+
+        <section class="painel" aria-labelledby="titulo-dados">
+            <h2 id="titulo-dados">Dados do pagamento</h2>
+            <p class="ajuda">Campos com * são obrigatórios.</p>
+
+            <form class="formulario"
+                  method="post"
+                  th:action="@{/pagamentos}"
+                  th:object="${pagamentoForm}">
+
+                <div class="aviso aviso-erro"
+                     role="alert"
+                     th:if="${#fields.hasAnyErrors()}">
+                    <p>Não foi possível salvar. Confira os campos indicados abaixo.</p>
+                    <ul th:if="${#fields.hasGlobalErrors()}">
+                        <li th:each="mensagem : ${#fields.globalErrors()}"
+                            th:text="${mensagem}">
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="aviso aviso-neutro"
+                     th:if="${#lists.isEmpty(membros)}">
+                    Não há membros disponíveis.
+                    <a th:href="@{/membros/novo}">Cadastre um membro</a>
+                    antes de registrar um pagamento.
+                </div>
+
+                <div class="grade">
+                    <div class="campo linha-inteira">
+                        <label for="membroId">Membro *</label>
+                        <select id="membroId"
+                                th:field="*{membroId}"
+                                th:errorclass="campo-invalido"
+                                th:attr="aria-invalid=${#fields.hasErrors('membroId')}"
+                                aria-describedby="ajuda-membro erro-membro"
+                                required>
+                            <option value="">Selecione um membro</option>
+                            <option th:each="membro : ${membros}"
+                                    th:value="${membro.id}"
+                                    th:text="${membro.nome + ' — ID ' + membro.id}">
+                            </option>
+                        </select>
+                        <p id="ajuda-membro" class="ajuda">
+                            Selecione um membro já cadastrado.
+                        </p>
+                        <p id="erro-membro"
+                           class="erro-campo"
+                           th:if="${#fields.hasErrors('membroId')}"
+                           th:errors="*{membroId}">
+                        </p>
+                    </div>
+
+                    <div class="campo">
+                        <label for="valor">Valor *</label>
+                        <input id="valor"
+                               type="number"
+                               th:field="*{valor}"
+                               th:errorclass="campo-invalido"
+                               th:attr="aria-invalid=${#fields.hasErrors('valor')}"
+                               min="0.01"
+                               max="9999999999.99"
+                               step="0.01"
+                               inputmode="decimal"
+                               placeholder="150,00"
+                               aria-describedby="ajuda-valor erro-valor"
+                               required>
+                        <p id="ajuda-valor" class="ajuda">
+                            Valor em reais (R$), maior que zero e com até duas casas decimais.
+                        </p>
+                        <p id="erro-valor"
+                           class="erro-campo"
+                           th:if="${#fields.hasErrors('valor')}"
+                           th:errors="*{valor}">
+                        </p>
+                    </div>
+
+                    <div class="campo">
+                        <label for="statusExibido">Status (somente leitura)</label>
+                        <input id="statusExibido"
+                               type="text"
+                               value="Pago"
+                               readonly>
+                    </div>
+
+                    <div class="campo">
+                        <label for="dataPagamento">Data do pagamento *</label>
+                        <input id="dataPagamento"
+                               type="date"
+                               th:field="*{dataPagamento}"
+                               th:errorclass="campo-invalido"
+                               th:attr="aria-invalid=${#fields.hasErrors('dataPagamento')}"
+                               aria-describedby="ajuda-data erro-data"
+                               required>
+                        <p id="ajuda-data" class="ajuda">
+                            Informe uma data válida. Campo obrigatório.
+                        </p>
+                        <p id="erro-data"
+                           class="erro-campo"
+                           th:if="${#fields.hasErrors('dataPagamento')}"
+                           th:errors="*{dataPagamento}">
+                        </p>
+                    </div>
+
+                    <div class="informacao">
+                        <p>Pagamento recebido</p>
+                        <p class="ajuda">
+                            Cancelar descarta apenas o formulário não salvo.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="acoes">
+                    <a class="botao botao-secundario" th:href="@{/pagamentos}">
+                        Cancelar
+                    </a>
+                    <button class="botao botao-primario"
+                            type="submit"
+                            th:disabled="${#lists.isEmpty(membros)}">
+                        Salvar registro
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+</body>
+</html>

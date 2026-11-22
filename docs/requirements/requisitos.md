@@ -17,10 +17,10 @@ O escopo contempla:
 - Autenticação de funcionários.
 - Cadastro, consulta, atualização e exclusão de membros.
 - Cadastro e consulta de treinos.
-- Registro de pagamentos.
+- Registro, listagem geral e consulta de pagamentos por membro.
 - Consulta do histórico de atividades.
 
-Todos os requisitos funcionais RF01 a RF09 integram a entrega final da A3. As etapas de implementação indicam somente a ordem de desenvolvimento; autenticação, exclusão de membros, treinos, pagamentos e consulta do histórico não estão fora do escopo final.
+Todos os requisitos funcionais RF01 a RF10 integram a entrega final da A3. As etapas de implementação indicam somente a ordem de desenvolvimento; autenticação, exclusão de membros, treinos, pagamentos e consulta do histórico não estão fora do escopo final.
 
 A atualização e a exclusão são operações previstas para membros. Para treinos, as operações previstas são cadastro e consulta.
 
@@ -41,10 +41,13 @@ As decisões de implementação estão explicitadas em `regras-de-negocio.md` e 
 | RF03 | Consultar membros | O sistema deve permitir listar os membros cadastrados e consultar suas informações. |
 | RF04 | Atualizar membros | O sistema deve permitir atualizar nome, CPF, telefone e endereço de um membro, validando os novos dados antes de salvá-los. |
 | RF05 | Excluir membros | O sistema deve permitir excluir membros sem registros vinculados e bloquear a exclusão quando houver treinos, pagamentos ou atividades associados. |
-| RF06 | Cadastrar treinos | O sistema deve permitir cadastrar um treino associado a um membro existente, informando tipo, descrição, duração em minutos e data de início. |
-| RF07 | Consultar treinos | O sistema deve permitir consultar os treinos associados a um membro, apresentando os dados cadastrados. |
-| RF08 | Registrar pagamentos | O sistema deve permitir registrar um pagamento recebido de um membro existente, informando valor e data do pagamento e atribuindo o status Pago. |
-| RF09 | Consultar histórico de atividades | O sistema deve permitir consultar as atividades registradas para um membro, apresentando atividade, data e tempo de execução. |
+| RF06 | Cadastrar treinos | O sistema deve permitir cadastrar um treino associado a um membro existente, informando obrigatoriamente tipo, descrição, duração em minutos inteiros positivos e data de início válida, gerando automaticamente seu identificador. |
+| RF07 | Consultar treinos | O sistema deve permitir consultar somente os treinos associados ao membro selecionado, apresentando tipo, descrição, duração em minutos e data de início, ou informando a ausência de registros. |
+| RF08 | Registrar pagamentos | O sistema deve permitir registrar um pagamento recebido de um membro existente, informando valor positivo dentro dos limites da RN12 e data do pagamento válida. O sistema deve atribuir o status PAGO e gerar automaticamente o identificador. |
+| RF09 | Consultar histórico de atividades | O sistema deve permitir consultar somente as atividades registradas para o membro selecionado, apresentando atividade, data e tempo de execução em minutos, ou informando a ausência de registros. Cada registro deve possuir vínculo com um membro e um funcionário responsável existentes. |
+| RF10 | Consultar pagamentos | O sistema deve permitir listar todos os pagamentos registrados e consultar somente os pagamentos de um membro existente selecionado, apresentando membro, valor, data do pagamento e status. A listagem geral deve ordenar os registros por data do pagamento decrescente e, em caso de empate, por identificador decrescente. Quando não houver pagamentos no conjunto consultado, deve informar a ausência de registros. Uma referência de membro informada e inválida deve produzir uma mensagem de erro, sem apresentar pagamentos de outros membros. |
+
+Na consulta de pagamentos, não informar um membro corresponde à listagem geral. Informar uma referência inválida ou inexistente não equivale a solicitar todos os pagamentos.
 
 ## 4. Requisitos não funcionais
 
@@ -73,7 +76,7 @@ O endereço pertence ao cadastro de membros. Não é previsto endereço para fun
 
 A referência ao funcionário responsável representa o relacionamento entre funcionários e atividades.
 
-O detalhamento das entidades e dos relacionamentos deve permanecer consistente com `docs/architecture/modelo-de-dados.md`.
+O detalhamento das entidades e dos relacionamentos deve permanecer consistente com `docs/architecture/database/modelo-de-dados.md`.
 
 ## 6. Critérios de aceitação e rastreabilidade
 
@@ -95,7 +98,7 @@ Os itens abaixo não fazem parte dos critérios de aceitação desta entrega. S�
 - Tela de cadastro e gerenciamento de funcionários.
 - Atualização e exclusão de treinos.
 - Tela de registro, atualização e exclusão de atividades.
-- Consulta financeira específica, edição e exclusão de pagamentos.
+- Análises e relatórios financeiros, edição e exclusão de pagamentos.
 - Controle de pendências, vencimentos, inadimplência e cobranças.
 - Integração com Pix, boletos ou outros meios de pagamento.
 - Dashboard, gráficos e relatórios gerenciais.
@@ -103,7 +106,7 @@ Os itens abaixo não fazem parte dos critérios de aceitação desta entrega. S�
 - Busca textual, filtros avançados e paginação.
 - Aplicativo móvel separado.
 
-A seleção de um membro para consultar treinos ou atividades faz parte do escopo e não constitui filtro avançado.
+A listagem geral de pagamentos e a seleção de um membro para consultar treinos, pagamentos ou atividades fazem parte do escopo e não constituem filtros avançados. A consulta de pagamentos apresenta registros recebidos; não inclui análises financeiras, cobranças ou controle de inadimplência.
 
 A adaptação visual da aplicação web a diferentes tamanhos de tela é uma escolha técnica da equipe. Não representa a criação de um aplicativo móvel separado nem deve ser apresentada como exigência específica do professor sem confirmação.
 

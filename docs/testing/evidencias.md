@@ -16,6 +16,8 @@ Em 18/11/2026, na task L02 (Issue #31), os testes de integração de treinos, pa
 
 Em 20/11/2026, após a revisão do PR #41, o teste `servicoRejeitaStatusInvalidoSemPersistirPagamento` passou a usar um membro criado no próprio teste, e a tabela da seção 3 foi reorganizada para reunir as evidências EV01 a EV19 em ordem, com as subseções de detalhe da EV17 e da EV18 abaixo dela. Também foi registrada a execução #52 da CI, aprovada com 145 testes (EV20).
 
+Em 21/11/2026, na branch `feat/d05-interface-pagamentos`, foi executado `./mvnw clean verify` após a implementação das telas de registro e consulta de pagamentos. A suíte completa registrou 238 testes, sem falhas, erros ou ignorados. O JaCoCo analisou 21 classes e apresentou 83% de cobertura de instruções e 64% de branches, com aprovação do gate de instruções de 75%. Os resultados locais e as verificações manuais da D05 estão registrados nas evidências EV21 a EV24. A execução da CI correspondente a esta entrega ainda não foi registrada.
+
 ## 3. Evidências de execução
 
 | ID | Verificação | CT/VN e cenário a registrar | Evidência esperada | Situação |
@@ -40,6 +42,10 @@ Em 20/11/2026, após a revisão do PR #41, o teste `servicoRejeitaStatusInvalido
 | EV18 | Testes automatizados | Execuções locais `mvn test` e `mvn clean verify`, branch `test/validacao-persistencia-modulos`, 18/11/2026 | 145 executados em 16 classes; 0 falhas; 0 erros; 0 ignorados. Inclui 49 testes de integração com PostgreSQL: 41 em classes do pacote `repository` e 8 em `MembroCpfHttpPostgresIntegrationTest`. Detalhamento abaixo. | Executado com sucesso |
 | EV19 | Cobertura de código | Medição local: `mvn clean verify`, JaCoCo 0.8.16, 18/11/2026 | Instruções 83% (1.001/1.192); branches 68% (92/134); linhas 281/322; métodos 92/104; classes 15/15 | Meta de instruções (75%) atendida |
 | EV20 | Integração contínua | Workflow `CI - VIGOR`, execução #52 (PR #41), commit `2097438`, branch `test/validacao-persistencia-modulos`, 18/11/2026, imagem `ubuntu-26.04`, PostgreSQL 18.7 | Flyway aplicou V1 a V5 no banco vazio; 145 executados; 0 falhas; 0 erros; 0 ignorados; `All coverage checks have been met.`; `BUILD SUCCESS`; relatório JaCoCo publicado como artefato `relatorio-jacoco` | Executado com sucesso |
+| EV21 | Build e suíte automatizada da D05 | Execução local de `./mvnw clean verify`, branch `feat/d05-interface-pagamentos`, 21/11/2026, concluída às 18:54:44 (-03:00) | 238 testes; 0 falhas; 0 erros; 0 ignorados; `BUILD SUCCESS`. O total corresponde ao projeto inteiro. | Executado com sucesso |
+| EV22 | Cobertura de código após a D05 | Relatório local JaCoCo 0.8.16 da execução EV21 | Instruções 83% (1.779/2.118); branches 64% (133/206); linhas 478/562; métodos 132/145; classes 21/21. Mensagem `All coverage checks have been met.` | Gate de instruções de 75% aprovado |
+| EV23 | Controller, templates e persistência de pagamentos | Testes da D05 e testes existentes reexecutados na suíte EV21; detalhamento abaixo | Validação do formulário, atribuição de `PAGO` pelo controller, consulta por membro, renderização HTML, escape de conteúdo e ordenação da listagem no PostgreSQL. Execução específica de `PagamentoPostgresIntegrationTest`: 10 testes, sem falhas, erros ou ignorados. | Executado com sucesso |
+| EV24 | Verificações manuais de pagamentos | Registro e listagem; filtro por membro; consulta após reiniciar a aplicação; uso do formulário com janela reduzida | Funcionamento confirmado pela responsável em ambiente local. Registro descritivo abaixo; não representa aprovação integral dos CT/VN nem avaliação completa de usabilidade. | Execução manual confirmada pela responsável |
 
 ### EV17 — Validação de CPF pelo fluxo HTTP
 
@@ -98,6 +104,108 @@ Execuções locais em 18/11/2026, com Windows 11, JDK 21.0.13 e PostgreSQL 18 lo
 Observação para a equipe, sem alteração nesta task: `servicoRejeitaStatusInvalidoSemPersistirPagamento` confere que o membro obtido por `membroParaTeste()` não possui pagamentos. Como esse método reutiliza o primeiro membro existente no banco, o teste falharia, sem defeito real, em um banco em que esse membro já tenha pagamentos.
 
 Ajuste após a revisão do PR #41, em 20/11/2026: o teste passou a usar um membro exclusivo, criado com `criarMembroTransitorio()`, e a verificação de que nenhum pagamento foi registrado deixou de depender dos dados existentes no banco. Após o ajuste, `mvn test` e `mvn clean verify` concluíram com 145 testes, 0 falhas, 0 erros e 0 ignorados, e `BUILD SUCCESS`.
+
+### EV21 a EV24 — Interface de pagamentos (D05)
+
+- **Responsável:** Maria Eduarda Souza dos Santos Ferreira.
+- **Task:** D05 — Implementar interface de registro e consulta de pagamentos.
+- **Branch:** `feat/d05-interface-pagamentos`.
+- **Data:** 21/11/2026.
+- **Ambiente:** Windows, Git Bash e PostgreSQL local, com `DB_PASSWORD` definida no terminal.
+- **Aplicação:** Spring Boot 4.1.2.
+- **Cobertura:** JaCoCo 0.8.16.
+
+#### Execução automatizada
+
+Comando da suíte completa:
+
+```bash
+./mvnw clean verify
+```
+
+Resultado observado:
+
+```text
+Tests run: 238, Failures: 0, Errors: 0, Skipped: 0
+Analyzed bundle 'vigor' with 21 classes
+All coverage checks have been met.
+BUILD SUCCESS
+```
+
+A execução terminou em 21/11/2026 às 18:54:44 (-03:00), com duração total de 1 minuto e 8 segundos.
+
+Os 238 testes pertencem à suíte completa do projeto, incluindo testes anteriores à D05. As 21 classes informadas pelo JaCoCo são classes de produção analisadas, não classes de teste.
+
+Também foi executado:
+
+```bash
+./mvnw -Dtest=PagamentoPostgresIntegrationTest test
+```
+
+Essa execução terminou às 18:23:39 (-03:00), com 10 testes, nenhuma falha, nenhum erro e nenhum teste ignorado.
+
+#### Testes relacionados à entrega
+
+| Arquivo | Contribuição e comportamentos verificados |
+|---|---|
+| [PagamentoControllerTest.java](../../src/test/java/br/edu/unisul/vigor/controller/PagamentoControllerTest.java) | Criado na D05. Verifica abertura do formulário, listagem, consulta por membro, filtros inválidos, campos obrigatórios, valores e datas inválidos, membro inexistente, preservação de dados e atribuição de `PAGO` pelo controller, inclusive quando o formulário tenta enviar outro status. |
+| [PagamentoServiceTest.java](../../src/test/java/br/edu/unisul/vigor/service/PagamentoServiceTest.java) | Testes existentes preservados e complementados na D05 para listagem geral, resultados vazios, consulta sem membro, limite de dígitos inteiros do valor e status nulo. |
+| [PagamentoTemplateRenderingTest.java](../../src/test/java/br/edu/unisul/vigor/controller/PagamentoTemplateRenderingTest.java) | Criado na D05, com oito testes de HTML renderizado: formulário, status somente leitura, ausência de membros, lista vazia, formatação de valor e data, seleção do filtro, mensagens e escape do nome do membro. |
+| [PagamentoPostgresIntegrationTest.java](../../src/test/java/br/edu/unisul/vigor/repository/PagamentoPostgresIntegrationTest.java) | Testes anteriores de persistência e integridade preservados. Na D05 foi acrescentado `listagemGeralOrdenaPorDataDecrescenteEPorIdNoDesempate`, que verifica a ordenação por data e ID decrescentes e o carregamento do membro associado. |
+
+Os testes do controller utilizam serviços simulados. Os testes de templates verificam o HTML gerado pelo Thymeleaf, sem avaliar visualmente o CSS. Os testes PostgreSQL verificam os serviços e repositórios com banco real, em transações desfeitas ao final.
+
+Essas verificações são complementares e não devem ser apresentadas como um único teste automatizado ponta a ponta do formulário até o PostgreSQL.
+
+#### Cobertura da suíte completa
+
+| Métrica | Resultado |
+|---|---|
+| Instruções | 83% exibidos no relatório; 1.779 cobertas de 2.118 |
+| Branches | 64% exibidos no relatório; 133 cobertos de 206 |
+| Linhas | 478 cobertas de 562 |
+| Métodos | 132 cobertos de 145 |
+| Classes | 21 cobertas de 21 |
+| Gate JaCoCo | Aprovado para o mínimo de 75% de instruções |
+
+Os percentuais correspondem ao projeto inteiro. Não representam cobertura exclusiva do módulo de pagamentos. Não há mínimo de cobertura de branches configurado no gate apresentado.
+
+Relatórios locais da execução:
+
+- `target/surefire-reports/`: resultados dos testes.
+- `target/site/jacoco/index.html`: relatório HTML de cobertura.
+- `target/site/jacoco/jacoco.xml`: relatório XML de cobertura.
+
+Os arquivos de `target/` são gerados pelo build e não são versionados. Logs e captura do relatório foram conferidos para elaborar este registro; os caminhos acima indicam os artefatos locais.
+
+#### Verificações manuais
+
+Verificações realizadas no navegador e confirmadas pela responsável:
+
+| Cenário | Procedimento | Resultado informado |
+|---|---|---|
+| Registro e listagem | Registrar um pagamento para um membro cadastrado e consultar a listagem. | Pagamento salvo e apresentado na listagem. |
+| Consulta por membro | Selecionar um membro no filtro e consultar seus pagamentos. | A listagem apresentou somente os pagamentos do membro selecionado. |
+| Persistência após reinício | Encerrar e iniciar novamente a aplicação, depois consultar os pagamentos. | O pagamento continuou disponível. |
+| Formulário em janela reduzida | Diminuir a largura da janela e utilizar o formulário. | O formulário permaneceu utilizável. |
+
+A verificação de janela reduzida não equivale a testes em todos os dispositivos ou navegadores. Não foram registradas dimensões exatas da janela nem uma avaliação completa de usabilidade.
+
+O cenário de reinício evidencia a permanência do pagamento consultado; não declara aprovação integral do CA25 para todos os módulos.
+
+#### Ajustes durante a validação
+
+- Uma primeira execução dos testes PostgreSQL ignorou os dez testes porque `DB_PASSWORD` não estava disponível. Após configurar a variável, os dez testes foram executados e aprovados.
+- As verificações de templates inicialmente utilizavam XPath, que interpretava o HTML como XML e gerava erros de análise. As verificações foram ajustadas para o HTML produzido pelo Thymeleaf.
+- A verificação de escape foi ajustada para aceitar representações equivalentes de entidades HTML, preservando a exigência de exibir o nome como texto, sem transformá-lo em uma tag executável.
+- Após os ajustes, a suíte completa foi aprovada conforme EV21.
+
+#### Limites e acompanhamento
+
+- A aprovação local não comprova a aprovação da CI desta branch. O link e o resultado da execução do GitHub Actions devem ser acrescentados após sua realização.
+- Os testes descritos não comprovam autenticação nem proteção das rotas de pagamentos. Essa integração deve ser verificada com o módulo de login.
+- O vínculo detalhado com os CT/VN deve ser atualizado no plano de testes e na matriz de rastreabilidade, preservando os identificadores existentes.
+- As evidências anteriores foram preservadas. A D05 complementa testes existentes e não altera a autoria das contribuições anteriores.
 
 ## 4. Validação de persistência PostgreSQL — Task L07
 
@@ -324,6 +432,8 @@ Na medição local de 16/11/2026 (EV14), a cobertura de instruções foi de 81% 
 
 Na medição local de 18/11/2026 (EV19), a cobertura de instruções foi de 83% e a de branches permaneceu em 68%.
 
+Na medição local de 21/11/2026, após a implementação da D05 (EV22), o relatório apresentou 83% de cobertura de instruções e 64% de branches, considerando 21 classes de produção. O gate de instruções de 75% foi aprovado. Essa medição corresponde à suíte completa do projeto.
+
 ## 8. Histórico
 
 | Data | Alteração | Responsável |
@@ -336,6 +446,7 @@ Na medição local de 18/11/2026 (EV19), a cobertura de instruções foi de 83% 
 | 16/11/2026 | Registro da validação HTTP de CPF com PostgreSQL e dos resultados da suíte local e da CI | Execução da issue #28 |
 | 18/11/2026 | Registro da validação de persistência dos módulos da task L02 (Issue #31): seis testes de integração com PostgreSQL, execuções locais com 145 testes e cobertura JaCoCo (EV18 e EV19) | Luan Milian Martins |
 | 20/11/2026 | Ajustes da revisão do PR #41: reorganização da tabela de evidências da seção 3, sem alteração do conteúdo das evidências; membro exclusivo no teste de status do pagamento; registro da execução #52 da CI (EV20) | Luan Milian Martins |
+| 21/11/2026 | Registro da D05: testes de controller e templates, complementação dos testes de serviço e PostgreSQL, suíte completa com 238 testes aprovados, cobertura de instruções de 83% e verificações manuais de pagamentos (EV21 a EV24). | Maria Eduarda Souza dos Santos Ferreira |
 
 Atualizar este histórico conforme novas evidências forem produzidas.
 
@@ -346,3 +457,25 @@ Os resultados do build, dos testes automatizados, da medição JaCoCo, da primei
 A EV18 registra a validação de persistência e consultas de treinos, pagamentos e histórico de atividades da task L02.
 
 A EV20 registra a execução da CI do PR #41, da task L02.
+
+As evidências EV21 a EV24 registram a validação local da interface de pagamentos na D05, incluindo testes automatizados, cobertura e verificações manuais específicas. Essas verificações atualizam parcialmente as pendências funcionais mencionadas acima, sem declarar aprovação de todos os CT/VN ou da avaliação completa de usabilidade. A CI e a integração com autenticação desta entrega ainda precisam de evidências próprias.
+
+## D05 — Validação após integração da develop e execução na CI
+
+Após a integração das alterações da `develop` na branch `feat/d05-interface-pagamentos`, foram realizadas as seguintes verificações:
+
+| Ambiente | Conclusão da execução — horário de Brasília | Resultado |
+|---|---|---|
+| Local — Windows/Git Bash | 21/11/2026 às 22h41min22s | `clean verify`: 238 testes, nenhuma falha, nenhum erro e nenhum teste ignorado. Limite de cobertura JaCoCo aprovado. |
+| GitHub Actions — CI - VIGOR | 21/11/2026 às 22h43min27s | `clean verify`: 238 testes, nenhuma falha, nenhum erro e nenhum teste ignorado. Limite de cobertura JaCoCo aprovado. |
+
+A execução da CI utilizou Java 21 e o serviço PostgreSQL 18 configurados no workflow.
+
+- [Execução da CI](https://github.com/Miaunisul/Vigor/actions/runs/44972713889/job/137055766603)
+- [Artefato relatorio-jacoco](https://github.com/Miaunisul/Vigor/actions/runs/44972713889/artifacts/14734102308)
+
+O upload do relatório JaCoCo foi concluído com sucesso, incluindo 76 arquivos. O artefato possui retenção de 14 dias, conforme o workflow.
+
+O log confirma a aprovação do limite configurado de 75% de cobertura de instruções, mas não apresenta o percentual exato desta execução. Os percentuais registrados anteriormente em EV22 permanecem vinculados à execução correspondente.
+
+Esta evidência confirma a execução automatizada após o merge e na CI. Não representa aprovação automática dos cenários manuais, da autenticação integrada ou de todos os critérios de aceite.

@@ -1,0 +1,523 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+    --fundo: #f4f6f2;
+    --superficie: #ffffff;
+    --texto: #101814;
+    --musgo: #26332a;
+    --lima: #c7f36b;
+    --borda: #d7ded6;
+    --auxiliar: #59695e;
+    --erro: #b52f36;
+    --sucesso: #24734b;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--fundo);
+    color: var(--texto);
+    font-family: "Inter", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+a {
+    color: inherit;
+}
+
+button,
+input,
+select {
+    font: inherit;
+}
+
+.sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 240px;
+    padding: 40px 20px 24px;
+    background: var(--texto);
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.logo {
+    display: block;
+    width: 180px;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto 48px;
+}
+
+.menu {
+    display: grid;
+    gap: 8px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.menu-item:hover {
+    background: #26332a;
+}
+
+.menu-item.ativo {
+    background: var(--lima);
+    color: var(--texto);
+    font-weight: 600;
+}
+
+.menu-item.indisponivel {
+    opacity: 0.65;
+}
+
+.icone {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.sidebar-rodape {
+    margin-top: auto;
+    padding-top: 32px;
+    font-size: 13px;
+}
+
+.identidade-funcionario {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    margin-bottom: 14px;
+}
+
+.identidade-funcionario strong {
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.identidade-funcionario span {
+    color: #c2ccc4;
+    font-size: 12px;
+}
+
+.form-sair { margin: 0; }
+
+.botao-sair {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.botao-sair .icone { width: 17px; height: 17px; }
+.botao-sair:hover { color: var(--lima); }
+
+.area-principal {
+    margin-left: 240px;
+    min-height: 100vh;
+}
+
+.topbar {
+    min-height: 80px;
+    padding: 20px 40px;
+    background: var(--superficie);
+    border-bottom: 1px solid var(--borda);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    color: var(--auxiliar);
+    font-size: 13px;
+}
+
+.conteudo {
+    padding: 40px;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+.cabecalho {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+h1 {
+    margin: 0 0 8px;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    line-height: 1.2;
+}
+
+h2 {
+    margin: 0 0 4px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.subtitulo,
+.ajuda {
+    color: var(--auxiliar);
+}
+
+.subtitulo {
+    margin: 0;
+    font-size: 14px;
+}
+
+.ajuda {
+    margin: 8px 0 0;
+    font-size: 13px;
+}
+
+.voltar {
+    display: inline-block;
+    margin-bottom: 24px;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.voltar:hover {
+    text-decoration: underline;
+}
+
+.painel {
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    padding: 32px;
+}
+
+.formulario {
+    margin-top: 24px;
+}
+
+.grade {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 24px;
+}
+
+.campo {
+    min-width: 0;
+}
+
+.linha-inteira {
+    grid-column: 1 / -1;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+input,
+select {
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 14px;
+    color: var(--texto);
+    background: white;
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+}
+
+input[readonly] {
+    background: #fafbf9;
+}
+
+:where(a, button, input, select):focus-visible {
+    outline: 2px solid var(--musgo);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 3px #c7f36b80;
+}
+
+.campo-invalido {
+    border-color: var(--erro);
+}
+
+.erro-campo {
+    margin: 6px 0 0;
+    color: var(--erro);
+    font-size: 13px;
+}
+
+.aviso {
+    padding: 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+.aviso p {
+    margin: 0;
+}
+
+.aviso ul {
+    margin: 8px 0 0;
+    padding-left: 20px;
+}
+
+.aviso-sucesso,
+.informacao {
+    color: var(--sucesso);
+    background: #edf7f1;
+}
+
+.aviso-erro {
+    color: var(--erro);
+    background: #fff0f1;
+    border: 1px solid #edc1c5;
+}
+
+.aviso-neutro {
+    color: var(--musgo);
+    background: #edf0e9;
+}
+
+.informacao {
+    padding: 16px;
+    border-radius: 10px;
+    align-self: end;
+    font-size: 14px;
+}
+
+.informacao p {
+    margin: 0;
+}
+
+.informacao .ajuda {
+    margin-top: 8px;
+}
+
+.acoes {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--borda);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 10px 18px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.botao-primario {
+    background: var(--lima);
+    color: var(--texto);
+}
+
+.botao-primario:hover {
+    background: #b8e65c;
+}
+
+.botao-secundario {
+    background: white;
+    color: var(--musgo);
+    border-color: var(--borda);
+}
+
+.botao-secundario:hover {
+    background: var(--fundo);
+}
+
+.botao:disabled {
+    background: #e1e7dd;
+    color: var(--auxiliar);
+    cursor: not-allowed;
+}
+
+.filtros {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+}
+
+.filtros .campo {
+    flex: 1 1 260px;
+}
+
+.tabela-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+}
+
+caption {
+    text-align: left;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+th,
+td {
+    padding: 16px;
+    border-bottom: 1px solid var(--borda);
+}
+
+th {
+    background: var(--fundo);
+    color: var(--auxiliar);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+td.valor {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    color: var(--sucesso);
+    background: #edf7f1;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.vazio {
+    padding: 40px 16px;
+    text-align: center;
+    color: var(--auxiliar);
+}
+
+.pular {
+    position: fixed;
+    top: -100px;
+    left: 16px;
+    z-index: 10;
+    background: var(--lima);
+    padding: 12px;
+}
+
+.pular:focus {
+    top: 16px;
+}
+
+@media (max-width: 900px) {
+    .sidebar {
+        width: 200px;
+        padding-inline: 16px;
+    }
+
+    .area-principal {
+        margin-left: 200px;
+    }
+
+    .conteudo,
+    .topbar {
+        padding: 24px;
+    }
+
+    .painel {
+        padding: 24px;
+    }
+
+    .grade {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .sidebar {
+        position: static;
+        width: 100%;
+        padding: 20px 16px;
+    }
+
+    .logo {
+        width: 140px;
+        margin: 0 0 20px;
+    }
+
+    .menu {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .sidebar-rodape { padding-top: 20px; }
+
+    .area-principal {
+        margin-left: 0;
+    }
+
+    .topbar {
+        padding: 16px;
+        min-height: 60px;
+    }
+
+    .topbar span:last-child {
+        display: none;
+    }
+
+    .conteudo {
+        padding: 24px 16px;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    .painel {
+        padding: 20px;
+    }
+
+    .acoes .botao {
+        flex: 1;
+    }
+}

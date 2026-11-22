@@ -23,8 +23,8 @@ As regras descrevem o comportamento esperado e não indicam, por si só, que ess
 | ID | Regra de negócio | Especificação |
 |---|---|---|
 | RN07 | Vínculo do treino | Cada treino deve estar associado a um membro existente. Não deve ser permitido gravar um treino sem membro ou com referência a um membro inexistente. |
-| RN08 | Dados obrigatórios do treino | O treino deve possuir identificador único gerado automaticamente, membro, tipo, descrição, duração e data de início. Tipo e descrição não podem ser vazios nem conter somente espaços. |
-| RN09 | Duração e data do treino | A duração deve ser um número inteiro positivo, expresso em minutos. A data de início deve ser uma data válida. |
+| RN08 | Dados obrigatórios do treino | O treino deve possuir identificador único gerado automaticamente, membro, tipo, descrição, duração e data de início. Antes da validação, o serviço remove os espaços das extremidades de tipo e descrição. Esses campos não podem ser ausentes, vazios nem compostos apenas por espaços. |
+| RN09 | Duração e data do treino | A duração é obrigatória e deve ser um número inteiro maior que zero, expresso em minutos. A data de início é obrigatória e deve ser válida. Não há restrição adicional documentada que exija data passada, atual ou futura. |
 
 ## 4. Regras de pagamentos
 
@@ -32,16 +32,16 @@ As regras descrevem o comportamento esperado e não indicam, por si só, que ess
 |---|---|---|
 | RN10 | Vínculo do pagamento | Cada pagamento deve estar associado a um membro existente. Não deve ser permitido gravar um pagamento sem membro ou com referência a um membro inexistente. |
 | RN11 | Dados obrigatórios do pagamento | O pagamento deve possuir identificador único gerado automaticamente, membro, valor, data do pagamento e status. A data do pagamento é obrigatória e deve ser válida. |
-| RN12 | Valor do pagamento | O valor deve ser maior que zero e possuir, no máximo, duas casas decimais. Valores ausentes, não numéricos, iguais a zero, negativos ou com mais de duas casas decimais devem ser rejeitados. |
-| RN13 | Status do pagamento | Nesta entrega, o registro representa um pagamento já recebido. O sistema deve atribuir o status Pago e não aceitar outro status. Controle de pagamentos pendentes, vencidos ou cancelados não faz parte desta entrega. |
+| RN12 | Valor do pagamento | O valor é obrigatório, deve ser maior que zero e possuir no máximo 10 dígitos na parte inteira e duas casas decimais, compatível com NUMERIC(12,2). Valores ausentes, não numéricos, iguais a zero, negativos ou que excedam esses limites devem ser rejeitados antes da persistência. |
+| RN13 | Status do pagamento | Nesta entrega, o registro representa um pagamento já recebido. O sistema deve atribuir o valor PAGO ao status e não permitir outros valores. A interface pode apresentar o texto Pago. Controle de pagamentos pendentes, vencidos ou cancelados não faz parte desta entrega. |
 
 ## 5. Regras de histórico de atividades
 
 | ID | Regra de negócio | Especificação |
 |---|---|---|
-| RN14 | Vínculos da atividade | Cada registro de atividade deve estar associado a um membro existente e a um funcionário responsável existente. |
-| RN15 | Dados obrigatórios da atividade | Cada registro deve possuir identificador único, membro, atividade, data, tempo de execução e funcionário responsável. O nome da atividade não pode ser vazio nem conter somente espaços. A data deve ser válida. |
-| RN16 | Tempo de execução | O tempo de execução deve ser um número inteiro positivo, expresso em minutos. |
+| RN14 | Vínculos da atividade | Cada registro de atividade deve estar associado a um membro existente e a um funcionário responsável existente. Referências ausentes ou inexistentes devem impedir a gravação. |
+| RN15 | Dados obrigatórios da atividade | Cada registro deve possuir identificador único gerado automaticamente, membro, atividade, data, tempo de execução e funcionário responsável. O nome da atividade não pode ser ausente, vazio nem composto apenas por espaços. A data é obrigatória e deve ser válida. |
+| RN16 | Tempo de execução | O tempo de execução é obrigatório e deve ser um número inteiro maior que zero, expresso em minutos. |
 | RN17 | Consulta do histórico | A consulta deve apresentar somente as atividades vinculadas ao membro selecionado. Quando não houver registros, o sistema deve informar a ausência de atividades. |
 
 Nesta entrega, o histórico será disponibilizado por dados previamente carregados por procedimento técnico documentado. As regras RN14 a RN16 também se aplicam a esses dados.
@@ -72,7 +72,7 @@ Os requisitos, as regras e os critérios de aceite desta revisão adotam as segu
 
 - Os funcionários serão cadastrados previamente por procedimento técnico documentado, sem tela de cadastro ou gerenciamento nesta entrega.
 - O histórico de atividades será inicialmente alimentado por carga técnica documentada, respeitando as regras de integridade e mantendo a consulta funcional.
-- Os pagamentos representarão valores já recebidos e serão registrados somente com o status Pago.
+- Os pagamentos representarão valores já recebidos e serão registrados somente com o status PAGO.
 - As operações de atualização e exclusão serão previstas somente para membros.
 - A gestão de treinos será atendida pelo cadastro e pela consulta.
 - A exclusão de membros será bloqueada quando existirem registros vinculados.
@@ -97,3 +97,31 @@ Não é necessário criar um teste isolado para cada regra. Os cenários devem c
 Até a execução das verificações, os testes e critérios devem permanecer identificados como planejados, sem indicação de aprovação.
 
 Esta atualização documental não implementa funcionalidades nem comprova a execução de testes.
+
+## 10. Revisão documental D04 — implementação e pendências
+
+A revisão comparou os requisitos e as regras dos módulos de treinos, pagamentos e histórico com as entidades, os serviços, as migrations V3 a V5 e o modelo de dados fornecidos. A conferência foi realizada por leitura dos arquivos, sem execução de testes ou consulta direta ao PostgreSQL.
+
+### Comportamentos identificados no código
+
+- Treinos: cadastro com validação dos campos obrigatórios, vínculo com membro existente, duração inteira positiva e consulta por membro.
+- Pagamentos: registro com validação de membro existente, valor positivo com até 10 dígitos inteiros e duas casas decimais, data obrigatória e status exclusivamente PAGO; consulta por membro disponível no serviço.
+- Histórico: registro técnico com membro e funcionário responsável existentes, atividade preenchida, data obrigatória e tempo inteiro positivo; consultas por membro e por funcionário disponíveis no serviço.
+- As migrations definem identificadores automáticos, campos obrigatórios e chaves estrangeiras com ON DELETE RESTRICT.
+
+### Pendências e limites
+
+- A atribuição automática de PAGO permanece como comportamento esperado de RF08 e RN13. No serviço de pagamentos revisado, o status precisa chegar preenchido: o método registrar valida seu conteúdo, mas não o atribui. A atribuição em outra camada não foi comprovada nesta revisão.
+- A D05 prevê listagem e consulta de pagamentos por membro. O serviço já possui consulta por membro, mas os requisitos atuais descrevem somente o registro. A inclusão explícita desse fluxo nos requisitos, critérios e rastreabilidade deve ser alinhada antes da conclusão da D05.
+- A existência dos serviços não comprova telas, mensagens, proteção das rotas ou funcionamento integrado. Controllers e templates desses módulos não foram examinados nesta revisão.
+- O método de registro de histórico não comprova a existência de um procedimento de carga técnica documentado. Esse procedimento deve respeitar RN14 a RN16, sem exigir uma tela fora do escopo.
+- As validações da aplicação e as constraints do banco são complementares. Cargas que não utilizem os serviços também devem respeitar as regras de negócio.
+- Nenhum teste ou critério foi declarado aprovado por esta revisão documental. Resultados de execução devem possuir evidências próprias.
+
+### Atualização de acompanhamento — D05
+
+A D05 explicita a listagem geral e a consulta de pagamentos por membro no RF10, nos CA31–CA34 e nos CT18–CT20. O CT21 trata da persistência de pagamentos após reinício.
+
+No fluxo web implementado, o `PagamentoController` atribui `PAGO` antes de chamar o serviço. O `PagamentoService` continua responsável pela validação do registro recebido. A ausência de status na solicitação do funcionário é permitida; o cliente não deve substituir o status definido pela aplicação.
+
+As observações anteriores da D04 descrevem o estado examinado naquela revisão. A atualização da D05 não comprova automaticamente autenticação integrada, execução da CI ou conclusão das pendências da carga técnica do histórico.
