@@ -200,7 +200,7 @@ public class TreinoController {
                 treinoService.cadastrar(treino, membroId);
                 atributos.addFlashAttribute("sucesso", "Treino cadastrado com sucesso.");
             }
-            return "redirect:/treinos";
+            return "redirect:/treinos?membroId=" + membroId;
         } catch (ConstraintViolationException e) {
             adicionarViolacoes(resultado, e.getConstraintViolations());
         } catch (IllegalArgumentException e) {
