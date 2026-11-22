@@ -7,24 +7,16 @@ import br.edu.unisul.vigor.service.TreinoService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Stream;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -39,6 +31,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standal
 class TreinoControllerTest {
 
     private static final Long MEMBRO_ID = 42L;
+    private static final Long TREINO_ID = 9L;
 
     private TreinoService treinoService;
     private MembroService membroService;
@@ -55,8 +48,10 @@ class TreinoControllerTest {
         mockMvc = standaloneSetup(new TreinoController(treinoService, membroService))
                 .setValidator(validator)
                 .build();
-        membro = membroComId(MEMBRO_ID, "Membro Teste");
+        membro = membroComId(MEMBRO_ID, "Ana Beatriz Costa");
+        membro.setCpf("52998224725");
         when(membroService.listarTodos()).thenReturn(List.of(membro));
+        when(treinoService.listarTodos()).thenReturn(List.of());
     }
 
     @AfterEach
@@ -65,229 +60,167 @@ class TreinoControllerTest {
     }
 
     @Test
-    void listaCarregaMembrosEExigeSelecaoParaConsultarTreinos() throws Exception {
+    void telaPrincipalCarregaListaCompletaEControles() throws Exception {
         mockMvc.perform(get("/treinos"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("treinos/lista"))
+                .andExpect(model().attribute("visualizacao", "lista"))
+                .andExpect(model().attribute("moduloAtivo", "treinos"))
                 .andExpect(model().attribute("membros", List.of(membro)))
                 .andExpect(model().attribute("treinos", List.of()))
-                .andExpect(model().attribute("membroSelecionadoId", (Object) null));
+                .andExpect(model().attribute("totalTreinos", 0));
 
-        verify(membroService).listarTodos();
-        verify(treinoService, never()).consultarPorMembro(any());
+        verify(treinoService).listarTodos();
     }
 
     @Test
-    void consultaSomenteTreinosDoMembroSelecionado() throws Exception {
-        Treino treino = treinoValido();
-        when(treinoService.consultarPorMembro(MEMBRO_ID)).thenReturn(List.of(treino));
+    void filtraListaPorMembroENomeOuCpf() throws Exception {
+        Membro bruno = membroComId(84L, "Bruno Almeida");
+        bruno.setCpf("39053344705");
+        Treino treinoAna = treinoValido(membro);
+        Treino treinoBruno = treinoValido(bruno);
+        when(membroService.listarTodos()).thenReturn(List.of(membro, bruno));
+        when(treinoService.listarTodos()).thenReturn(List.of(treinoAna, treinoBruno));
 
-        mockMvc.perform(get("/treinos").param("membroId", MEMBRO_ID.toString()))
+        mockMvc.perform(get("/treinos").param("q", "529.982"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("treinos", List.of(treinoAna)))
+                .andExpect(model().attribute("totalTreinos", 1));
+
+        mockMvc.perform(get("/treinos").param("membroId", "84"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("treinos", List.of(treinoBruno)))
+                .andExpect(model().attribute("membroSelecionadoId", 84L));
+    }
+
+    @Test
+    void detalhesEEdicaoSaoEstadosDaMesmaTela() throws Exception {
+        Treino treino = treinoValido(membro);
+        setTreinoId(treino, TREINO_ID);
+        when(treinoService.buscarPorId(TREINO_ID)).thenReturn(treino);
+
+        mockMvc.perform(get("/treinos").param("acao", "detalhes")
+                        .param("treinoId", TREINO_ID.toString()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("treinos/lista"))
-                .andExpect(model().attribute("membroSelecionadoId", MEMBRO_ID))
-                .andExpect(model().attribute("treinos", List.of(treino)));
+                .andExpect(model().attribute("visualizacao", "detalhes"))
+                .andExpect(model().attribute("treino", treino));
 
-        verify(treinoService).consultarPorMembro(MEMBRO_ID);
+        mockMvc.perform(get("/treinos").param("acao", "editar")
+                        .param("treinoId", TREINO_ID.toString()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("treinos/lista"))
+                .andExpect(model().attribute("visualizacao", "editar"))
+                .andExpect(model().attribute("treino", treino));
     }
 
     @Test
-    void trocarDoMembroComTreinoParaMembroSemTreinoMostraListaVazia() throws Exception {
-        Long segundoMembroId = 84L;
-        Membro segundoMembro = membroComId(segundoMembroId, "Membro sem treinos");
-        Treino treinoDoPrimeiro = treinoValido();
-        when(membroService.listarTodos()).thenReturn(List.of(membro, segundoMembro));
-        when(treinoService.consultarPorMembro(MEMBRO_ID)).thenReturn(List.of(treinoDoPrimeiro));
-        when(treinoService.consultarPorMembro(segundoMembroId)).thenReturn(List.of());
+    void redirecionaQuandoTreinoSolicitadoNaoExiste() throws Exception {
+        when(treinoService.buscarPorId(404L))
+                .thenThrow(new IllegalArgumentException("Treino não encontrado."));
 
-        mockMvc.perform(get("/treinos").param("membroId", MEMBRO_ID.toString()))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("membroSelecionadoId", MEMBRO_ID))
-                .andExpect(model().attribute("treinos", List.of(treinoDoPrimeiro)));
-
-        mockMvc.perform(get("/treinos").param("membroId", segundoMembroId.toString()))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("membroSelecionadoId", segundoMembroId))
-                .andExpect(model().attribute("treinos", List.of()));
-
-        verify(treinoService).consultarPorMembro(MEMBRO_ID);
-        verify(treinoService).consultarPorMembro(segundoMembroId);
-    }
-
-    @Test
-    void redirecionaComErroAoConsultarMembroInexistente() throws Exception {
-        when(treinoService.consultarPorMembro(404L))
-                .thenThrow(new IllegalArgumentException("Membro não encontrado."));
-
-        mockMvc.perform(get("/treinos").param("membroId", "404"))
+        mockMvc.perform(get("/treinos").param("acao", "detalhes").param("treinoId", "404"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(view().name("redirect:/treinos"))
-                .andExpect(flash().attribute("erro", "Membro não encontrado."));
+                .andExpect(flash().attribute("erro", "Treino não encontrado."));
     }
 
     @Test
-    void formularioCarregaMembrosParaSelecao() throws Exception {
+    void antigoEnderecoDeCadastroAbreEstadoNovoNaTelaPrincipal() throws Exception {
         mockMvc.perform(get("/treinos/novo"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("treinos/formulario"))
-                .andExpect(model().attribute("membros", List.of(membro)))
-                .andExpect(model().attribute("treino", hasProperty("membro")));
-
-        verify(membroService).listarTodos();
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/treinos?acao=novo"));
     }
 
     @Test
-    void cadastraTreinoValidoEVoltaParaListaDoMembro() throws Exception {
+    void cadastraTreinoValido() throws Exception {
         mockMvc.perform(post("/treinos")
+                        .param("acao", "novo")
                         .param("membroId", MEMBRO_ID.toString())
-                        .param("tipo", "Musculação")
+                        .param("tipo", "Treino A — membros superiores")
                         .param("descricao", "Treino de força")
                         .param("duracaoMinutos", "45")
                         .param("dataInicio", "2026-11-20"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(view().name("redirect:/treinos?membroId=42"))
+                .andExpect(view().name("redirect:/treinos"))
                 .andExpect(flash().attribute("sucesso", "Treino cadastrado com sucesso."));
 
         verify(treinoService).cadastrar(any(Treino.class), eq(MEMBRO_ID));
     }
 
     @Test
-    void rejeitaCadastroSemMembroEPreservaOsDados() throws Exception {
+    void atualizaTreinoSemCriarOutraTelaOuRota() throws Exception {
         mockMvc.perform(post("/treinos")
-                        .param("tipo", "Musculação")
-                        .param("descricao", "Treino de força")
-                        .param("duracaoMinutos", "45")
-                        .param("dataInicio", "2026-11-20"))
+                        .param("acao", "editar")
+                        .param("treinoId", TREINO_ID.toString())
+                        .param("membroId", MEMBRO_ID.toString())
+                        .param("tipo", "Treino B — membros inferiores")
+                        .param("descricao", "Treino atualizado")
+                        .param("duracaoMinutos", "50")
+                        .param("dataInicio", "2026-11-21"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/treinos"))
+                .andExpect(flash().attribute("sucesso", "Treino atualizado com sucesso."));
+
+        verify(treinoService).atualizar(eq(TREINO_ID), any(Treino.class), eq(MEMBRO_ID));
+    }
+
+    @Test
+    void excluiTreinoPeloPostDaTelaPrincipal() throws Exception {
+        mockMvc.perform(post("/treinos")
+                        .param("acao", "excluir")
+                        .param("treinoId", TREINO_ID.toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/treinos"))
+                .andExpect(flash().attribute("sucesso", "Treino excluído com sucesso."));
+
+        verify(treinoService).excluir(TREINO_ID);
+    }
+
+    @Test
+    void preservaFormularioEValidacoesQuandoDadosSaoInvalidos() throws Exception {
+        mockMvc.perform(post("/treinos")
+                        .param("acao", "novo")
+                        .param("membroId", MEMBRO_ID.toString())
+                        .param("tipo", " ")
+                        .param("descricao", "Descrição preservada")
+                        .param("duracaoMinutos", "0")
+                        .param("dataInicio", "20/11/2026"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("treinos/formulario"))
-                .andExpect(model().attributeHasFieldErrors("treino", "membro.id"))
-                .andExpect(model().attribute("treino", hasProperty("tipo", equalTo("Musculação"))))
-                .andExpect(model().attribute("membros", List.of(membro)));
+                .andExpect(view().name("treinos/lista"))
+                .andExpect(model().attribute("visualizacao", "novo"))
+                .andExpect(model().attributeHasFieldErrors("treino", "tipo"))
+                .andExpect(model().attributeHasFieldErrors("treino", "duracaoMinutos"))
+                .andExpect(model().attributeHasFieldErrors("treino", "dataInicio"))
+                .andExpect(model().attribute("treino", org.hamcrest.Matchers.hasProperty(
+                        "descricao", org.hamcrest.Matchers.equalTo("Descrição preservada"))));
 
         verifyNoInteractions(treinoService);
     }
 
     @Test
-    void membroInexistenteRetornaFormularioComErroNoCampoDeSelecao() throws Exception {
-        when(treinoService.cadastrar(any(Treino.class), eq(404L)))
-                .thenThrow(new IllegalArgumentException("Membro não encontrado."));
-
+    void informaDuracaoNaoInteiraSemMensagemTecnica() throws Exception {
         mockMvc.perform(post("/treinos")
-                        .param("membroId", "404")
-                        .param("tipo", "Musculação")
-                        .param("descricao", "Treino de força")
-                        .param("duracaoMinutos", "45")
-                        .param("dataInicio", "2026-11-20"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("treinos/formulario"))
-                .andExpect(model().attributeHasFieldErrors("treino", "membro.id"));
-
-        verify(treinoService).cadastrar(any(Treino.class), eq(404L));
-    }
-
-    @ParameterizedTest
-    @MethodSource("camposObrigatoriosAusentes")
-    void rejeitaCamposObrigatoriosAusentes(String campo, String valor) throws Exception {
-        var requisicao = post("/treinos")
-                .param("membroId", MEMBRO_ID.toString());
-        if (!"tipo".equals(campo)) {
-            requisicao.param("tipo", "Musculação");
-        }
-        if (!"descricao".equals(campo)) {
-            requisicao.param("descricao", "Treino de força");
-        }
-        if (!"duracaoMinutos".equals(campo)) {
-            requisicao.param("duracaoMinutos", "45");
-        }
-        if (!"dataInicio".equals(campo)) {
-            requisicao.param("dataInicio", "2026-11-20");
-        }
-        if (valor != null) {
-            requisicao.param(campo, valor);
-        }
-
-        mockMvc.perform(requisicao)
-                .andExpect(status().isOk())
-                .andExpect(view().name("treinos/formulario"))
-                .andExpect(model().attributeHasFieldErrors("treino", campo));
-
-        verifyNoInteractions(treinoService);
-    }
-
-    static Stream<org.junit.jupiter.params.provider.Arguments> camposObrigatoriosAusentes() {
-        return Stream.of(
-                org.junit.jupiter.params.provider.Arguments.of("tipo", "   "),
-                org.junit.jupiter.params.provider.Arguments.of("descricao", "   "),
-                org.junit.jupiter.params.provider.Arguments.of("duracaoMinutos", null),
-                org.junit.jupiter.params.provider.Arguments.of("dataInicio", null));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"0", "-1"})
-    void rejeitaDuracaoZeroOuNegativa(String duracao) throws Exception {
-        mockMvc.perform(post("/treinos")
+                        .param("acao", "novo")
                         .param("membroId", MEMBRO_ID.toString())
-                        .param("tipo", "Musculação")
+                        .param("tipo", "Treino A")
                         .param("descricao", "Treino de força")
-                        .param("duracaoMinutos", duracao)
+                        .param("duracaoMinutos", "quarenta")
                         .param("dataInicio", "2026-11-20"))
                 .andExpect(status().isOk())
+                .andExpect(view().name("treinos/lista"))
                 .andExpect(model().attributeHasFieldErrors("treino", "duracaoMinutos"));
 
         verifyNoInteractions(treinoService);
     }
 
-    @Test
-    void rejeitaDuracaoQueNaoSejaInteira() throws Exception {
-        mockMvc.perform(post("/treinos")
-                        .param("membroId", MEMBRO_ID.toString())
-                        .param("tipo", "Musculação")
-                        .param("descricao", "Treino de força")
-                        .param("duracaoMinutos", "quarenta")
-                        .param("dataInicio", "2026-11-20"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeHasFieldErrors("treino", "duracaoMinutos"))
-                .andExpect(model().attributeHasFieldErrorCode("treino", "duracaoMinutos",
-                        "typeMismatch"));
-
-        verifyNoInteractions(treinoService);
-    }
-
-    @Test
-    void rejeitaDataDeInicioInvalida() throws Exception {
-        mockMvc.perform(post("/treinos")
-                        .param("membroId", MEMBRO_ID.toString())
-                        .param("tipo", "Musculação")
-                        .param("descricao", "Treino de força")
-                        .param("duracaoMinutos", "45")
-                        .param("dataInicio", "20/11/2026"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeHasFieldErrors("treino", "dataInicio"));
-
-        verifyNoInteractions(treinoService);
-    }
-
-    @Test
-    void rejeitaIdentificadorDeMembroQueNaoSejaNumerico() throws Exception {
-        mockMvc.perform(post("/treinos")
-                        .param("membroId", "membro-invalido")
-                        .param("tipo", "Musculação")
-                        .param("descricao", "Treino de força")
-                        .param("duracaoMinutos", "45")
-                        .param("dataInicio", "2026-11-20"))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeHasFieldErrors("treino", "membro.id"));
-
-        verifyNoInteractions(treinoService);
-    }
-
-    private Treino treinoValido() {
+    private Treino treinoValido(Membro associado) {
         Treino treino = new Treino();
-        treino.setTipo("Musculação");
+        treino.setMembro(associado);
+        treino.setTipo("Treino A — membros superiores");
         treino.setDescricao("Treino de força");
         treino.setDuracaoMinutos(45);
         treino.setDataInicio(LocalDate.of(2026, 11, 20));
-        treino.setMembro(membro);
         return treino;
     }
 
@@ -298,5 +231,11 @@ class TreinoControllerTest {
         campoId.setAccessible(true);
         campoId.set(membro, id);
         return membro;
+    }
+
+    private void setTreinoId(Treino treino, Long id) throws ReflectiveOperationException {
+        Field campoId = Treino.class.getDeclaredField("id");
+        campoId.setAccessible(true);
+        campoId.set(treino, id);
     }
 }

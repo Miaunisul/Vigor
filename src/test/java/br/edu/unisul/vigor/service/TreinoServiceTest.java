@@ -150,6 +150,83 @@ class TreinoServiceTest {
         verify(treinoRepository, never()).findByMembro_Id(any());
     }
 
+    @Test
+    void listaTodosOsTreinos() {
+        List<Treino> esperados = List.of(treinoValido());
+        when(treinoRepository.findAll()).thenReturn(esperados);
+
+        assertSame(esperados, treinoService.listarTodos());
+        verify(treinoRepository).findAll();
+    }
+
+    @Test
+    void buscaTreinoPorId() {
+        Treino esperado = treinoValido();
+        when(treinoRepository.findById(9L)).thenReturn(Optional.of(esperado));
+
+        assertSame(esperado, treinoService.buscarPorId(9L));
+        verify(treinoRepository).findById(9L);
+    }
+
+    @Test
+    void rejeitaBuscaPorIdQuandoTreinoNaoExiste() {
+        when(treinoRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> treinoService.buscarPorId(404L));
+    }
+
+    @Test
+    void atualizaTreinoPreservandoSeuId() {
+        Membro membroAtual = new Membro();
+        Membro novoMembro = new Membro();
+        Treino original = treinoValido();
+        Treino dados = treinoValido();
+        dados.setTipo("  Treino B  ");
+        dados.setDescricao("  Descrição atualizada  ");
+        dados.setDuracaoMinutos(50);
+        dados.setDataInicio(LocalDate.of(2026, 2, 12));
+        original.setMembro(membroAtual);
+        when(treinoRepository.findById(9L)).thenReturn(Optional.of(original));
+        when(membroRepository.findById(84L)).thenReturn(Optional.of(novoMembro));
+        when(treinoRepository.saveAndFlush(original)).thenReturn(original);
+
+        Treino atualizado = treinoService.atualizar(9L, dados, 84L);
+
+        assertSame(original, atualizado);
+        assertSame(novoMembro, atualizado.getMembro());
+        assertEquals("Treino B", atualizado.getTipo());
+        assertEquals("Descrição atualizada", atualizado.getDescricao());
+        assertEquals(50, atualizado.getDuracaoMinutos());
+        assertEquals(LocalDate.of(2026, 2, 12), atualizado.getDataInicio());
+        verify(treinoRepository).saveAndFlush(original);
+    }
+
+    @Test
+    void rejeitaAtualizacaoInvalidaSemPersistir() {
+        Treino original = treinoValido();
+        Treino dados = treinoValido();
+        dados.setDuracaoMinutos(0);
+        when(treinoRepository.findById(9L)).thenReturn(Optional.of(original));
+        when(membroRepository.findById(42L)).thenReturn(Optional.of(new Membro()));
+
+        assertThrows(ConstraintViolationException.class,
+                () -> treinoService.atualizar(9L, dados, 42L));
+
+        verify(treinoRepository, never()).saveAndFlush(any(Treino.class));
+    }
+
+    @Test
+    void excluiTreinoExistente() {
+        Treino treino = treinoValido();
+        when(treinoRepository.findById(9L)).thenReturn(Optional.of(treino));
+
+        treinoService.excluir(9L);
+
+        verify(treinoRepository).delete(treino);
+        verify(treinoRepository).flush();
+    }
+
     private Treino treinoValido() {
         Treino treino = new Treino();
         treino.setTipo("Musculação");
