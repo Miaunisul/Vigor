@@ -204,6 +204,7 @@ class MembroTemplateRenderingTest {
                 .andExpect(content().string(containsString("Esteira")))
                 .andExpect(content().string(containsString("30 min")))
                 .andExpect(content().string(containsString("Camila Martins")))
+                .andExpect(content().string(containsString("href=\"#secao-atividades\"")))
                 .andExpect(content().string(containsString("/membros/42/editar")))
                 .andExpect(content().string(containsString("/membros/42/excluir")))
                 .andExpect(content().string(containsString("Excluir membro")));
