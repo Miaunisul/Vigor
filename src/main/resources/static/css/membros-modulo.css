@@ -1,0 +1,424 @@
+@import url("/css/pagamentos.css");
+
+.filtros-membros {
+    align-items: center;
+    gap: 16px;
+    margin: 0 0 24px;
+}
+
+.busca-membro {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 420px;
+    min-width: 0;
+    margin: 0;
+    font-weight: 400;
+}
+
+.busca-membro input {
+    min-height: 48px;
+    padding-left: 42px;
+}
+
+.busca-membro input::-webkit-search-cancel-button {
+    cursor: pointer;
+}
+
+.icone-busca {
+    position: absolute;
+    left: 14px;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--auxiliar);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+}
+
+.filtro-membro {
+    flex: 0 1 190px;
+    min-width: 170px;
+    margin: 0;
+    font-weight: 400;
+}
+
+.filtro-membro select {
+    min-height: 48px;
+    padding: 10px 36px 10px 14px;
+    font-size: 14px;
+}
+
+.painel-tabela {
+    padding: 0;
+    overflow: hidden;
+}
+
+.tabela-container {
+    overflow-x: auto;
+}
+
+.tabela-membros {
+    min-width: 760px;
+    font-size: 14px;
+}
+
+.tabela-membros th,
+.tabela-membros td {
+    padding: 16px 20px;
+}
+
+.tabela-membros tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.identificacao-membro {
+    min-width: 180px;
+}
+
+.nome-membro,
+.codigo-membro {
+    display: block;
+}
+
+.nome-membro {
+    font-weight: 600;
+}
+
+.codigo-membro {
+    margin-top: 4px;
+    color: var(--auxiliar);
+    font-variant-numeric: tabular-nums;
+}
+
+.acoes-linha {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    white-space: nowrap;
+}
+
+.acoes-linha form {
+    display: inline;
+    margin: 0;
+}
+
+.link-acao {
+    padding: 0;
+    color: var(--texto);
+    background: none;
+    border: 0;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.link-acao:hover {
+    text-decoration: underline;
+}
+
+.link-perigo {
+    color: var(--erro);
+}
+
+.botao-perigo {
+    background: var(--erro);
+    color: #fff;
+}
+
+.botao-perigo:hover {
+    background: #9e252c;
+}
+
+.rodape-tabela {
+    min-height: 56px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--borda);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    color: var(--auxiliar);
+    font-size: 13px;
+}
+
+.paginacao {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    white-space: nowrap;
+}
+
+.paginacao a,
+.paginacao span {
+    color: inherit;
+    text-decoration: none;
+}
+
+.paginacao a:hover {
+    color: var(--texto);
+    text-decoration: underline;
+}
+
+.paginacao strong {
+    color: var(--texto);
+    font-weight: 600;
+}
+
+.nota-rodape,
+.estado-vazio > p {
+    margin: 20px 0 0;
+    color: var(--auxiliar);
+    font-size: 13px;
+}
+
+.estado-vazio {
+    padding: 28px;
+}
+
+.cabecalho-formulario {
+    margin-bottom: 24px;
+}
+
+.painel-formulario,
+.painel-detalhes {
+    padding: 32px;
+}
+
+.painel-formulario h2,
+.detalhes-titulo h2 {
+    font-size: 20px;
+}
+
+.painel-formulario > .ajuda,
+.detalhes-titulo > p {
+    margin: 4px 0 24px;
+}
+
+.grade-membro {
+    gap: 20px 24px;
+}
+
+.grade-membro .campo > label,
+.grade-detalhes dt {
+    margin: 0 0 8px;
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.grade-membro input {
+    min-height: 46px;
+}
+
+.grade-membro .ajuda {
+    margin-top: 6px;
+}
+
+.campo-bloqueado {
+    position: relative;
+}
+
+.campo-bloqueado input {
+    padding-right: 42px;
+    color: var(--auxiliar);
+    background: var(--fundo);
+}
+
+.icone-lock {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    width: 16px;
+    height: 16px;
+    transform: translateY(-50%);
+    fill: none;
+    stroke: var(--auxiliar);
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    pointer-events: none;
+}
+
+.acoes-formulario {
+    margin-top: 20px;
+    padding-top: 20px;
+}
+
+.acoes-formulario .botao,
+.acoes-detalhes .botao {
+    min-height: 44px;
+}
+
+.painel-detalhes {
+    margin-top: 0;
+}
+
+.detalhes-titulo > p {
+    color: var(--auxiliar);
+    font-size: 13px;
+}
+
+.grade-detalhes {
+    gap: 24px;
+}
+
+.grade-detalhes .campo {
+    min-width: 0;
+}
+
+.grade-detalhes dd {
+    margin: 0;
+    min-height: 46px;
+    padding: 12px 14px;
+    overflow-wrap: anywhere;
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    background: var(--fundo);
+    color: var(--auxiliar);
+}
+
+.acoes-detalhes {
+    margin-top: 24px;
+    padding-top: 20px;
+}
+
+.acoes-detalhes form {
+    margin: 0;
+}
+
+.visualmente-oculto {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 900px) {
+    .painel-formulario,
+    .painel-detalhes {
+        padding: 24px;
+    }
+}
+
+@media (max-width: 680px) {
+    .filtros-membros {
+        align-items: stretch;
+    }
+
+    .busca-membro,
+    .filtro-membro {
+        flex-basis: 100%;
+    }
+
+    .painel-tabela {
+        padding: 0 16px;
+        overflow: visible;
+        background: transparent;
+        border: 0;
+    }
+
+    .tabela-membros {
+        min-width: 0;
+    }
+
+    .tabela-membros thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
+
+    .tabela-membros,
+    .tabela-membros tbody,
+    .tabela-membros tr,
+    .tabela-membros td {
+        display: block;
+        width: 100%;
+    }
+
+    .tabela-membros tr {
+        margin-bottom: 12px;
+        padding: 8px 16px;
+        border: 1px solid var(--borda);
+        border-radius: 10px;
+        background: var(--superficie);
+    }
+
+    .tabela-membros td {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--borda);
+        text-align: right;
+    }
+
+    .tabela-membros td::before {
+        flex: 0 0 auto;
+        color: var(--auxiliar);
+        content: attr(data-label);
+        font-weight: 500;
+        text-align: left;
+    }
+
+    .tabela-membros td.identificacao-membro {
+        display: block;
+        text-align: left;
+    }
+
+    .tabela-membros td.identificacao-membro::before {
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .tabela-membros td.vazio {
+        display: block;
+        text-align: center;
+    }
+
+    .tabela-membros td.vazio::before {
+        display: none;
+    }
+
+    .tabela-membros td:last-child {
+        border-bottom: 0;
+    }
+
+    .acoes-linha {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        white-space: normal;
+    }
+
+    .rodape-tabela {
+        padding: 14px 4px 0;
+        border-top: 0;
+    }
+
+    .grade-membro,
+    .grade-detalhes {
+        grid-template-columns: 1fr;
+    }
+
+    .grade-membro .linha-inteira,
+    .grade-detalhes .linha-inteira {
+        grid-column: auto;
+    }
+
+    .acoes-formulario .botao,
+    .acoes-detalhes .botao {
+        flex: 1 1 auto;
+    }
+}

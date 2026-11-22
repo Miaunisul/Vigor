@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
@@ -40,6 +41,8 @@ public class MembroController {
     public void configurarFormularioPadrao(Model model) {
         model.addAttribute("editando", false);
         model.addAttribute("formAction", "/membros");
+        model.addAttribute("estado", "lista");
+        model.addAttribute("moduloAtivo", "membros");
     }
 
     @InitBinder("membro")
@@ -49,9 +52,75 @@ public class MembroController {
     }
 
     @GetMapping
-    public String listar(Model model) {
-        model.addAttribute("membros", membroService.listarTodos());
+    public String listar(
+            @RequestParam(required = false) String acao,
+            @RequestParam(required = false) Long membroId,
+            @RequestParam(required = false, name = "q") String busca,
+            @RequestParam(defaultValue = "0") int page,
+            Model model,
+            RedirectAttributes atributos) {
+        if ("detalhes".equals(acao)) {
+            return exibirDetalhes(membroId, model, atributos);
+        }
+
+        montarLista(model, busca, membroId, page);
         return "membros/lista";
+    }
+
+    private String exibirDetalhes(
+            Long membroId,
+            Model model,
+            RedirectAttributes atributos) {
+        if (membroId == null || membroId <= 0) {
+            atributos.addFlashAttribute("erro", MENSAGEM_MEMBRO_NAO_ENCONTRADO);
+            return "redirect:/membros";
+        }
+        try {
+            model.addAttribute("membro", membroService.buscarPorId(membroId));
+            model.addAttribute("estado", "detalhes");
+            return "membros/lista";
+        } catch (IllegalArgumentException e) {
+            if (!MENSAGEM_MEMBRO_NAO_ENCONTRADO.equals(e.getMessage())) {
+                throw e;
+            }
+            atributos.addFlashAttribute("erro", e.getMessage());
+            return "redirect:/membros";
+        }
+    }
+
+    private void montarLista(Model model, String busca, Long membroId, int paginaSolicitada) {
+        List<Membro> membros = membroService.listarTodos();
+        String termo = busca == null ? "" : busca.strip();
+        String termoMinusculo = termo.toLowerCase(Locale.ROOT);
+        String cpfTermo = termo.replaceAll("\\D", "");
+
+        List<Membro> filtrados = membros.stream()
+                .filter(membro -> membroId == null
+                        || Objects.equals(membro.getId(), membroId))
+                .filter(membro -> termo.isBlank()
+                        || (membro.getNome() != null
+                                && membro.getNome().toLowerCase(Locale.ROOT)
+                                        .contains(termoMinusculo))
+                        || (!cpfTermo.isBlank() && membro.getCpf() != null
+                                && membro.getCpf().contains(cpfTermo)))
+                .toList();
+
+        int total = filtrados.size();
+        int totalPaginas = Math.max(1, (int) Math.ceil((double) total / 10));
+        int pagina = Math.max(0, Math.min(paginaSolicitada, totalPaginas - 1));
+        int inicioIndice = pagina * 10;
+        int fimIndice = Math.min(total, inicioIndice + 10);
+
+        model.addAttribute("membros", membros);
+        model.addAttribute("membrosPagina", filtrados.subList(inicioIndice, fimIndice));
+        model.addAttribute("estado", "lista");
+        model.addAttribute("busca", termo);
+        model.addAttribute("membroSelecionadoId", membroId);
+        model.addAttribute("pagina", pagina);
+        model.addAttribute("totalPaginas", totalPaginas);
+        model.addAttribute("totalMembros", total);
+        model.addAttribute("inicioLista", total == 0 ? 0 : inicioIndice + 1);
+        model.addAttribute("fimLista", fimIndice);
     }
 
     @PostMapping("/{id}/excluir")
@@ -68,7 +137,8 @@ public class MembroController {
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("membro", new Membro());
-        return "membros/formulario";
+        model.addAttribute("estado", "novo");
+        return "membros/lista";
     }
 
     @GetMapping("/{id}/editar")
@@ -79,7 +149,7 @@ public class MembroController {
         try {
             model.addAttribute("membro", membroService.buscarPorId(id));
             configurarFormularioEdicao(model, id);
-            return "membros/formulario";
+            return "membros/lista";
         } catch (IllegalArgumentException e) {
             if (!MENSAGEM_MEMBRO_NAO_ENCONTRADO.equals(e.getMessage())) {
                 throw e;
@@ -93,10 +163,12 @@ public class MembroController {
     public String cadastrar(
             @Valid @ModelAttribute("membro") Membro membro,
             BindingResult resultado,
+            Model model,
             RedirectAttributes atributos) {
 
         if (resultado.hasErrors()) {
-            return "membros/formulario";
+            model.addAttribute("estado", "novo");
+            return "membros/lista";
         }
 
         String cpfInformado = membro.getCpf();
@@ -112,11 +184,13 @@ public class MembroController {
             }
             membro.setCpf(cpfInformado);
             rejeitarCpf(resultado, e.getMessage());
-            return "membros/formulario";
+            model.addAttribute("estado", "novo");
+            return "membros/lista";
         } catch (ConstraintViolationException e) {
             membro.setCpf(cpfInformado);
             adicionarViolacoes(resultado, e.getConstraintViolations());
-            return "membros/formulario";
+            model.addAttribute("estado", "novo");
+            return "membros/lista";
         } catch (DataIntegrityViolationException e) {
             if (!ehViolacaoDaConstraintCpf(e)) {
                 throw e;
@@ -125,7 +199,8 @@ public class MembroController {
             membro.setCpf(cpfInformado);
             rejeitarCpf(resultado,
                     "Já existe um membro cadastrado com este CPF.");
-            return "membros/formulario";
+            model.addAttribute("estado", "novo");
+            return "membros/lista";
         }
     }
 
@@ -139,7 +214,7 @@ public class MembroController {
         configurarFormularioEdicao(model, id);
 
         if (resultado.hasErrors()) {
-            return "membros/formulario";
+            return "membros/lista";
         }
 
         String cpfInformado = membro.getCpf();
@@ -169,12 +244,14 @@ public class MembroController {
             membro.setCpf(cpfInformado);
             rejeitarCpf(resultado, MENSAGEM_CPF_DUPLICADO);
         }
-        return "membros/formulario";
+        return "membros/lista";
     }
 
     private void configurarFormularioEdicao(Model model, Long id) {
         model.addAttribute("editando", true);
         model.addAttribute("formAction", "/membros/" + id + "/editar");
+        model.addAttribute("membroId", id);
+        model.addAttribute("estado", "editar");
     }
 
     private boolean ehCpfDuplicado(IllegalArgumentException excecao) {

@@ -2,72 +2,216 @@
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Membros | VIGOR</title>
-    <link rel="stylesheet" th:href="@{/css/membros.css}">
+    <link rel="stylesheet" th:href="@{/css/membros-modulo.css}">
 </head>
 <body>
-    <header class="site-header">
-        <a class="brand" th:href="@{/membros}">VIGOR</a>
-        <span>Sistema de gestão de academia</span>
-        <nav class="site-nav" aria-label="Navegação principal">
-            <a th:href="@{/treinos}">Treinos</a>
-        </nav>
-    </header>
+<a class="pular" href="#conteudo">Ir para o conteúdo</a>
 
-    <main class="page-shell">
-        <section class="page-heading page-heading--with-action">
-            <div>
-                <p class="eyebrow">Gestão de membros</p>
-                <h1>Membros cadastrados</h1>
-                <p>Consulte e atualize os dados cadastrais.</p>
+<aside th:replace="~{pagamentos/lista :: menuPagamentos}"></aside>
+
+<div class="area-principal">
+    <header th:replace="~{pagamentos/lista :: cabecalhoModulo('Membros')}"></header>
+
+    <main id="conteudo" class="conteudo">
+        <div class="aviso aviso-sucesso" role="status"
+             th:if="${sucesso != null}" th:text="${sucesso}"></div>
+        <div class="aviso aviso-erro" role="alert"
+             th:if="${erro != null}" th:text="${erro}"></div>
+
+        <section th:if="${estado == 'lista'}" aria-labelledby="titulo-membros">
+            <div class="cabecalho">
+                <div>
+                    <h1 id="titulo-membros">Membros</h1>
+                    <p class="subtitulo">Cadastre e acompanhe os membros da academia.</p>
+                </div>
+                <a class="botao botao-primario" th:href="@{/membros/novo}">
+                    <span aria-hidden="true">+</span> Novo membro
+                </a>
             </div>
-            <a class="button button--primary" th:href="@{/membros/novo}">Cadastrar novo membro</a>
-        </section>
 
-        <p class="feedback feedback--success" role="status" th:if="${sucesso}" th:text="${sucesso}"></p>
-        <p class="feedback feedback--error" role="alert" th:if="${erro}" th:text="${erro}"></p>
+            <form class="filtros filtros-membros" method="get" th:action="@{/membros}">
+                <label class="busca-membro" for="busca">
+                    <svg class="icone-busca" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="11" cy="11" r="6.5"/>
+                        <path d="m16 16 4.5 4.5"/>
+                    </svg>
+                    <span class="visualmente-oculto">Buscar por nome ou CPF</span>
+                    <input id="busca" name="q" type="search"
+                           placeholder="Buscar por nome ou CPF"
+                           th:value="${busca}">
+                </label>
+                <label class="filtro-membro" for="membroId">
+                    <span class="visualmente-oculto">Filtrar por membro</span>
+                    <select id="membroId" name="membroId"
+                            onchange="this.form.requestSubmit()">
+                        <option value="" th:selected="${membroSelecionadoId == null}">Todos os membros</option>
+                        <option th:each="membroOpcao : ${membros}"
+                                th:value="${membroOpcao.id}"
+                                th:selected="${membroOpcao.id == membroSelecionadoId}"
+                                th:text="${membroOpcao.nome}">Membro cadastrado</option>
+                    </select>
+                </label>
+            </form>
 
-        <section class="panel empty-state" th:if="${#lists.isEmpty(membros)}">
-            <h2>Nenhum membro cadastrado</h2>
-            <p>Cadastre o primeiro membro para começar.</p>
-        </section>
+            <section class="painel estado-vazio"
+                     th:if="${#lists.isEmpty(membros)}"
+                     aria-labelledby="titulo-sem-membros">
+                <h2 id="titulo-sem-membros">Nenhum membro cadastrado</h2>
+                <p>Cadastre o primeiro membro para começar.</p>
+            </section>
 
-        <section class="panel table-panel" th:unless="${#lists.isEmpty(membros)}">
-            <div class="table-scroll">
-                <table class="data-table">
-                    <thead>
+            <section class="painel painel-tabela"
+                     th:if="${!#lists.isEmpty(membros)}"
+                     aria-label="Membros cadastrados">
+                <div class="tabela-container">
+                    <table class="tabela-membros">
+                        <caption class="visualmente-oculto">Lista de membros</caption>
+                        <thead>
                         <tr>
-                            <th scope="col">ID</th>
                             <th scope="col">Nome</th>
                             <th scope="col">CPF</th>
                             <th scope="col">Telefone</th>
-                            <th scope="col">Endereço</th>
                             <th scope="col">Data de cadastro</th>
                             <th scope="col">Ações</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="membro : ${membros}">
-                            <td th:text="${membro.id}"></td>
-                            <td th:text="${membro.nome}"></td>
-                            <td th:text="${membro.cpf}"></td>
-                            <td th:text="${membro.telefone}"></td>
-                            <td th:text="${membro.endereco}"></td>
-                            <td th:text="${membro.dataCadastro}"></td>
-                            <td class="table-actions">
-                                <a class="button button--small button--secondary"
-                                   th:href="@{/membros/{id}/editar(id=${membro.id})}">Editar</a>
-                                <form th:action="@{/membros/{id}/excluir(id=${membro.id})}" method="post"
-                                      onsubmit="return confirm('Confirma a exclusão deste membro?')">
-                                    <button class="button button--small button--danger" type="submit">Excluir</button>
-                                </form>
+                        </thead>
+                        <tbody>
+                        <tr th:each="membro : ${membrosPagina}">
+                            <td class="identificacao-membro" data-label="Nome">
+                                <span class="nome-membro" th:text="${membro.nome}">Ana Beatriz Costa</span>
+                                <span class="codigo-membro"
+                                      th:text="${'MB-' + #numbers.formatInteger(membro.id, 3)}">MB-001</span>
+                            </td>
+                            <td data-label="CPF"
+                                th:text="${'***.***.***-' + #strings.substring(membro.cpf, 9, 11)}">
+                                ***.***.***-42
+                            </td>
+                            <td data-label="Telefone" th:text="${membro.telefone}">(11) 99845-1200</td>
+                            <td data-label="Data de cadastro"
+                                th:text="${#temporals.format(membro.dataCadastro, 'dd/MM/yyyy')}">01/09/2026</td>
+                            <td data-label="Ações">
+                                <div class="acoes-linha">
+                                    <a class="link-acao"
+                                       th:href="@{/membros(acao='detalhes',membroId=${membro.id})}">Ver detalhes</a>
+                                    <a class="link-acao"
+                                       th:href="@{/membros/{id}/editar(id=${membro.id})}">Editar</a>
+                                    <form method="post"
+                                          th:action="@{/membros/{id}/excluir(id=${membro.id})}"
+                                          onsubmit="return confirm('Confirma a exclusão deste membro?');">
+                                        <button class="link-acao link-perigo" type="submit">Excluir</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
-                    </tbody>
-                </table>
+                        <tr th:if="${#lists.isEmpty(membrosPagina)}">
+                            <td class="vazio" colspan="5"
+                                th:text="${busca != null and !busca.isBlank()
+                                    ? 'Nenhum membro corresponde à busca informada.'
+                                    : (membroSelecionadoId != null
+                                        ? 'Nenhum membro corresponde ao filtro selecionado.'
+                                        : 'Nenhum membro cadastrado.')}">
+                                Nenhum membro corresponde à busca informada.
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <footer class="rodape-tabela">
+                    <span th:text="${'Mostrando ' + inicioLista + '–' + fimLista + ' de ' + totalMembros + ' registros'}">
+                        Mostrando 1–4 de 4 registros
+                    </span>
+                    <nav class="paginacao" aria-label="Paginação dos membros">
+                        <a th:if="${pagina > 0}"
+                           th:href="@{/membros(q=${busca},membroId=${membroSelecionadoId},page=${pagina - 1})}">Anterior</a>
+                        <span th:unless="${pagina > 0}" aria-disabled="true">Anterior</span>
+                        <strong th:text="${'Página ' + (pagina + 1)}">Página 1</strong>
+                        <a th:if="${pagina + 1 < totalPaginas}"
+                           th:href="@{/membros(q=${busca},membroId=${membroSelecionadoId},page=${pagina + 1})}">Próxima</a>
+                        <span th:unless="${pagina + 1 < totalPaginas}" aria-disabled="true">Próxima</span>
+                    </nav>
+                </footer>
+            </section>
+
+            <p class="nota-rodape">CPFs mascarados para proteger informações pessoais.</p>
+        </section>
+
+        <section th:if="${estado == 'novo' or estado == 'editar'}"
+                 aria-labelledby="titulo-formulario-membro">
+            <a class="voltar" th:href="@{/membros}">
+                <span aria-hidden="true">←</span> Voltar para membros
+            </a>
+            <div class="cabecalho cabecalho-formulario">
+                <div>
+                    <h1 id="titulo-formulario-membro"
+                        th:text="${editando} ? 'Editar membro' : 'Novo membro'">Novo membro</h1>
+                    <p class="subtitulo"
+                       th:text="${editando
+                            ? 'Atualize os dados de ' + membro.nome + '.'
+                            : 'Preencha os dados para cadastrar um membro.'}">
+                        Preencha os dados para cadastrar um membro.
+                    </p>
+                </div>
             </div>
+            <div th:replace="~{membros/formulario :: formularioMembro}"></div>
+            <p class="nota-rodape">Os dados serão utilizados apenas na gestão administrativa da academia.</p>
+        </section>
+
+        <section th:if="${estado == 'detalhes'}" aria-labelledby="titulo-detalhes-membro">
+            <a class="voltar" th:href="@{/membros}">
+                <span aria-hidden="true">←</span> Voltar para membros
+            </a>
+            <div class="cabecalho cabecalho-formulario">
+                <div>
+                    <h1 id="titulo-detalhes-membro">Detalhes do membro</h1>
+                    <p class="subtitulo" th:text="${membro.nome}">Nome do membro</p>
+                </div>
+            </div>
+            <section class="painel painel-detalhes" aria-labelledby="titulo-dados-detalhe">
+                <div class="detalhes-titulo">
+                    <h2 id="titulo-dados-detalhe">Dados do membro</h2>
+                    <p>CPF mascarado para proteger informações pessoais.</p>
+                </div>
+                <dl class="grade grade-detalhes">
+                    <div class="campo">
+                        <dt>ID do membro</dt>
+                        <dd th:text="${'MB-' + #numbers.formatInteger(membro.id, 3)}">MB-001</dd>
+                    </div>
+                    <div class="campo">
+                        <dt>Nome completo</dt>
+                        <dd th:text="${membro.nome}">Ana Beatriz Costa</dd>
+                    </div>
+                    <div class="campo">
+                        <dt>CPF</dt>
+                        <dd th:text="${'***.***.***-' + #strings.substring(membro.cpf, 9, 11)}">***.***.***-42</dd>
+                    </div>
+                    <div class="campo">
+                        <dt>Telefone</dt>
+                        <dd th:text="${membro.telefone}">(11) 99845-1200</dd>
+                    </div>
+                    <div class="campo">
+                        <dt>Data de cadastro</dt>
+                        <dd th:text="${#temporals.format(membro.dataCadastro, 'dd/MM/yyyy')}">01/09/2026</dd>
+                    </div>
+                    <div class="campo linha-inteira">
+                        <dt>Endereço</dt>
+                        <dd th:text="${membro.endereco}">Rua das Palmeiras, 85 - São Paulo — SP</dd>
+                    </div>
+                </dl>
+                <div class="acoes acoes-detalhes">
+                    <a class="botao botao-primario"
+                       th:href="@{/membros/{id}/editar(id=${membro.id})}">Editar membro</a>
+                    <form method="post"
+                          th:action="@{/membros/{id}/excluir(id=${membro.id})}"
+                          onsubmit="return confirm('Confirma a exclusão deste membro?');">
+                        <button class="botao botao-perigo" type="submit">Excluir membro</button>
+                    </form>
+                </div>
+            </section>
         </section>
     </main>
+</div>
 </body>
 </html>
