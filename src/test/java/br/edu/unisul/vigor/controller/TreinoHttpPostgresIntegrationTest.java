@@ -102,7 +102,8 @@ class TreinoHttpPostgresIntegrationTest {
                 "data-label=\"Tipo de treino\">Força</td>"), listaPrimeiro::body);
         assertFalse(listaPrimeiro.body().contains(
                 "data-label=\"Tipo de treino\">Mobilidade</td>"), listaPrimeiro::body);
-        assertTrue(listaSegundo.body().contains("Nenhum treino cadastrado para este membro"),
+        assertTrue(listaSegundo.body().contains(
+                "Este membro ainda não possui treinos cadastrados."),
                 listaSegundo::body);
         assertFalse(listaSegundo.body().contains(
                 "data-label=\"Tipo de treino\">Força</td>"), listaSegundo::body);
