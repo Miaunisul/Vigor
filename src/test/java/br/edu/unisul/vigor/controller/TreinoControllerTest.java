@@ -142,7 +142,7 @@ class TreinoControllerTest {
                         .param("duracaoMinutos", "45")
                         .param("dataInicio", "2026-11-20"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(view().name("redirect:/treinos"))
+                .andExpect(view().name("redirect:/treinos?membroId=" + MEMBRO_ID))
                 .andExpect(flash().attribute("sucesso", "Treino cadastrado com sucesso."));
 
         verify(treinoService).cadastrar(any(Treino.class), eq(MEMBRO_ID));
@@ -159,7 +159,7 @@ class TreinoControllerTest {
                         .param("duracaoMinutos", "50")
                         .param("dataInicio", "2026-11-21"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(view().name("redirect:/treinos"))
+                .andExpect(view().name("redirect:/treinos?membroId=" + MEMBRO_ID))
                 .andExpect(flash().attribute("sucesso", "Treino atualizado com sucesso."));
 
         verify(treinoService).atualizar(eq(TREINO_ID), any(Treino.class), eq(MEMBRO_ID));
