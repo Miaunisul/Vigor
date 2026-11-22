@@ -15,7 +15,10 @@
          alt="VIGOR">
 
     <nav class="menu" aria-label="Menu principal">
-        <a class="menu-item" th:href="@{/membros}">
+        <a class="menu-item"
+           th:classappend="${moduloAtivo == 'membros'} ? ' ativo' : ''"
+           th:href="@{/membros}"
+           th:attr="aria-current=${moduloAtivo == 'membros' ? 'page' : null}">
             <svg class="icone" viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="9" cy="7" r="3"/>
                 <path d="M3 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6M21 21v-3a6 6 0 0 0-3-5"/>
@@ -45,7 +48,18 @@
             Pagamentos
         </a>
 
+        <a class="menu-item"
+           th:if="${moduloAtivo == 'membros' and estado == 'detalhes'}"
+           href="#secao-atividades">
+            <svg class="icone" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="4" width="14" height="18" rx="2"/>
+                <path d="M9 4V2h6v2M9 10h6M9 14h6M9 18h4"/>
+            </svg>
+            Atividades
+        </a>
+
         <span class="menu-item indisponivel"
+              th:unless="${moduloAtivo == 'membros' and estado == 'detalhes'}"
               aria-disabled="true"
               title="A navegação será integrada com o módulo de atividades">
             <svg class="icone" viewBox="0 0 24 24" aria-hidden="true">

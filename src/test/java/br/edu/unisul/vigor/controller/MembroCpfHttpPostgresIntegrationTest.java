@@ -132,7 +132,11 @@ class MembroCpfHttpPostgresIntegrationTest {
         HttpResponse<String> lista = get("/membros");
         assertEquals(200, lista.statusCode(), lista::body);
         assertTrue(lista.body().contains("Nome após edição"), lista::body);
-        assertTrue(lista.body().contains("Rua Nova, 45"), lista::body);
+
+        HttpResponse<String> detalhes = get(
+        "/membros?acao=detalhes&membroId=" + idOriginal);
+        assertEquals(200, detalhes.statusCode(), detalhes::body);
+        assertTrue(detalhes.body().contains("Rua Nova, 45"), detalhes::body);
     }
 
     @Test
