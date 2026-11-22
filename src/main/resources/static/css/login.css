@@ -1,0 +1,113 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+    --fundo: #f4f6f2;
+    --superficie: #fff;
+    --texto: #101814;
+    --auxiliar: #59695e;
+    --lima: #c7f36b;
+    --borda: #d7ded6;
+    --erro: #b52f36;
+    --sucesso: #24734b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    color: var(--texto);
+    background: var(--fundo);
+    font: 15px/1.5 "Inter", sans-serif;
+}
+
+button, input { font: inherit; }
+
+.login-layout {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(320px, 41%) 1fr;
+}
+
+.apresentacao {
+    min-height: 100vh;
+    padding: 40px clamp(24px, 4.4vw, 64px);
+    display: flex;
+    flex-direction: column;
+    background: var(--texto);
+    color: #fff;
+}
+
+.marca-topo { width: 180px; max-width: 70%; height: auto; }
+
+.simbolo-marca {
+    width: 132px;
+    height: 132px;
+    overflow: hidden;
+    margin: 48px auto 36px;
+    display: grid;
+    place-items: center;
+}
+
+.simbolo-marca img {
+    display: block;
+    width: 410px;
+    max-width: none;
+    height: auto;
+}
+
+.apresentacao-texto { margin-top: auto; }
+.apresentacao h1 { max-width: 460px; margin: 0 0 14px; font-size: clamp(25px, 2.3vw, 34px); line-height: 1.2; letter-spacing: -0.035em; }
+.apresentacao-texto p { max-width: 460px; margin: 0; color: #c2ccc4; font-size: 14px; }
+.assinatura { margin-top: auto; padding-top: 32px; color: #aab5ad; font-size: 12px; }
+
+.acesso {
+    min-height: 100vh;
+    padding: 32px;
+    display: grid;
+    place-items: center;
+}
+
+.cartao-login {
+    width: min(100%, 410px);
+    padding: 32px;
+    background: var(--superficie);
+    border: 1px solid var(--borda);
+    border-radius: 12px;
+    box-shadow: 0 8px 28px #10181408;
+}
+
+.identificacao-acesso, .ambiente-restrito {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.identificacao-acesso { margin: 0 0 8px; color: var(--texto); font-size: 13px; font-weight: 600; }
+.identificacao-acesso svg, .ambiente-restrito svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.cartao-login h2 { margin: 0; font-size: 25px; font-weight: 500; letter-spacing: -0.04em; }
+.subtitulo-login { margin: 4px 0 28px; color: var(--auxiliar); font-size: 14px; }
+.formulario-login { display: grid; gap: 18px; }
+.campo-login label { display: block; margin-bottom: 7px; font-size: 13px; font-weight: 600; }
+.campo-login input { width: 100%; min-height: 42px; padding: 9px 12px; color: var(--texto); background: #fff; border: 1px solid var(--borda); border-radius: 9px; font-size: 14px; }
+.campo-login input::placeholder { color: #77847b; }
+.campo-senha { position: relative; }
+.campo-senha input { padding-right: 82px; }
+.alternar-senha { position: absolute; inset: 0 8px 0 auto; padding: 0 4px; border: 0; background: transparent; color: var(--auxiliar); font-size: 12px; cursor: pointer; }
+.botao-entrar { width: 100%; min-height: 44px; margin-top: 2px; border: 0; border-radius: 9px; background: var(--lima); color: var(--texto); font-size: 14px; font-weight: 700; cursor: pointer; }
+.botao-entrar:hover { background: #b8e65c; }
+.ambiente-restrito { justify-content: center; margin: 20px 0 0; color: var(--auxiliar); font-size: 12px; }
+.mensagem { margin: 0 0 18px; padding: 10px 12px; border-radius: 8px; font-size: 13px; }
+.mensagem-erro { color: var(--erro); background: #fff0f1; border: 1px solid #edc1c5; }
+.mensagem-sucesso { color: var(--sucesso); background: #edf7f1; }
+:where(a, button, input):focus-visible { outline: 2px solid #26332a; outline-offset: 3px; box-shadow: 0 0 0 3px #c7f36b80; }
+
+@media (max-width: 760px) {
+    .login-layout { grid-template-columns: 1fr; }
+    .apresentacao { min-height: auto; padding: 24px; }
+    .marca-topo { width: 142px; }
+    .simbolo-marca, .assinatura { display: none; }
+    .apresentacao-texto { margin-top: 38px; }
+    .apresentacao h1 { font-size: 25px; }
+    .acesso { min-height: auto; padding: 28px 18px; }
+    .cartao-login { padding: 26px 22px; }
+}

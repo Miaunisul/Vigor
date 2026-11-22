@@ -114,9 +114,9 @@ class MembroTemplateRenderingTest {
         assertTrue(html.contains("href=\"/membros\""));
         assertTrue(html.contains("href=\"/treinos\""));
         assertTrue(html.contains("href=\"/pagamentos\""));
-        assertFalse(html.contains("title=\"A navegação será integrada com o módulo de treinos\""));
+        assertTrue(html.contains("href=\"/atividades\""));
         assertTrue(html.contains("Atividades"));
-        assertTrue(html.contains("aria-disabled=\"true\""));
+        assertFalse(html.contains("aria-disabled=\"true\""));
     }
 
     @Test
@@ -204,7 +204,7 @@ class MembroTemplateRenderingTest {
                 .andExpect(content().string(containsString("Esteira")))
                 .andExpect(content().string(containsString("30 min")))
                 .andExpect(content().string(containsString("Camila Martins")))
-                .andExpect(content().string(containsString("href=\"#secao-atividades\"")))
+                .andExpect(content().string(containsString("href=\"/atividades\"")))
                 .andExpect(content().string(containsString("/membros/42/editar")))
                 .andExpect(content().string(containsString("/membros/42/excluir")))
                 .andExpect(content().string(containsString("Excluir membro")));

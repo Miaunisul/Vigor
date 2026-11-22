@@ -2,12 +2,14 @@ package br.edu.unisul.vigor.service;
 
 import br.edu.unisul.vigor.model.Funcionario;
 import br.edu.unisul.vigor.repository.FuncionarioRepository;
+import br.edu.unisul.vigor.security.FuncionarioPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -37,6 +39,24 @@ class FuncionarioServiceTest {
 
         assertTrue(funcionarioService.autenticar("  Mille  ", senha));
         verify(funcionarioRepository).findByLoginNormalizado("Mille");
+    }
+
+    @Test
+    void autenticaEDevolveSomenteIdentidadeSemHashDeSenha() {
+        String senha = "Senha-de-teste-123";
+        Funcionario funcionario = funcionarioComSenha(passwordEncoder.encode(senha));
+        when(funcionarioRepository.findByLoginNormalizado("Mille"))
+                .thenReturn(Optional.of(funcionario));
+
+        var autenticado = funcionarioService.autenticarFuncionario(" Mille ", senha);
+
+        assertTrue(autenticado.isPresent());
+        FuncionarioPrincipal principal = autenticado.orElseThrow();
+        assertEquals("Funcionária Teste", principal.getNome());
+        assertEquals("Atendimento", principal.getCargo());
+        assertEquals("Mille", principal.getLogin());
+        assertFalse(java.util.Arrays.stream(principal.getClass().getMethods())
+                .anyMatch(metodo -> metodo.getName().toLowerCase().contains("senha")));
     }
 
     @Test
