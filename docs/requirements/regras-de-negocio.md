@@ -117,3 +117,11 @@ A revisão comparou os requisitos e as regras dos módulos de treinos, pagamento
 - O método de registro de histórico não comprova a existência de um procedimento de carga técnica documentado. Esse procedimento deve respeitar RN14 a RN16, sem exigir uma tela fora do escopo.
 - As validações da aplicação e as constraints do banco são complementares. Cargas que não utilizem os serviços também devem respeitar as regras de negócio.
 - Nenhum teste ou critério foi declarado aprovado por esta revisão documental. Resultados de execução devem possuir evidências próprias.
+
+### Atualização de acompanhamento — D05
+
+A D05 explicita a listagem geral e a consulta de pagamentos por membro no RF10, nos CA31–CA34 e nos CT18–CT20. O CT21 trata da persistência de pagamentos após reinício.
+
+No fluxo web implementado, o `PagamentoController` atribui `PAGO` antes de chamar o serviço. O `PagamentoService` continua responsável pela validação do registro recebido. A ausência de status na solicitação do funcionário é permitida; o cliente não deve substituir o status definido pela aplicação.
+
+As observações anteriores da D04 descrevem o estado examinado naquela revisão. A atualização da D05 não comprova automaticamente autenticação integrada, execução da CI ou conclusão das pendências da carga técnica do histórico.

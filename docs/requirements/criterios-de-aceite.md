@@ -284,13 +284,55 @@ Cada condição inválida deve ser verificada separadamente, mantendo os demais 
 
 Essa situação deve ser diferenciada da consulta de um membro existente que não possui registros.
 
+### CA31 — Listagem geral de pagamentos
+
+**Dado** que existem pagamentos registrados,
+
+**Quando** o funcionário acessa a listagem sem selecionar um membro,
+
+**Então** o sistema deve apresentar os pagamentos com membro, valor em reais, data do pagamento e status apresentado como Pago.
+
+**E** os registros devem estar ordenados por data do pagamento decrescente e, em caso de empate, por identificador decrescente.
+
+### CA32 — Consulta de pagamentos por membro
+
+**Dado** que existem pagamentos associados a membros distintos,
+
+**Quando** o funcionário seleciona um membro existente e solicita a consulta,
+
+**Então** o sistema deve apresentar somente os pagamentos desse membro, com os dados correspondentes aos registros armazenados, preservando a seleção realizada.
+
+**E** ao limpar a seleção, deve voltar à listagem geral.
+
+### CA33 — Consulta de pagamentos sem resultados
+
+**Dado** que não existem pagamentos registrados, ou que o membro existente selecionado não possui pagamentos,
+
+**Quando** o funcionário solicita a consulta correspondente,
+
+**Então** o sistema deve informar a ausência de pagamentos no conjunto consultado.
+
+**E** quando houver um membro selecionado, deve preservar essa seleção.
+
+Os cenários de listagem geral vazia e de membro existente sem pagamentos devem ser verificados separadamente.
+
+### CA34 — Consulta de pagamentos com referência inválida
+
+**Dado** que foi informada uma referência de membro não numérica, fora dos limites do identificador, igual a zero, negativa ou correspondente a um membro inexistente,
+
+**Quando** é solicitada a consulta de pagamentos,
+
+**Então** o sistema deve informar o problema e não apresentar pagamentos de outros membros.
+
+A ausência de seleção no formulário de consulta é permitida e corresponde à listagem geral, conforme CA31. Ela não deve ser tratada como referência inválida.
+
 ## 10. Validação e testes
 
 Os critérios de aceite devem orientar os testes unitários, de integração, de validação, de sistema e de usabilidade, conforme aplicável.
 
 Todos os critérios deste documento integram a entrega final da A3, exceto o CA13, identificado como futuro. A execução das verificações acompanhará as etapas de implementação.
 
-Os critérios CA17 a CA30 descrevem comportamentos esperados. Os identificadores CT01 a CT17 estão documentados em `docs/testing/plano-de-testes.md`; isso não comprova implementação ou execução dos testes. Os cenários permanecem planejados até serem executados, e suas evidências devem ser registradas em `docs/testing/evidencias.md`.
+Os critérios CA17 a CA34 descrevem comportamentos esperados. Os identificadores CT01 a CT21 estão definidos em `docs/testing/plano-de-testes.md`. A existência de um caso de teste não comprova sua execução integral. Resultados e limitações devem ser associados às evidências registradas em `docs/testing/evidencias.md`.
 
 O CA25 exige verificar a permanência dos dados após reiniciar a aplicação. Um teste que apenas salva e consulta dados sem reiniciar a aplicação não comprova, por si só, o atendimento integral desse critério.
 
@@ -306,7 +348,7 @@ Os critérios CA28 a CA30 foram explicitados na revisão D04. Sua associação a
 
 Entradas não numéricas, datas inválidas e valores fracionários em campos inteiros devem ser verificadas na camada que recebe e converte esses dados. Os serviços utilizam tipos Java como `BigDecimal`, `LocalDate` e `Integer`; a existência desses tipos não comprova o tratamento de erros na interface.
 
-A atribuição automática do status prevista no CA11 permanece pendente de comprovação no fluxo completo. O serviço de pagamentos revisado valida o status recebido, mas não o preenche automaticamente.
+Na implementação da D05, o `PagamentoController` atribui `PAGO` antes de chamar o serviço. O formulário recebe membro, valor e data; o status não integra os campos vinculados à entrada do usuário. O `PagamentoService` continua validando o status do registro recebido. Os testes do controller verificam a atribuição automática e que um status enviado pelo cliente não substitui o valor definido pela aplicação. Essas verificações não comprovam, por si só, autenticação ou proteção das rotas.
 
 Os requisitos não funcionais também devem ser verificados:
 
