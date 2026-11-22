@@ -59,8 +59,15 @@ class TreinoHttpPostgresIntegrationTest {
     void formularioHttpCarregaMembrosCadastrados() throws IOException, InterruptedException {
         Membro membro = membroParaTeste(" membro do formulário");
 
-        HttpResponse<String> resposta = get("/treinos/novo");
+        HttpResponse<String> redirecionamento = get("/treinos/novo");
 
+        assertEquals(302, redirecionamento.statusCode(), redirecionamento::body);
+        String destino = redirecionamento.headers().firstValue("Location").orElseThrow();
+        URI uriDestino = URI.create(destino);
+        assertEquals("/treinos", uriDestino.getPath());
+        assertEquals("acao=novo", uriDestino.getRawQuery());
+
+        HttpResponse<String> resposta = get(destino);
         assertEquals(200, resposta.statusCode(), resposta::body);
         assertTrue(resposta.body().contains("Cadastrar treino"), resposta::body);
         assertTrue(resposta.body().contains("value=\"" + membro.getId() + "\""), resposta::body);
