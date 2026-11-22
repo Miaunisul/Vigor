@@ -459,3 +459,23 @@ A EV18 registra a validação de persistência e consultas de treinos, pagamento
 A EV20 registra a execução da CI do PR #41, da task L02.
 
 As evidências EV21 a EV24 registram a validação local da interface de pagamentos na D05, incluindo testes automatizados, cobertura e verificações manuais específicas. Essas verificações atualizam parcialmente as pendências funcionais mencionadas acima, sem declarar aprovação de todos os CT/VN ou da avaliação completa de usabilidade. A CI e a integração com autenticação desta entrega ainda precisam de evidências próprias.
+
+## D05 — Validação após integração da develop e execução na CI
+
+Após a integração das alterações da `develop` na branch `feat/d05-interface-pagamentos`, foram realizadas as seguintes verificações:
+
+| Ambiente | Conclusão da execução — horário de Brasília | Resultado |
+|---|---|---|
+| Local — Windows/Git Bash | 21/11/2026 às 22h41min22s | `clean verify`: 238 testes, nenhuma falha, nenhum erro e nenhum teste ignorado. Limite de cobertura JaCoCo aprovado. |
+| GitHub Actions — CI - VIGOR | 21/11/2026 às 22h43min27s | `clean verify`: 238 testes, nenhuma falha, nenhum erro e nenhum teste ignorado. Limite de cobertura JaCoCo aprovado. |
+
+A execução da CI utilizou Java 21 e o serviço PostgreSQL 18 configurados no workflow.
+
+- [Execução da CI](https://github.com/Miaunisul/Vigor/actions/runs/44972713889/job/137055766603)
+- [Artefato relatorio-jacoco](https://github.com/Miaunisul/Vigor/actions/runs/44972713889/artifacts/14734102308)
+
+O upload do relatório JaCoCo foi concluído com sucesso, incluindo 76 arquivos. O artefato possui retenção de 14 dias, conforme o workflow.
+
+O log confirma a aprovação do limite configurado de 75% de cobertura de instruções, mas não apresenta o percentual exato desta execução. Os percentuais registrados anteriormente em EV22 permanecem vinculados à execução correspondente.
+
+Esta evidência confirma a execução automatizada após o merge e na CI. Não representa aprovação automática dos cenários manuais, da autenticação integrada ou de todos os critérios de aceite.

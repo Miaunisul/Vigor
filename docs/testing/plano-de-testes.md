@@ -257,7 +257,7 @@ As verificações abaixo complementam os CT funcionais, sem receber identificado
 | VN03 | RNF03 | Avaliar fluxos principais quanto a campos identificados, obrigatoriedade, clareza das mensagens e navegação; registrar dificuldades. | Planejado |
 | VN04 | RNF04 | Verificar rejeição de dados inválidos e integridade pelos CT funcionais. CT11 verifica a gravação de pagamento; CT17 verifica membros após reinício; CT21 verifica pagamentos após reinício. Não estender esses resultados às demais entidades. | Parcialmente verificado; ver evidências específicas. |
 | VN05 | RNF05 | Revisar separação de apresentação, regras de negócio e persistência; registrar análise estática e resultado do quality gate adotado. | Planejado |
-| VN06 | RNF06 | Executar `./mvnw clean verify`, conferir testes executados e ignorados, relatório JaCoCo e limite mínimo de 75% de instruções. Conferir separadamente a execução na CI. | Validação local da D05 registrada em EV21–EV23; CI da D05 pendente de conferência. |
+| VN06 | RNF06 | Executar `./mvnw clean verify`, conferir testes executados e ignorados, relatório JaCoCo e limite mínimo de 75% de instruções. Conferir separadamente a execução na CI. | Validação local da D05 registrada em EV21–EV23; CI da D05 verificada na execução 44972713889: 238 testes sem falhas, erros ou ignorados, limite JaCoCo aprovado e relatório publicado. Referência em evidencias.md. |
 
 ## 5. Cobertura e rastreabilidade
 
@@ -424,9 +424,9 @@ Este documento representa o planejamento dos cenários. A execução automatizad
 - Ampliar a associação entre testes automatizados e os CT/VN aplicáveis, sem inferir cobertura funcional pela execução global.
 - Registrar em `evidencias.md` os resultados individuais dos testes integrados de CPF descritos na seção 9.2 e ampliar os testes de persistência das demais funcionalidades conforme a implementação.
 - Realizar os testes de usabilidade.
-- Registrar as evidências pendentes de testes funcionais, usabilidade e CI.
-- Confirmar, na execução após o merge e na CI da D05, a aprovação do limite automático de 75% de cobertura de instruções já configurado no JaCoCo. Os resultados anteriores permanecem registrados em `evidencias.md`.
+- Registrar as evidências ainda pendentes de testes funcionais, usabilidade e outras execuções de CI.
 - Relacionar cada integrante às funcionalidades e aos respectivos arquivos de teste.
 - Concluir a associação e a execução integral dos CT11, CT12 e CT18–CT21, respeitando as verificações parciais já registradas.
 - Definir e vincular os casos específicos dos CA28–CA30 na tarefa de acompanhamento da rastreabilidade.
-- Conferir a CI da D05 e registrar o link da execução correspondente ao commit validado.
+
+A validação local após o merge e a execução da CI da D05 foram concluídas com 238 testes, sem falhas, erros ou testes ignorados, e aprovação do limite automático de 75% de cobertura de instruções. O relatório JaCoCo foi publicado na execução [44972713889](https://github.com/Miaunisul/Vigor/actions/runs/44972713889). Os resultados e links estão registrados em `evidencias.md`.
