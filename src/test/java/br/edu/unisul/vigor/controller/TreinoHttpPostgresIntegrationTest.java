@@ -59,8 +59,16 @@ class TreinoHttpPostgresIntegrationTest {
     void formularioHttpCarregaMembrosCadastrados() throws IOException, InterruptedException {
         Membro membro = membroParaTeste(" membro do formulário");
 
-        HttpResponse<String> resposta = get("/treinos/novo");
+        HttpResponse<String> redirecionamento = get("/treinos/novo");
 
+        assertEquals(302, redirecionamento.statusCode(), redirecionamento::body);
+        String destino = redirecionamento.headers().firstValue("Location").orElseThrow();
+        URI uriDestino = URI.create(destino);
+        assertEquals("/treinos", uriDestino.getPath());
+        assertEquals("acao=novo", uriDestino.getRawQuery());
+
+        HttpResponse<String> resposta = get(
+                uriDestino.getRawPath() + "?" + uriDestino.getRawQuery());
         assertEquals(200, resposta.statusCode(), resposta::body);
         assertTrue(resposta.body().contains("Cadastrar treino"), resposta::body);
         assertTrue(resposta.body().contains("value=\"" + membro.getId() + "\""), resposta::body);
@@ -90,14 +98,15 @@ class TreinoHttpPostgresIntegrationTest {
         assertEquals(200, listaSegundo.statusCode(), listaSegundo::body);
         assertMembroSelecionado(listaPrimeiro.body(), primeiro.getId());
         assertMembroSelecionado(listaSegundo.body(), segundo.getId());
-        assertTrue(listaPrimeiro.body().contains("Treino exclusivo do primeiro membro"),
-                listaPrimeiro::body);
-        assertFalse(listaPrimeiro.body().contains("Treino exclusivo do segundo membro"),
-                listaPrimeiro::body);
-        assertTrue(listaSegundo.body().contains("Nenhum treino cadastrado para este membro"),
+        assertTrue(listaPrimeiro.body().contains(
+                "data-label=\"Tipo de treino\">Força</td>"), listaPrimeiro::body);
+        assertFalse(listaPrimeiro.body().contains(
+                "data-label=\"Tipo de treino\">Mobilidade</td>"), listaPrimeiro::body);
+        assertTrue(listaSegundo.body().contains(
+                "Este membro ainda não possui treinos cadastrados."),
                 listaSegundo::body);
-        assertFalse(listaSegundo.body().contains("Treino exclusivo do primeiro membro"),
-                listaSegundo::body);
+        assertFalse(listaSegundo.body().contains(
+                "data-label=\"Tipo de treino\">Força</td>"), listaSegundo::body);
 
         HttpResponse<String> respostaSegundo = cadastrarTreino(
                 segundo.getId(), "Mobilidade", "Treino exclusivo do segundo membro", 35);
@@ -118,14 +127,14 @@ class TreinoHttpPostgresIntegrationTest {
         assertEquals(200, listaSegundo.statusCode(), listaSegundo::body);
         assertMembroSelecionado(listaPrimeiro.body(), primeiro.getId());
         assertMembroSelecionado(listaSegundo.body(), segundo.getId());
-        assertTrue(listaPrimeiro.body().contains("Treino exclusivo do primeiro membro"),
-                listaPrimeiro::body);
-        assertFalse(listaPrimeiro.body().contains("Treino exclusivo do segundo membro"),
-                listaPrimeiro::body);
-        assertTrue(listaSegundo.body().contains("Treino exclusivo do segundo membro"),
-                listaSegundo::body);
-        assertFalse(listaSegundo.body().contains("Treino exclusivo do primeiro membro"),
-                listaSegundo::body);
+        assertTrue(listaPrimeiro.body().contains(
+                "data-label=\"Tipo de treino\">Força</td>"), listaPrimeiro::body);
+        assertFalse(listaPrimeiro.body().contains(
+                "data-label=\"Tipo de treino\">Mobilidade</td>"), listaPrimeiro::body);
+        assertTrue(listaSegundo.body().contains(
+                "data-label=\"Tipo de treino\">Mobilidade</td>"), listaSegundo::body);
+        assertFalse(listaSegundo.body().contains(
+                "data-label=\"Tipo de treino\">Força</td>"), listaSegundo::body);
     }
 
     @Test

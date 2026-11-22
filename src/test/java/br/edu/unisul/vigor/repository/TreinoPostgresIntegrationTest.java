@@ -61,6 +61,39 @@ class TreinoPostgresIntegrationTest {
     }
 
     @Test
+    void atualizaTreinoExistenteSemAlterarSeuIdentificador() {
+        Membro membro = membroParaTeste();
+        Treino salvo = treinoService.cadastrar(treinoValido(), membro.getId());
+        Treino dadosAtualizados = treinoValido();
+        dadosAtualizados.setTipo("Treino atualizado");
+        dadosAtualizados.setDescricao("Descrição atualizada");
+        dadosAtualizados.setDuracaoMinutos(50);
+        dadosAtualizados.setDataInicio(LocalDate.of(2026, 2, 12));
+
+        treinoService.atualizar(salvo.getId(), dadosAtualizados, membro.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        Treino consultado = treinoRepository.findById(salvo.getId()).orElseThrow();
+        assertEquals(salvo.getId(), consultado.getId());
+        assertEquals("Treino atualizado", consultado.getTipo());
+        assertEquals("Descrição atualizada", consultado.getDescricao());
+        assertEquals(50, consultado.getDuracaoMinutos());
+        assertEquals(LocalDate.of(2026, 2, 12), consultado.getDataInicio());
+    }
+
+    @Test
+    void excluiTreinoExistente() {
+        Membro membro = membroParaTeste();
+        Treino salvo = treinoService.cadastrar(treinoValido(), membro.getId());
+        Long treinoId = salvo.getId();
+
+        treinoService.excluir(treinoId);
+
+        assertTrue(treinoRepository.findById(treinoId).isEmpty());
+    }
+
+    @Test
     void servicoRejeitaDuracaoInvalidaSemPersistirTreino() {
         Membro membro = membroParaTeste();
         long quantidadeAntes = treinoRepository.findByMembro_Id(membro.getId()).size();
