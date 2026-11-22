@@ -12,10 +12,7 @@
 <aside th:replace="~{pagamentos/lista :: menuPagamentos}"></aside>
 
 <div class="area-principal">
-    <header class="topbar">
-        <span>Gestão da academia / Pagamentos</span>
-        <span>Acesso de funcionários</span>
-    </header>
+    <header th:replace="~{pagamentos/lista :: cabecalhoModulo('Pagamentos')}"></header>
 
     <main id="conteudo" class="conteudo">
         <a class="voltar" th:href="@{/pagamentos}">

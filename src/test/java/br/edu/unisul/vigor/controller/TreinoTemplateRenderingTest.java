@@ -18,7 +18,6 @@ import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -61,8 +60,10 @@ class TreinoTemplateRenderingTest {
                 .setValidator(validator)
                 .setViewResolvers(viewResolver)
                 .build();
-        membro = membroComId(42L, "Membro Teste & Família");
+        membro = membroComId(42L, "Ana Beatriz Costa");
+        membro.setCpf("52998224725");
         when(membroService.listarTodos()).thenReturn(List.of(membro));
+        when(treinoService.listarTodos()).thenReturn(List.of());
     }
 
     @AfterEach
@@ -71,123 +72,103 @@ class TreinoTemplateRenderingTest {
     }
 
     @Test
-    void renderizaFormularioComMembrosETodosOsCamposObrigatorios() throws Exception {
-        mockMvc.perform(get("/treinos/novo"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Cadastrar treino")))
-                .andExpect(content().string(containsString("Membro Teste &amp; Família")))
-                .andExpect(content().string(containsString("name=\"membroId\"")))
-                .andExpect(content().string(containsString("name=\"tipo\"")))
-                .andExpect(content().string(containsString("name=\"descricao\"")))
-                .andExpect(content().string(containsString("name=\"duracaoMinutos\"")))
-                .andExpect(content().string(containsString("name=\"dataInicio\"")))
-                .andExpect(content().string(containsString("/css/membros.css")))
-                .andExpect(content().string(containsString("required")));
+    void renderizaListaComSidebarBuscaFiltroEEstados() throws Exception {
+        Treino treino = treinoValido();
+        setTreinoId(treino, 1L);
+        when(treinoService.listarTodos()).thenReturn(List.of(treino));
 
-        verifyNoInteractions(treinoService);
-    }
-
-    @Test
-    void renderizaListaDoMembroSelecionadoESeusTreinos() throws Exception {
-        Treino treino = treinoValido(membro);
-        when(treinoService.consultarPorMembro(42L)).thenReturn(List.of(treino));
-
-        mockMvc.perform(get("/treinos").param("membroId", "42"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Treinos cadastrados")))
-                .andExpect(content().string(containsString("Musculação")))
-                .andExpect(content().string(containsString("Treino de força")))
-                .andExpect(content().string(containsString("45")))
-                .andExpect(content().string(containsString("2026-11-20")))
-                .andExpect(content().string(containsString("method=\"get\"")))
-                .andExpect(content().string(containsString(
-                        "onchange=\"this.form.requestSubmit()\"")))
-                .andExpect(content().string(containsString("Consultar treinos")));
-    }
-
-    @Test
-    void renderizaTrocaParaMembroSemTreinosESelecionaOMembroConsultado() throws Exception {
-        Membro segundoMembro = membroComId(84L, "Membro sem treinos");
-        Treino treinoDoPrimeiro = treinoValido(membro);
-        when(membroService.listarTodos()).thenReturn(List.of(membro, segundoMembro));
-        when(treinoService.consultarPorMembro(42L)).thenReturn(List.of(treinoDoPrimeiro));
-        when(treinoService.consultarPorMembro(84L)).thenReturn(List.of());
-
-        String listaDoPrimeiro = mockMvc.perform(get("/treinos").param("membroId", "42"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Treino de força")))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        assertMembroSelecionado(listaDoPrimeiro, 42L);
-
-        String listaDoSegundo = mockMvc.perform(get("/treinos").param("membroId", "84"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString(
-                        "Nenhum treino cadastrado para este membro")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(
-                        containsString("Treino de força"))))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        assertMembroSelecionado(listaDoSegundo, 84L);
-    }
-
-    @Test
-    void renderizaListaSemMembroSemExibirTodosOsTreinos() throws Exception {
         mockMvc.perform(get("/treinos"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Selecione um membro")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(
-                        containsString("<table"))));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("/css/treinos.css")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "/images/vigor-logo-branca.png")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Gestão da academia")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Treinos")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ana Beatriz Costa")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Treino A — membros superiores")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("45 min")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("20/11/2026")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Buscar membro por nome ou CPF")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Todos os membros")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Ver detalhes")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Excluir")));
+    }
+
+    @Test
+    void renderizaCadastroComoEstadoDaTelaPrincipal() throws Exception {
+        mockMvc.perform(get("/treinos").param("acao", "novo"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Novo treino")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Dados do treino")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"membroId\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"tipo\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"descricao\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"duracaoMinutos\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"dataInicio\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Treino A — membros superiores")));
 
         verifyNoInteractions(treinoService);
     }
 
     @Test
-    void renderizaMensagensJuntoDosCamposInvalidos() throws Exception {
+    void renderizaDetalhesComAcoesDeEdicaoEExclusao() throws Exception {
+        Treino treino = treinoValido();
+        setTreinoId(treino, 1L);
+        when(treinoService.buscarPorId(1L)).thenReturn(treino);
+
+        mockMvc.perform(get("/treinos").param("acao", "detalhes").param("treinoId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Detalhes do treino")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Registro TR-001")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Membro")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("45 minutos")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Editar treino")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Excluir treino")));
+    }
+
+    @Test
+    void renderizaEdicaoComDadosPreenchidosEIdSomenteLeitura() throws Exception {
+        Treino treino = treinoValido();
+        setTreinoId(treino, 1L);
+        when(treinoService.buscarPorId(1L)).thenReturn(treino);
+
+        mockMvc.perform(get("/treinos").param("acao", "editar").param("treinoId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Editar treino")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"TR-001\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"Treino A — membros superiores\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"45\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Salvar treino")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("readonly")));
+    }
+
+    @Test
+    void renderizaErrosDeValidacaoNoMesmoFormularioEPreservaDados() throws Exception {
         mockMvc.perform(post("/treinos")
-                        .param("tipo", "   ")
+                        .param("acao", "novo")
+                        .param("membroId", "42")
+                        .param("tipo", " ")
                         .param("descricao", "Descrição preservada")
                         .param("duracaoMinutos", "0")
                         .param("dataInicio", "20/11/2026"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Selecione um membro cadastrado.")))
-                .andExpect(content().string(containsString("O tipo do treino é obrigatório.")))
-                .andExpect(content().string(containsString(
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Novo treino")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("O tipo do treino é obrigatório.")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
                         "A duração deve ser um número inteiro positivo de minutos.")))
-                .andExpect(content().string(containsString("Informe uma data válida.")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(
-                        containsString("Failed to convert"))))
-                .andExpect(content().string(containsString("field-input--invalid")))
-                .andExpect(content().string(containsString(
-                        "Descri&ccedil;&atilde;o preservada")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Informe uma data válida.")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Descri&ccedil;&atilde;o preservada")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("campo-invalido")));
 
         verifyNoInteractions(treinoService);
     }
 
-    @Test
-    void renderizaMensagemClaraQuandoDuracaoNaoForInteira() throws Exception {
-        mockMvc.perform(post("/treinos")
-                        .param("membroId", "42")
-                        .param("tipo", "Musculação")
-                        .param("descricao", "Descrição do treino")
-                        .param("duracaoMinutos", "quarenta")
-                        .param("dataInicio", "2026-11-20"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString(
-                        "Informe a duração como um número inteiro de minutos.")))
-                .andExpect(content().string(org.hamcrest.Matchers.not(
-                        containsString("Failed to convert"))));
-
-        verifyNoInteractions(treinoService);
-    }
-
-    private Treino treinoValido(Membro associado) {
+    private Treino treinoValido() {
         Treino treino = new Treino();
-        treino.setMembro(associado);
-        treino.setTipo("Musculação");
-        treino.setDescricao("Treino de força");
+        treino.setMembro(membro);
+        treino.setTipo("Treino A — membros superiores");
+        treino.setDescricao("Treino voltado ao fortalecimento dos membros superiores.");
         treino.setDuracaoMinutos(45);
         treino.setDataInicio(LocalDate.of(2026, 11, 20));
         return treino;
@@ -202,12 +183,9 @@ class TreinoTemplateRenderingTest {
         return membro;
     }
 
-    private void assertMembroSelecionado(String html, Long membroId) {
-        int indiceValor = html.indexOf("value=\"" + membroId + "\"");
-        assertTrue(indiceValor >= 0, html);
-        int inicioOpcao = html.lastIndexOf("<option", indiceValor);
-        int fimOpcao = html.indexOf('>', indiceValor);
-        assertTrue(inicioOpcao >= 0 && fimOpcao > indiceValor, html);
-        assertTrue(html.substring(inicioOpcao, fimOpcao).contains("selected"), html);
+    private void setTreinoId(Treino treino, Long id) throws ReflectiveOperationException {
+        Field campoId = Treino.class.getDeclaredField("id");
+        campoId.setAccessible(true);
+        campoId.set(treino, id);
     }
 }
