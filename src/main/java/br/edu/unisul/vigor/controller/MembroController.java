@@ -2,7 +2,10 @@
 package br.edu.unisul.vigor.controller;
 
 import br.edu.unisul.vigor.model.Membro;
+import br.edu.unisul.vigor.service.HistoricoAtividadeService;
 import br.edu.unisul.vigor.service.MembroService;
+import br.edu.unisul.vigor.service.PagamentoService;
+import br.edu.unisul.vigor.service.TreinoService;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
@@ -32,9 +35,19 @@ public class MembroController {
             "Membro não encontrado.";
 
     private final MembroService membroService;
+    private final TreinoService treinoService;
+    private final PagamentoService pagamentoService;
+    private final HistoricoAtividadeService historicoAtividadeService;
 
-    public MembroController(MembroService membroService) {
+    public MembroController(
+            MembroService membroService,
+            TreinoService treinoService,
+            PagamentoService pagamentoService,
+            HistoricoAtividadeService historicoAtividadeService) {
         this.membroService = membroService;
+        this.treinoService = treinoService;
+        this.pagamentoService = pagamentoService;
+        this.historicoAtividadeService = historicoAtividadeService;
     }
 
     @ModelAttribute
@@ -76,7 +89,13 @@ public class MembroController {
             return "redirect:/membros";
         }
         try {
-            model.addAttribute("membro", membroService.buscarPorId(membroId));
+            Membro membro = membroService.buscarPorId(membroId);
+            model.addAttribute("membro", membro);
+            model.addAttribute("treinos", treinoService.consultarPorMembro(membroId));
+            model.addAttribute("pagamentos", pagamentoService.consultarPorMembro(membroId));
+            model.addAttribute(
+                    "atividades",
+                    historicoAtividadeService.consultarPorMembro(membroId));
             model.addAttribute("estado", "detalhes");
             return "membros/lista";
         } catch (IllegalArgumentException e) {

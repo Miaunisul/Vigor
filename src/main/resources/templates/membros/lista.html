@@ -166,13 +166,29 @@
             <div class="cabecalho cabecalho-formulario">
                 <div>
                     <h1 id="titulo-detalhes-membro">Detalhes do membro</h1>
-                    <p class="subtitulo" th:text="${membro.nome}">Nome do membro</p>
+                    <p class="subtitulo"
+                       th:text="${'Consulte os dados e o histórico de ' + membro.nome + '.'}">
+                        Consulte os dados e o histórico do membro.
+                    </p>
                 </div>
             </div>
             <section class="painel painel-detalhes" aria-labelledby="titulo-dados-detalhe">
                 <div class="detalhes-titulo">
-                    <h2 id="titulo-dados-detalhe">Dados do membro</h2>
-                    <p>CPF mascarado para proteger informações pessoais.</p>
+                    <h2 id="titulo-dados-detalhe">Informações pessoais</h2>
+                    <p th:text="${'Cadastro MB-' + #numbers.formatInteger(membro.id, 3)
+                        + ' · Membro desde '
+                        + #temporals.format(membro.dataCadastro, 'dd/MM/yyyy')}">
+                        Cadastro MB-001 · Membro desde 01/09/2026
+                    </p>
+                </div>
+                <div class="acoes acoes-detalhes acoes-detalhes-topo">
+                    <a class="botao botao-secundario"
+                       th:href="@{/membros/{id}/editar(id=${membro.id})}">Editar membro</a>
+                    <form method="post"
+                          th:action="@{/membros/{id}/excluir(id=${membro.id})}"
+                          onsubmit="return confirm('Confirma a exclusão deste membro?');">
+                        <button class="botao botao-perigo" type="submit">Excluir membro</button>
+                    </form>
                 </div>
                 <dl class="grade grade-detalhes">
                     <div class="campo">
@@ -192,24 +208,118 @@
                         <dd th:text="${membro.telefone}">(11) 99845-1200</dd>
                     </div>
                     <div class="campo">
-                        <dt>Data de cadastro</dt>
-                        <dd th:text="${#temporals.format(membro.dataCadastro, 'dd/MM/yyyy')}">01/09/2026</dd>
-                    </div>
-                    <div class="campo linha-inteira">
                         <dt>Endereço</dt>
                         <dd th:text="${membro.endereco}">Rua das Palmeiras, 85 - São Paulo — SP</dd>
                     </div>
+                    <div class="campo">
+                        <dt>Data de cadastro</dt>
+                        <dd th:text="${#temporals.format(membro.dataCadastro, 'dd/MM/yyyy')}">01/09/2026</dd>
+                    </div>
                 </dl>
-                <div class="acoes acoes-detalhes">
-                    <a class="botao botao-primario"
-                       th:href="@{/membros/{id}/editar(id=${membro.id})}">Editar membro</a>
-                    <form method="post"
-                          th:action="@{/membros/{id}/excluir(id=${membro.id})}"
-                          onsubmit="return confirm('Confirma a exclusão deste membro?');">
-                        <button class="botao botao-perigo" type="submit">Excluir membro</button>
-                    </form>
-                </div>
             </section>
+
+            <div class="secoes-vinculadas">
+                <section class="secao-vinculada" aria-labelledby="titulo-treinos-vinculados">
+                    <h2 id="titulo-treinos-vinculados">Treinos vinculados</h2>
+                    <div class="painel painel-tabela painel-tabela-vinculada">
+                        <div class="tabela-container">
+                            <table class="tabela-membros tabela-vinculados">
+                                <caption class="visualmente-oculto">Treinos vinculados ao membro</caption>
+                                <thead>
+                                <tr>
+                                    <th scope="col">Membro</th>
+                                    <th scope="col">Tipo de treino</th>
+                                    <th scope="col">Duração</th>
+                                    <th scope="col">Data de início</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="treino : ${treinos}">
+                                    <td data-label="Membro" th:text="${treino.membro.nome}">Ana Beatriz Costa</td>
+                                    <td data-label="Tipo de treino" th:text="${treino.tipo}">Treino A — membros superiores</td>
+                                    <td data-label="Duração" th:text="${treino.duracaoMinutos + ' min'}">45 min</td>
+                                    <td data-label="Data de início"
+                                        th:text="${#temporals.format(treino.dataInicio, 'dd/MM/yyyy')}">05/10/2026</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(treinos)}">
+                                    <td class="vazio" colspan="4">Nenhum treino vinculado a este membro.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="secao-vinculada" aria-labelledby="titulo-pagamentos-vinculados">
+                    <h2 id="titulo-pagamentos-vinculados">Pagamentos</h2>
+                    <div class="painel painel-tabela painel-tabela-vinculada">
+                        <div class="tabela-container">
+                            <table class="tabela-membros tabela-vinculados">
+                                <caption class="visualmente-oculto">Pagamentos vinculados ao membro</caption>
+                                <thead>
+                                <tr>
+                                    <th scope="col">Membro</th>
+                                    <th scope="col">Valor</th>
+                                    <th scope="col">Data do pagamento</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="pagamento : ${pagamentos}">
+                                    <td data-label="Membro" th:text="${pagamento.membro.nome}">Ana Beatriz Costa</td>
+                                    <td data-label="Valor"
+                                        th:text="${'R$ ' + #numbers.formatDecimal(pagamento.valor, 1, 'POINT', 2, 'COMMA')}">R$ 150,00</td>
+                                    <td data-label="Data do pagamento"
+                                        th:text="${#temporals.format(pagamento.dataPagamento, 'dd/MM/yyyy')}">05/10/2026</td>
+                                    <td data-label="Status">
+                                        <span class="status"
+                                              th:text="${pagamento.status == 'PAGO' ? 'Pago' : pagamento.status}">Pago</span>
+                                    </td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(pagamentos)}">
+                                    <td class="vazio" colspan="4">Nenhum pagamento registrado para este membro.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="secao-vinculada" aria-labelledby="titulo-atividades-vinculadas">
+                    <h2 id="titulo-atividades-vinculadas">Atividades realizadas</h2>
+                    <div class="painel painel-tabela painel-tabela-vinculada">
+                        <div class="tabela-container">
+                            <table class="tabela-membros tabela-vinculados">
+                                <caption class="visualmente-oculto">Atividades realizadas pelo membro</caption>
+                                <thead>
+                                <tr>
+                                    <th scope="col">Membro</th>
+                                    <th scope="col">Atividade</th>
+                                    <th scope="col">Data</th>
+                                    <th scope="col">Tempo de execução</th>
+                                    <th scope="col">Funcionário responsável</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="atividade : ${atividades}">
+                                    <td data-label="Membro" th:text="${atividade.membro.nome}">Ana Beatriz Costa</td>
+                                    <td data-label="Atividade" th:text="${atividade.atividade}">Esteira</td>
+                                    <td data-label="Data"
+                                        th:text="${#temporals.format(atividade.dataAtividade, 'dd/MM/yyyy')}">10/10/2026</td>
+                                    <td data-label="Tempo de execução"
+                                        th:text="${atividade.tempoExecucaoMinutos + ' min'}">30 min</td>
+                                    <td data-label="Funcionário responsável"
+                                        th:text="${atividade.funcionarioResponsavel.nome}">Camila Martins</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(atividades)}">
+                                    <td class="vazio" colspan="5">Nenhuma atividade registrada para este membro.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
         </section>
     </main>
 </div>
