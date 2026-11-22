@@ -2,94 +2,370 @@
 <html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Treinos | VIGOR</title>
-    <link rel="stylesheet" th:href="@{/css/membros.css}">
+    <link rel="stylesheet" th:href="@{/css/treinos.css}">
 </head>
 <body>
-    <header class="site-header">
-        <a class="brand" th:href="@{/membros}">VIGOR</a>
-        <span>Sistema de gestão de academia</span>
-        <nav class="site-nav" aria-label="Navegação principal">
-            <a th:href="@{/membros}">Membros</a>
-        </nav>
-    </header>
+<a class="pular" href="#conteudo">Ir para o conteúdo</a>
 
-    <main class="page-shell">
-        <section class="page-heading page-heading--with-action">
-            <div>
-                <p class="eyebrow">Gestão de treinos</p>
-                <h1>Treinos cadastrados</h1>
-                <p>Consulte os treinos de um membro ou cadastre um novo.</p>
+<aside th:replace="~{pagamentos/lista :: menuPagamentos}"></aside>
+
+<div class="area-principal">
+    <header th:replace="~{pagamentos/lista :: cabecalhoModulo('Treinos')}"></header>
+
+    <main id="conteudo" class="conteudo">
+        <div class="aviso aviso-sucesso" role="status"
+             th:if="${sucesso != null}" th:text="${sucesso}"></div>
+        <div class="aviso aviso-erro" role="alert"
+             th:if="${erro != null}" th:text="${erro}"></div>
+
+        <section th:if="${visualizacao == 'lista'}" aria-labelledby="titulo-treinos">
+            <div class="cabecalho">
+                <div>
+                    <h1 id="titulo-treinos">Treinos</h1>
+                    <p class="subtitulo">Organize os treinos vinculados a cada membro.</p>
+                </div>
+                <a class="botao botao-primario"
+                   th:href="@{/treinos(acao='novo')}">
+                    <span aria-hidden="true">+</span> Novo treino
+                </a>
             </div>
-            <a class="button button--primary" th:href="@{/treinos/novo}">Cadastrar treino</a>
-        </section>
 
-        <p class="feedback feedback--success" role="status" th:if="${sucesso}" th:text="${sucesso}"></p>
-        <p class="feedback feedback--error" role="alert" th:if="${erro}" th:text="${erro}"></p>
-
-        <section class="panel">
-            <form class="filter-form" th:action="@{/treinos}" method="get">
-                <div class="form-field">
-                    <label for="membroId">Membro</label>
-                    <select id="membroId" name="membroId" required
+            <form class="filtros filtros-treinos" method="get" th:action="@{/treinos}">
+                <label class="busca-membro" for="busca">
+                    <svg class="icone-busca" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="11" cy="11" r="6.5"/>
+                        <path d="m16 16 4.5 4.5"/>
+                    </svg>
+                    <span class="visualmente-oculto">Buscar membro por nome ou CPF</span>
+                    <input id="busca" name="q" type="search"
+                           placeholder="Buscar membro por nome ou CPF"
+                           th:value="${busca}">
+                </label>
+                <label class="filtro-membro" for="membroId">
+                    <span class="visualmente-oculto">Filtrar treinos por membro</span>
+                    <select id="membroId" name="membroId"
                             onchange="this.form.requestSubmit()">
-                        <option value="">Selecione um membro</option>
+                        <option value="" th:selected="${membroSelecionadoId == null}">Todos os membros</option>
                         <option th:each="membro : ${membros}"
                                 th:value="${membro.id}"
-                                th:text="${membro.nome}"
-                                th:selected="${membroSelecionadoId != null and membro.id == membroSelecionadoId}">
-                            Membro cadastrado
-                        </option>
+                                th:selected="${membro.id == membroSelecionadoId}"
+                                th:text="${membro.nome}">Membro cadastrado</option>
                     </select>
-                </div>
-                <button class="button button--secondary" type="submit">Consultar treinos</button>
+                </label>
             </form>
-        </section>
 
-        <section class="panel empty-state" th:if="${#lists.isEmpty(membros)}">
-            <h2>Nenhum membro cadastrado</h2>
-            <p>Cadastre um membro antes de consultar ou registrar treinos.</p>
-            <a class="button button--secondary" th:href="@{/membros/novo}">Cadastrar membro</a>
-        </section>
+            <section class="painel estado-vazio"
+                     th:if="${#lists.isEmpty(membros)}"
+                     aria-labelledby="titulo-sem-membros">
+                <h2 id="titulo-sem-membros">Nenhum membro cadastrado</h2>
+                <p>Cadastre um membro antes de consultar ou registrar treinos.</p>
+                <a class="botao botao-secundario" th:href="@{/membros/novo}">Cadastrar membro</a>
+            </section>
 
-        <section class="panel empty-state"
-                 th:if="${!#lists.isEmpty(membros) and membroSelecionadoId == null}">
-            <h2>Selecione um membro</h2>
-            <p>Os treinos serão exibidos somente para o membro selecionado.</p>
-        </section>
-
-        <section class="panel empty-state"
-                 th:if="${membroSelecionadoId != null and #lists.isEmpty(treinos)}">
-            <h2>Nenhum treino cadastrado para este membro</h2>
-            <p>Você pode registrar um treino para o membro selecionado.</p>
-            <a class="button button--secondary" th:href="@{/treinos/novo}">Cadastrar treino</a>
-        </section>
-
-        <section class="panel table-panel"
-                 th:if="${membroSelecionadoId != null and !#lists.isEmpty(treinos)}">
-            <div class="table-scroll">
-                <table class="data-table training-table">
-                    <caption class="visually-hidden">Treinos do membro selecionado</caption>
-                    <thead>
+            <section class="painel painel-tabela"
+                     th:if="${!#lists.isEmpty(membros)}"
+                     aria-label="Treinos cadastrados">
+                <div class="tabela-container">
+                    <table class="tabela-treinos">
+                        <caption class="visualmente-oculto">Lista de treinos</caption>
+                        <thead>
                         <tr>
-                            <th scope="col">Tipo</th>
-                            <th scope="col">Descrição</th>
-                            <th scope="col">Duração (minutos)</th>
+                            <th scope="col">Membro</th>
+                            <th scope="col">Tipo de treino</th>
+                            <th scope="col">Duração</th>
                             <th scope="col">Data de início</th>
+                            <th scope="col">Ações</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         <tr th:each="treino : ${treinos}">
-                            <td th:text="${treino.tipo}"></td>
-                            <td th:text="${treino.descricao}"></td>
-                            <td th:text="${treino.duracaoMinutos}"></td>
-                            <td th:text="${treino.dataInicio}"></td>
+                            <td class="membro-treino" data-label="Membro" th:text="${treino.membro.nome}"></td>
+                            <td data-label="Tipo de treino" th:text="${treino.tipo}"></td>
+                            <td class="duracao-treino" data-label="Duração"
+                                th:text="${treino.duracaoMinutos + ' min'}"></td>
+                            <td class="data-treino" data-label="Data de início"
+                                th:text="${#temporals.format(treino.dataInicio, 'dd/MM/yyyy')}"></td>
+                            <td data-label="Ações">
+                                <div class="acoes-linha">
+                                    <a class="link-acao"
+                                       th:href="@{/treinos(acao='detalhes',treinoId=${treino.id})}">Ver detalhes</a>
+                                    <a class="link-acao"
+                                       th:href="@{/treinos(acao='editar',treinoId=${treino.id})}">Editar</a>
+                                    <form method="post" th:action="@{/treinos}"
+                                          onsubmit="return confirm('Excluir este treino?');">
+                                        <input type="hidden" name="acao" value="excluir">
+                                        <input type="hidden" name="treinoId" th:value="${treino.id}">
+                                        <button class="link-acao link-perigo" type="submit">Excluir</button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
-                    </tbody>
-                </table>
+                        <tr th:if="${#lists.isEmpty(treinos)}">
+                            <td class="vazio" colspan="5"
+                                th:text="${busca != null and !busca.isBlank()
+                                    ? 'Nenhum treino corresponde à busca informada.'
+                                    : (membroSelecionadoId != null
+                                        ? 'Este membro ainda não possui treinos cadastrados.'
+                                        : 'Ainda não existem treinos cadastrados.')}">
+                                Ainda não existem treinos cadastrados.
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <footer class="rodape-tabela">
+                    <span th:text="${'Mostrando ' + inicioLista + '–' + fimLista + ' de ' + totalTreinos + ' registros'}">
+                        Mostrando 0–0 de 0 registros
+                    </span>
+                    <nav class="paginacao" aria-label="Paginação dos treinos">
+                        <a th:if="${pagina > 0}"
+                           th:href="@{/treinos(q=${busca},membroId=${membroSelecionadoId},page=${pagina - 1})}">Anterior</a>
+                        <span th:unless="${pagina > 0}" aria-disabled="true">Anterior</span>
+                        <strong th:text="${'Página ' + (pagina + 1)}">Página 1</strong>
+                        <a th:if="${pagina + 1 < totalPaginas}"
+                           th:href="@{/treinos(q=${busca},membroId=${membroSelecionadoId},page=${pagina + 1})}">Próxima</a>
+                        <span th:unless="${pagina + 1 < totalPaginas}" aria-disabled="true">Próxima</span>
+                    </nav>
+                </footer>
+            </section>
+
+            <p class="nota-rodape">Os treinos são registros administrativos vinculados a um membro.</p>
+        </section>
+
+        <section th:if="${visualizacao == 'novo' or visualizacao == 'editar'}"
+                 aria-labelledby="titulo-formulario">
+            <a class="voltar" th:href="@{/treinos}">
+                <span aria-hidden="true">←</span> Voltar para treinos
+            </a>
+            <div class="cabecalho cabecalho-formulario">
+                <div>
+                    <h1 id="titulo-formulario"
+                        th:text="${visualizacao == 'editar' ? 'Editar treino' : 'Novo treino'}">Novo treino</h1>
+                    <p class="subtitulo"
+                       th:text="${visualizacao == 'editar'
+                            ? 'Atualize o treino de ' + treino.membro.nome + '.'
+                            : 'Associe o treino a um membro e informe seus dados.'}">
+                        Associe o treino a um membro e informe seus dados.
+                    </p>
+                </div>
             </div>
+
+            <section class="painel painel-formulario" aria-labelledby="titulo-dados-treino">
+                <h2 id="titulo-dados-treino">Dados do treino</h2>
+                <p class="ajuda">Campos com * são obrigatórios.</p>
+
+                <form class="formulario-treino" method="post"
+                      th:action="@{/treinos}" th:object="${treino}">
+                    <input type="hidden" name="acao" th:value="${visualizacao}">
+                    <input th:if="${visualizacao == 'editar'}" type="hidden"
+                           name="treinoId" th:value="${treinoId}">
+
+                    <div class="aviso aviso-erro" role="alert"
+                         th:if="${#fields.hasAnyErrors()}">
+                        <p>Não foi possível salvar. Confira os campos indicados abaixo.</p>
+                        <ul th:if="${#fields.hasGlobalErrors()}">
+                            <li th:each="mensagem : ${#fields.globalErrors()}"
+                                th:text="${mensagem}"></li>
+                        </ul>
+                    </div>
+
+                    <div class="aviso aviso-neutro" th:if="${#lists.isEmpty(membros)}">
+                        Não há membros disponíveis.
+                        <a th:href="@{/membros/novo}">Cadastre um membro</a>
+                        antes de registrar um treino.
+                    </div>
+
+                    <div class="grade grade-treino">
+                        <div class="campo linha-inteira" th:if="${visualizacao == 'editar'}">
+                            <label for="treinoCodigo">ID do treino</label>
+                            <div class="campo-bloqueado">
+                                <input id="treinoCodigo" type="text" readonly
+                                       th:value="${'TR-' + #numbers.formatInteger(treinoId, 3)}">
+                                <svg class="icone-lock" viewBox="0 0 24 24" aria-hidden="true">
+                                    <rect x="5" y="10" width="14" height="11" rx="2"/>
+                                    <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="campo">
+                            <label for="membroIdFormulario">Membro *</label>
+                            <select id="membroIdFormulario" name="membroId" required
+                                    th:classappend="${#fields.hasErrors('membro.id')} ? ' campo-invalido' : ''"
+                                    th:attr="aria-invalid=${#fields.hasErrors('membro.id')}"
+                                    aria-describedby="ajuda-membro erro-membro">
+                                <option value="">Selecione um membro</option>
+                                <option th:each="membro : ${membros}"
+                                        th:value="${membro.id}"
+                                        th:selected="${membroIdFormulario != null and membro.id.toString() == membroIdFormulario}"
+                                        th:text="${membro.nome + ' · MB-' + #numbers.formatInteger(membro.id, 3)}">
+                                    Membro cadastrado
+                                </option>
+                            </select>
+                            <p id="ajuda-membro" class="ajuda">Selecione um membro já cadastrado.</p>
+                            <p id="erro-membro" class="erro-campo" role="alert"
+                               th:if="${#fields.hasErrors('membro.id')}"
+                               th:errors="*{membro.id}"></p>
+                        </div>
+
+                        <div class="campo">
+                            <label for="tipo">Tipo de treino *</label>
+                            <input id="tipo" type="text" list="tiposTreino"
+                                   th:field="*{tipo}" required
+                                   th:classappend="${#fields.hasErrors('tipo')} ? ' campo-invalido' : ''"
+                                   th:attr="aria-invalid=${#fields.hasErrors('tipo')}"
+                                   aria-describedby="erro-tipo">
+                            <datalist id="tiposTreino">
+                                <option value="Treino A — membros superiores"></option>
+                                <option value="Treino B — membros inferiores"></option>
+                            </datalist>
+                            <p id="erro-tipo" class="erro-campo" role="alert"
+                               th:if="${#fields.hasErrors('tipo')}" th:errors="*{tipo}"></p>
+                        </div>
+
+                        <div class="campo linha-inteira">
+                            <label for="descricao">Descrição *</label>
+                            <textarea id="descricao" rows="3" th:field="*{descricao}" required
+                                      th:classappend="${#fields.hasErrors('descricao')} ? ' campo-invalido' : ''"
+                                      th:attr="aria-invalid=${#fields.hasErrors('descricao')}"
+                                      aria-describedby="erro-descricao"></textarea>
+                            <p id="erro-descricao" class="erro-campo" role="alert"
+                               th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}"></p>
+                        </div>
+
+                        <div class="campo">
+                            <label for="duracaoMinutos">Duração em minutos *</label>
+                            <input id="duracaoMinutos" type="number" min="1" step="1"
+                                   th:field="*{duracaoMinutos}" required
+                                   th:classappend="${#fields.hasErrors('duracaoMinutos')} ? ' campo-invalido' : ''"
+                                   th:attr="aria-invalid=${#fields.hasErrors('duracaoMinutos')}"
+                                   aria-describedby="ajuda-duracao erro-duracao">
+                            <p id="ajuda-duracao" class="ajuda">Informe a duração total prevista.</p>
+                            <p id="erro-duracao" class="erro-campo" role="alert"
+                               th:if="${#fields.hasErrors('duracaoMinutos')}"
+                               th:errors="*{duracaoMinutos}"></p>
+                        </div>
+
+                        <div class="campo">
+                            <label for="dataInicio">Data de início *</label>
+                            <input id="dataInicio" type="date" th:field="*{dataInicio}" required
+                                   th:classappend="${#fields.hasErrors('dataInicio')} ? ' campo-invalido' : ''"
+                                   th:attr="aria-invalid=${#fields.hasErrors('dataInicio')}"
+                                   aria-describedby="ajuda-data erro-data">
+                            <p id="ajuda-data" class="ajuda">Formato: DD/MM/AAAA.</p>
+                            <p id="erro-data" class="erro-campo" role="alert"
+                               th:if="${#fields.hasErrors('dataInicio')}"
+                               th:errors="*{dataInicio}"></p>
+                        </div>
+                    </div>
+
+                    <div class="acoes acoes-formulario">
+                        <a class="botao botao-secundario" th:href="@{/treinos}">Cancelar</a>
+                        <button class="botao botao-primario" type="submit"
+                                th:disabled="${#lists.isEmpty(membros)}"
+                                th:text="${visualizacao == 'editar' ? 'Salvar treino' : 'Cadastrar treino'}">
+                            Cadastrar treino
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </section>
+
+        <section th:if="${visualizacao == 'detalhes'}" aria-labelledby="titulo-detalhes">
+            <a class="voltar" th:href="@{/treinos}">
+                <span aria-hidden="true">←</span> Voltar para treinos
+            </a>
+            <div class="cabecalho cabecalho-formulario">
+                <div>
+                    <h1 id="titulo-detalhes">Detalhes do treino</h1>
+                    <p class="subtitulo">Consulte as informações do treino vinculado ao membro.</p>
+                </div>
+            </div>
+
+            <section class="painel painel-detalhes" aria-label="Dados do treino">
+                <div class="detalhes-titulo">
+                    <h2 th:text="${treino.tipo}">Tipo de treino</h2>
+                    <p th:text="${'Registro TR-' + #numbers.formatInteger(treino.id, 3)}">Registro TR-001</p>
+                </div>
+
+                <div class="grade grade-detalhes">
+                    <div class="campo">
+                        <label>Membro</label>
+                        <div class="valor-bloqueado">
+                            <span th:text="${treino.membro.nome + ' · MB-' + #numbers.formatInteger(treino.membro.id, 3)}">Membro</span>
+                            <svg class="icone-lock" viewBox="0 0 24 24" aria-hidden="true">
+                                <rect x="5" y="10" width="14" height="11" rx="2"/>
+                                <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="campo">
+                        <label>Tipo de treino</label>
+                        <div class="valor-bloqueado">
+                            <span th:text="${treino.tipo}">Tipo</span>
+                            <svg class="icone-lock" viewBox="0 0 24 24" aria-hidden="true">
+                                <rect x="5" y="10" width="14" height="11" rx="2"/>
+                                <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="campo linha-inteira">
+                        <label>Descrição</label>
+                        <div class="valor-bloqueado valor-descricao">
+                            <span th:text="${treino.descricao}">Descrição do treino</span>
+                            <svg class="icone-lock" viewBox="0 0 24 24" aria-hidden="true">
+                                <rect x="5" y="10" width="14" height="11" rx="2"/>
+                                <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="campo">
+                        <label>Duração</label>
+                        <div class="valor-bloqueado">
+                            <span th:text="${treino.duracaoMinutos + ' minutos'}">45 minutos</span>
+                            <svg class="icone-lock" viewBox="0 0 24 24" aria-hidden="true">
+                                <rect x="5" y="10" width="14" height="11" rx="2"/>
+                                <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="campo">
+                        <label>Data de início</label>
+                        <div class="valor-bloqueado">
+                            <span th:text="${#temporals.format(treino.dataInicio, 'dd/MM/yyyy')}">05/10/2026</span>
+                            <svg class="icone-lock" viewBox="0 0 24 24" aria-hidden="true">
+                                <rect x="5" y="10" width="14" height="11" rx="2"/>
+                                <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="acoes acoes-detalhes">
+                    <a class="botao botao-secundario"
+                       th:href="@{/treinos(acao='editar',treinoId=${treino.id})}">
+                        <svg class="icone-acao" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="m4 16.5-.8 4.3 4.3-.8L19.7 7.8l-3.5-3.5L4 16.5Z"/>
+                            <path d="m14.8 5.7 3.5 3.5"/>
+                        </svg> Editar treino
+                    </a>
+                    <form method="post" th:action="@{/treinos}"
+                          onsubmit="return confirm('Excluir este treino?');">
+                        <input type="hidden" name="acao" value="excluir">
+                        <input type="hidden" name="treinoId" th:value="${treino.id}">
+                        <button class="botao botao-perigo" type="submit">
+                            <svg class="icone-acao" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 7h16M9 7V4h6v3m3 0-.8 13H6.8L6 7m4 4v5m4-5v5"/>
+                            </svg> Excluir treino
+                        </button>
+                    </form>
+                </div>
+            </section>
         </section>
     </main>
+</div>
 </body>
 </html>
