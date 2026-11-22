@@ -26,14 +26,15 @@
             Membros
         </a>
 
-        <span class="menu-item indisponivel"
-              aria-disabled="true"
-              title="A navegação será integrada com o módulo de treinos">
+        <a class="menu-item"
+           th:classappend="${moduloAtivo == 'treinos'} ? ' ativo' : ''"
+           th:href="@{/treinos}"
+           th:attr="aria-current=${moduloAtivo == 'treinos' ? 'page' : null}">
             <svg class="icone" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="m6 6 12 12M3 8l5-5M16 21l5-5M2 5l3-3M19 22l3-3M5 11l6-6M13 19l6-6"/>
             </svg>
             Treinos
-        </span>
+        </a>
 
         <a class="menu-item"
            th:classappend="${moduloAtivo == null or moduloAtivo == 'pagamentos'} ? ' ativo' : ''"

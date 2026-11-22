@@ -16,7 +16,9 @@ import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -81,6 +83,20 @@ class MembroTemplateRenderingTest {
                 .andExpect(content().string(containsString("/membros/42/editar")));
 
         assertNotNull(membro.getDataCadastro());
+    }
+
+    @Test
+    void sidebarNavegaParaModulosComRotasEIdentificaTreinosComoLink() throws Exception {
+        String html = mockMvc.perform(get("/membros"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        assertTrue(html.contains("href=\"/membros\""));
+        assertTrue(html.contains("href=\"/treinos\""));
+        assertTrue(html.contains("href=\"/pagamentos\""));
+        assertFalse(html.contains("title=\"A navegação será integrada com o módulo de treinos\""));
+        assertTrue(html.contains("Atividades"));
+        assertTrue(html.contains("aria-disabled=\"true\""));
     }
 
     @Test
