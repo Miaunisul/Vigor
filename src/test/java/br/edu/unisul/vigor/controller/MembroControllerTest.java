@@ -13,16 +13,20 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.ui.ExtendedModelMap;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDate;
 import java.util.Set;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,6 +38,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -62,6 +67,64 @@ class MembroControllerTest {
     }
 
     @Test
+    void deveExibirDetalhesDentroDaTelaDeMembrosUsandoConsultaExistente()
+            throws Exception {
+        Membro membro = membroValido("52998224725");
+        setId(membro, 42L);
+        when(membroService.buscarPorId(42L)).thenReturn(membro);
+
+        mockMvc.perform(get("/membros")
+                        .param("acao", "detalhes")
+                        .param("membroId", "42"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("membros/lista"))
+                .andExpect(model().attribute("estado", "detalhes"))
+                .andExpect(model().attribute("membro", membro));
+
+        verify(membroService).buscarPorId(42L);
+    }
+
+    @Test
+    void deveFiltrarListaPorCpfSemCriarConsultaDeServicoNova() throws Exception {
+        Membro correspondente = membroValido("52998224725");
+        correspondente.setNome("Ana Beatriz Costa");
+        setId(correspondente, 1L);
+        Membro outro = membroValido("12345678909");
+        outro.setNome("Bruno Almeida");
+        setId(outro, 2L);
+        when(membroService.listarTodos()).thenReturn(List.of(correspondente, outro));
+
+        mockMvc.perform(get("/membros").param("q", "529.982.247-25"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("membros/lista"))
+                .andExpect(model().attribute("totalMembros", 1))
+                .andExpect(model().attribute("membrosPagina", hasSize(1)))
+                .andExpect(model().attribute("membrosPagina", org.hamcrest.Matchers.hasItem(correspondente)));
+
+        verify(membroService).listarTodos();
+    }
+
+    @Test
+    void devePaginarListaDosMembrosEmDezRegistros() throws Exception {
+        List<Membro> membros = new ArrayList<>();
+        for (int indice = 1; indice <= 12; indice++) {
+            Membro membro = membroValido("52998224725");
+            membro.setNome("Membro " + indice);
+            setId(membro, (long) indice);
+            membros.add(membro);
+        }
+        when(membroService.listarTodos()).thenReturn(membros);
+
+        mockMvc.perform(get("/membros").param("page", "1"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("pagina", 1))
+                .andExpect(model().attribute("totalMembros", 12))
+                .andExpect(model().attribute("inicioLista", 11))
+                .andExpect(model().attribute("fimLista", 12))
+                .andExpect(model().attribute("membrosPagina", hasSize(2)));
+    }
+
+    @Test
     void devePreservarCamposInformadosAoRetornarFormularioComErroDeValidacao()
             throws Exception {
         mockMvc.perform(post("/membros")
@@ -70,7 +133,8 @@ class MembroControllerTest {
                         .param("telefone", "  (48) 99999-0000  ")
                         .param("endereco", "  Rua A, 10  "))
                 .andExpect(status().isOk())
-                .andExpect(view().name("membros/formulario"))
+                .andExpect(view().name("membros/lista"))
+                .andExpect(model().attribute("estado", "novo"))
                 .andExpect(model().attributeHasFieldErrors("membro", "cpf"))
                 .andExpect(model().attribute("membro",
                         hasProperty("nome", equalTo("Membro Teste"))))
@@ -99,7 +163,7 @@ class MembroControllerTest {
                         .param("telefone", "(48) 99999-0000")
                         .param("endereco", "Rua A, 10"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("membros/formulario"))
+                .andExpect(view().name("membros/lista"))
                 .andExpect(model().attributeHasFieldErrors("membro", "cpf"))
                 .andExpect(model().attribute("membro",
                         hasProperty("cpf", equalTo("529.982.247-25"))));
@@ -120,7 +184,7 @@ class MembroControllerTest {
                         .param("telefone", "(48) 99999-0000")
                         .param("endereco", "Rua A, 10"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("membros/formulario"))
+                .andExpect(view().name("membros/lista"))
                 .andExpect(model().attributeHasFieldErrors("membro", "cpf"))
                 .andExpect(model().attribute("membro",
                         hasProperty("cpf", equalTo("529.982.247-25"))));
@@ -155,7 +219,7 @@ class MembroControllerTest {
                         .param("telefone", "(48) 99999-0000")
                         .param("endereco", "Rua A, 10"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("membros/formulario"))
+                .andExpect(view().name("membros/lista"))
                 .andExpect(model().attributeHasFieldErrors("membro", "cpf"))
                 .andExpect(model().attribute("membro",
                         hasProperty("cpf", equalTo("529.982.247-25"))));
@@ -197,9 +261,10 @@ class MembroControllerTest {
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
                         .get("/membros/{id}/editar", 42L))
                 .andExpect(status().isOk())
-                .andExpect(view().name("membros/formulario"))
+                .andExpect(view().name("membros/lista"))
                 .andExpect(model().attribute("editando", true))
                 .andExpect(model().attribute("formAction", "/membros/42/editar"))
+                .andExpect(model().attribute("membroId", 42L))
                 .andExpect(model().attribute("membro",
                         hasProperty("nome", equalTo("Nome atual"))))
                 .andExpect(model().attribute("membro",
@@ -257,7 +322,7 @@ class MembroControllerTest {
                         .param("telefone", "Telefone enviado")
                         .param("endereco", "Endereço enviado"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("membros/formulario"))
+                .andExpect(view().name("membros/lista"))
                 .andExpect(model().attribute("editando", true))
                 .andExpect(model().attribute("formAction", "/membros/42/editar"))
                 .andExpect(model().attributeHasFieldErrors("membro", "cpf"))
@@ -281,7 +346,7 @@ class MembroControllerTest {
                         .param("telefone", "Telefone enviado")
                         .param("endereco", "Endereço enviado"))
                 .andExpect(status().isOk())
-                .andExpect(view().name("membros/formulario"))
+                .andExpect(view().name("membros/lista"))
                 .andExpect(model().attributeHasFieldErrors("membro", "cpf"))
                 .andExpect(model().attribute("membro",
                         hasProperty("cpf", equalTo("529.982.247-25"))));
@@ -319,7 +384,8 @@ class MembroControllerTest {
         DataIntegrityViolationException propagada = assertThrows(
                 DataIntegrityViolationException.class,
                 () -> new MembroController(membroService).cadastrar(
-                        membro, resultado, new RedirectAttributesModelMap()));
+                        membro, resultado, new ExtendedModelMap(),
+                        new RedirectAttributesModelMap()));
 
         assertSame(excecao, propagada);
     }
@@ -331,5 +397,11 @@ class MembroControllerTest {
         membro.setTelefone("(48) 99999-0000");
         membro.setEndereco("Rua A, 10");
         return membro;
+    }
+
+    private void setId(Membro membro, Long id) throws ReflectiveOperationException {
+        var idField = Membro.class.getDeclaredField("id");
+        idField.setAccessible(true);
+        idField.set(membro, id);
     }
 }
