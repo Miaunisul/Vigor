@@ -76,7 +76,7 @@ Os valores foram extraídos do elemento `report/counter` de `target/site/jacoco/
 
 O `pom.xml` exige `INSTRUCTION / COVEREDRATIO >= 0.75` para o bundle em `verify`. A pipeline executa `mvn --batch-mode --no-transfer-progress clean verify` em Java 21 com serviço PostgreSQL 18 e publica `target/site/jacoco/` no artefato `relatorio-jacoco`, com retenção de 14 dias. A configuração dispara em PRs para `develop`/main e pushes nas branches configuradas.
 
-A CI da versão-base `0ed8b47` concluiu com sucesso. A execução do PR de revisão será registrada após sua conclusão. [CI da versão-base](https://github.com/Miaunisul/Vigor/actions/runs/45075396121)
+A CI da versão-base `0ed8b47` concluiu com sucesso. A [execução #101 do PR #58](https://github.com/Miaunisul/Vigor/actions/runs/45170884447), em 23/11/2026, avaliou o commit `9235847cb1557c659acc43b54b55059ddeede382` e aprovou 281 testes, com zero falhas, erros ou ignorados, incluindo os 24 cenários HTTP novos. O XML da CI confirmou os mesmos contadores da tabela local e o gate de 75% foi aprovado. O artefato foi publicado com retenção até 07/12/2026. O [resumo dos contadores da CI](e02/cobertura-ci.csv) está preservado neste PR. [Relatório HTML/XML da CI](https://github.com/Miaunisul/Vigor/actions/runs/45170884447/artifacts/14817580413) · [CI da versão-base](https://github.com/Miaunisul/Vigor/actions/runs/45075396121)
 
 ## Requisitos não funcionais
 
@@ -87,7 +87,7 @@ A CI da versão-base `0ed8b47` concluiu com sucesso. A execução do PR de revis
 | VN03 / RNF03 | Nos percursos observados, campos, indicação de obrigatoriedade, ações de retorno, mensagens de erro/sucesso e ausência de registros foram compreensíveis. Teclado completo, leitor de tela, diferentes navegadores e janela reduzida ficaram sem execução nesta revisão. |
 | VN04 / RNF04 | Banco vazio/migrações, rejeições e relacionamentos conferidos. Reinício real comparado para o membro e pagamento identificados. O resultado não foi estendido às variantes de todas as entidades. |
 | VN05 / RNF05 | Inspeção confirmou controller/service/repository/model e templates separados. O Maven compila o projeto. Não foi identificada configuração de ferramenta dedicada de análise estática no POM ou workflow. Encaminhamento E02-L02. |
-| VN06 / RNF06 | Suíte local e gate JaCoCo aprovados. A CI do PR possui conferência própria, indicada na seção anterior após a execução. |
+| VN06 / RNF06 | Suíte local e gate JaCoCo aprovados. A CI #101 confirmou os totais e o gate. A referência e o artefato estão na seção anterior. |
 
 ## Falhas, inconsistências e encaminhamentos
 
@@ -119,7 +119,7 @@ As identidades abaixo foram verificadas pelos autores dos PRs e pelo histórico 
 
 ## Encaminhamento para Maria Eduarda
 
-O PR de revisão e o comentário na issue #36 serão usados para encaminhar este relatório a `@dudahmesmo`, com os links da CI e do relatório de cobertura. O envio e o recebimento serão tratados distintamente no registro.
+Os resultados e encaminhamentos foram enviados a `@dudahmesmo` pelo [comentário na issue #36](https://github.com/Miaunisul/Vigor/issues/36#issuecomment-7100512592), com os links da execução #101 e do relatório JaCoCo. O [PR #58](https://github.com/Miaunisul/Vigor/pull/58) também solicita sua revisão. O envio está registrado. O recebimento e a consolidação dependem do acompanhamento de Maria Eduarda.
 
 Para consolidação, utilizar os totais e versões desta revisão, associar os resultados de cada E02-UI aos CTs aplicáveis e tratar os itens E02-D01–E02-D05/E02-L01–E02-L02 com os responsáveis indicados. Manter os registros históricos existentes e a distinção entre aprovado, reprovado, parcialmente verificado e não executado. A decisão sobre CA30 requer alinhamento da equipe.
 
