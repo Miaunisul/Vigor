@@ -172,11 +172,30 @@ class HistoricoAtividadeServiceTest {
     }
 
     @Test
-    void consultaHistoricoSemFiltros() {
+    void consultaHistoricoPorMembroSemFiltrosAdicionais() {
         List<HistoricoAtividade> esperadas = List.of(atividadeValida());
+        when(membroRepository.existsById(10L)).thenReturn(true);
         when(historicoRepository.findAll(any(Specification.class))).thenReturn(esperadas);
 
-        assertSame(esperadas, historicoService.consultar(null, null, null, null));
+        assertSame(esperadas, historicoService.consultar(10L, null, null, null));
+        verify(historicoRepository).findAll(any(Specification.class));
+    }
+
+    @Test
+    void rejeitaConsultaSemMembroAntesDeConsultarRepositorio() {
+        assertThrows(IllegalArgumentException.class,
+                () -> historicoService.consultar(null, null, null, null));
+
+        verifyNoInteractions(historicoRepository, membroRepository);
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = {0L, -1L})
+    void rejeitaReferenciaDeMembroNaoPositivaAntesDeConsultarRepositorio(Long membroId) {
+        assertThrows(IllegalArgumentException.class,
+                () -> historicoService.consultar(membroId, null, null, null));
+
+        verifyNoInteractions(historicoRepository, membroRepository);
     }
 
     @Test
