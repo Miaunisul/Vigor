@@ -225,7 +225,7 @@ class RevisaoFinalHttpPostgresIntegrationTest {
         assertFalse(HtmlEscape.unescapeHtml(pagamentos.body()).contains("123,45"));
         var historico = cliente.get("/atividades?membroId=" + referencia);
         assertEquals(200, historico.statusCode());
-        assertTrue(historico.body().contains("Informe um membro e um período válidos."));
+        assertTrue(historico.body().contains("A referência do membro é inválida. Selecione um membro cadastrado."));
         assertFalse(historico.body().contains(atividade));
     }
 
