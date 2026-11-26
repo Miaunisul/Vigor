@@ -36,7 +36,16 @@
                 <div class="campo campo-selecao">
                     <label for="membroId">Membro selecionado</label>
                     <select id="membroId" name="membroId">
-                        <option value="" th:selected="${membroSelecionadoId == null}">Todos os membros</option>
+                        <option value="" th:selected="${membroSelecionadoId == null and #strings.isEmpty(membroIdInformado)}">
+                            Selecione um membro
+                        </option>
+                        <option th:if="${!#strings.isEmpty(membroIdInformado) and !referenciaMembroEncontrada}"
+                                th:value="${membroIdInformado}" selected
+                                th:text="${referenciaMembroValida
+                                    ? 'Membro não encontrado: ' + membroIdInformado
+                                    : 'Referência inválida: ' + membroIdInformado}">
+                            Referência inválida
+                        </option>
                         <option th:each="membro : ${membros}" th:value="${membro.id}"
                                 th:selected="${membro.id == membroSelecionadoId}"
                                 th:text="${membro.nome}">Membro cadastrado</option>
@@ -57,7 +66,8 @@
             </form>
         </section>
 
-        <section class="painel tabela-atividades" aria-label="Histórico de atividades">
+        <section class="painel tabela-atividades" aria-label="Histórico de atividades"
+                 th:if="${consultaExecutada}">
             <div class="tabela-container">
                 <table>
                     <caption class="visualmente-oculto">Atividades realizadas pelos membros</caption>
@@ -79,7 +89,12 @@
                         <td th:text="${atividade.funcionarioResponsavel.nome}">Funcionário</td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(atividades)}">
-                        <td class="vazio" colspan="5">Nenhuma atividade encontrada para os filtros informados.</td>
+                        <td class="vazio" colspan="5"
+                            th:text="${membroSemAtividades
+                                ? 'Este membro ainda não possui atividades registradas.'
+                                : 'Nenhuma atividade encontrada para este membro com os filtros informados.'}">
+                            Nenhuma atividade encontrada para este membro.
+                        </td>
                     </tr>
                     </tbody>
                 </table>

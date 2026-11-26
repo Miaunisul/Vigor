@@ -276,11 +276,11 @@ Cada condição inválida deve ser verificada separadamente, mantendo os demais 
 
 ### CA30 — Consulta com referência de membro inválida
 
-**Dado** que a referência ao membro está ausente ou não corresponde a um membro cadastrado,
+**Dado** que nenhum membro foi selecionado, que a referência informada tem formato inválido ou não corresponde a um membro cadastrado,
 
 **Quando** é solicitada uma consulta de treinos ou histórico por esse membro,
 
-**Então** o sistema deve rejeitar a solicitação e informar o problema, sem apresentar registros de outros membros.
+**Então** o sistema deve informar se falta selecionar um membro, se a referência é inválida ou se o membro não existe, sem apresentar registros de outros membros.
 
 Essa situação deve ser diferenciada da consulta de um membro existente que não possui registros.
 
@@ -332,7 +332,7 @@ Os critérios de aceite devem orientar os testes unitários, de integração, de
 
 Todos os critérios deste documento integram a entrega final da A3, exceto o CA13, identificado como futuro. A execução das verificações acompanhará as etapas de implementação.
 
-Os critérios CA17 a CA34 descrevem comportamentos esperados. Os identificadores CT01 a CT21 estão definidos em `docs/testing/plano-de-testes.md`. A existência de um caso de teste não comprova sua execução integral. Resultados e limitações devem ser associados às evidências registradas em `docs/testing/evidencias.md`.
+Os critérios CA17 a CA34 descrevem comportamentos esperados. Os identificadores CT01 a CT22 estão definidos em `docs/testing/plano-de-testes.md`. A existência de um caso de teste não comprova sua execução integral. Resultados e limitações devem ser associados às evidências registradas em `docs/testing/evidencias.md`.
 
 O CA25 exige verificar a permanência dos dados após reiniciar a aplicação. Um teste que apenas salva e consulta dados sem reiniciar a aplicação não comprova, por si só, o atendimento integral desse critério.
 
@@ -344,7 +344,7 @@ Os testes do fluxo de registro devem verificar que uma solicitação válida sem
 
 A preparação dos dados de atividades deve respeitar as regras RN14 a RN16. A preparação dos dados de funcionários deve respeitar as regras RN18 e RN19.
 
-Os critérios CA28 a CA30 foram explicitados na revisão D04. Sua associação aos casos de teste e à matriz de rastreabilidade permanece pendente de atualização; não se presume que os CT01 a CT17 já contemplem integralmente esses cenários.
+Os critérios CA28 a CA30 foram explicitados na revisão D04. O CA30 está associado ao CT22 e à matriz de rastreabilidade. Os cenários de preparação técnica dos CA28 e CA29 permanecem pendentes no trabalho L03; não se presume que CT13 contemple integralmente esses cenários.
 
 Entradas não numéricas, datas inválidas e valores fracionários em campos inteiros devem ser verificadas na camada que recebe e converte esses dados. Os serviços utilizam tipos Java como `BigDecimal`, `LocalDate` e `Integer`; a existência desses tipos não comprova o tratamento de erros na interface.
 

@@ -145,10 +145,10 @@ Os casos descrevem procedimentos e resultados esperados. A situação de cada ca
 
 ### CT10 — Consulta de treinos por membro
 
-- **Status:** Planejado.
+- **Status:** Parcialmente verificado em M09; controller, serviço e renderização passaram nos testes focados. A execução PostgreSQL aguarda `DB_PASSWORD`.
 - **RF/CA:** RF07; CA20.
 - **Pré-condições:** Funcionário autenticado; existe um membro com um treino previamente cadastrado (por CT09 ou preparação de dados), e os valores armazenados de tipo, descrição, duração em minutos, data de início e membro associado são conhecidos para comparação. Para verificar a consulta sem resultados, existe também outro membro sem treinos.
-- **Passos:** Consultar os treinos do membro com o treino conhecido e comparar cada detalhe apresentado com os valores armazenados: tipo, descrição, duração, data de início e membro associado. Em execução separada, consultar o membro sem treinos.
+- **Passos:** Selecionar um membro com treino e comparar cada detalhe apresentado com os valores armazenados: tipo, descrição, duração, data de início e membro associado. Repetir para outro membro com treinos e conferir que nenhum registro do primeiro aparece. Em execução separada, consultar um membro sem treinos. Confirmar que busca e paginação mantêm o membro selecionado.
 - **Resultado esperado:** A consulta apresenta somente os treinos associados ao membro consultado, e tipo, descrição, duração, data de início e membro de cada treino apresentado correspondem aos valores efetivamente armazenados. Para o membro sem treinos, o sistema informa que não há treinos cadastrados.
 
 ### CT11 — Registro de pagamento válido
@@ -173,7 +173,7 @@ Os casos descrevem procedimentos e resultados esperados. A situação de cada ca
 
 ### CT13 — Consulta do histórico com atividades
 
-- **Status:** Planejado.
+- **Status:** Parcialmente verificado em M09; controller, serviço e renderização passaram nos testes focados. A execução PostgreSQL aguarda `DB_PASSWORD`.
 - **RF/CA:** RF09; CA14. **Regras:** RN14, RN15, RN16 e RN17.
 - **Pré-condições:** Funcionário autenticado; dados de atividades e cadastros de membros e funcionários disponibilizados por procedimentos técnicos documentados; atividades associadas a membros distintos.
 - **Passos:** 1. Conferir cada registro de atividade disponibilizado: verificar identificador presente e único; presença do membro, atividade, data, tempo de execução e funcionário responsável; nome da atividade não vazio nem composto apenas por espaços; data válida; tempo de execução inteiro positivo em minutos. 2. Conferir que as referências de cada atividade correspondem a membro e funcionário existentes nos dados disponibilizados, sem pressupor nome físico de atributo ou coluna. 3. Consultar o histórico de cada membro selecionado e comparar os resultados com os registros armazenados, incluindo atividade, data e tempo de execução.
@@ -181,11 +181,20 @@ Os casos descrevem procedimentos e resultados esperados. A situação de cada ca
 
 ### CT14 — Consulta do histórico sem atividades
 
-- **Status:** Planejado.
+- **Status:** Parcialmente verificado em M09; renderização e serviço foram exercitados. A execução PostgreSQL aguarda `DB_PASSWORD`.
 - **RF/CA:** RF09; CA22.
 - **Pré-condições:** Funcionário autenticado; existe membro sem atividades carregadas.
 - **Passos:** Consultar o histórico desse membro.
 - **Resultado esperado:** O sistema informa a ausência de atividades para o membro consultado.
+
+### CT22 — Seleção e validação da referência de membro em treinos e histórico
+
+- **Status:** Parcialmente verificado em M09; testes focados de controller, serviço e template passaram. Os testes PostgreSQL estão implementados e aguardam `DB_PASSWORD` para execução.
+- **RF/CA:** RF07, RF09; CA30.
+- **Pré-condições:** Existem dois membros distintos, registros de treino e de histórico associados a pelo menos um deles e um membro sem registros. Para a verificação no banco, usar PostgreSQL real.
+- **Passos:** Para cada consulta, enviar a referência ausente, em formato inválido, zero ou negativa e positiva sem membro correspondente. Confirmar a mensagem específica, a preservação dos filtros e que nenhum registro é apresentado. Depois consultar cada membro existente com registros e o membro existente sem registros, comparando os IDs e associações com o banco.
+- **Resultado esperado:** Ausência de seleção, formato inválido, membro inexistente, membro existente sem registros e membro existente com registros são estados distintos. Só a consulta de membro existente executa a busca; ela retorna exclusivamente registros associados ao membro selecionado.
+- **Testes relacionados:** `TreinoControllerTest`, `TreinoTemplateRenderingTest`, `TreinoServiceTest`, `TreinoPostgresIntegrationTest`, `AtividadeTemplateRenderingTest`, `HistoricoAtividadeServiceTest` e `HistoricoAtividadePostgresIntegrationTest`.
 
 ### CT15 — Login válido e proteção por hash da senha
 
@@ -302,19 +311,18 @@ As verificações abaixo complementam os CT funcionais, sem receber identificado
 | RF04: CA07, CA17, CA18, CA24, CA26 | CT07 — verifica a atualização de membros e reutiliza variações de entrada dos CT02–CT04, que tratam do cadastro. |
 | RF05: CA08, CA19 | CT08 |
 | RF06: CA09, CA10, CA21 | CT09 |
-| RF07: CA20 | CT10 |
+| RF07: CA20, CA30 | CT10, CT22 |
 | RF08: CA11, CA12, CA27 | CT11, CT12 |
-| RF09: CA14, CA22 | CT13, CT14 |
+| RF09: CA14, CA22, CA30 | CT13, CT14, CT22 |
 | RF01: CA15, CA16, CA23 | CT15, CT16 |
 | RNF01 a RNF06 | VN01 a VN06; CT15, CT16, CT17 e CT21 complementam conforme indicado |
 | RF10: CA31, CA32, CA33, CA34 | CT18, CT19, CT20 |
 | RF08, RF10 e RNF04 / CA25: pagamentos após reinício | CT21 |
 | RF09 / CA28, CA29: preparação técnica do histórico | CT23, CT24 |
-| RF07 e RF09 / CA30: referência inválida na consulta | Caso específico pendente de definição e vínculo. |
+| RF07 e RF09 / CA30: seleção ausente ou referência inválida na consulta | CT22 |
+O CA13 permanece fora do escopo de registro pela interface. Os identificadores CT01 a CT24 estão definidos neste plano. CT13 e CT14 tratam das consultas do histórico; CT22 cobre o CA30 e CT23/CT24 cobrem a carga técnica dos CA28/CA29, executada conforme EV27/EV28. A situação de cada CT deve seguir seus registros de execução e limitações.
 
-O CA13 permanece fora do escopo de registro pela interface. Os identificadores CT01 a CT21 estão definidos neste plano. CT13 e CT14 tratam das consultas do histórico; não comprovam integralmente os CA28–CA30. A definição dos casos específicos desses critérios permanece como acompanhamento da D04. A situação de cada CT deve seguir seus registros de execução e limitações.
-
-Na task L03, os casos específicos dos CA28 e CA29 foram definidos como CT23 e CT24 e executados conforme EV27 e EV28. O identificador CT22 está em uso na branch da M09, ainda não integrada à `develop`.
+Na task L03, os casos específicos dos CA28 e CA29 foram definidos como CT23 e CT24 e executados conforme EV27 e EV28. O CT22 da M09 está integrado nesta branch e cobre o CA30.
 
 ## 6. Tipos de teste
 
@@ -463,6 +471,5 @@ Este documento representa o planejamento dos cenários. A execução automatizad
 - Registrar as evidências ainda pendentes de testes funcionais, usabilidade e outras execuções de CI.
 - Relacionar cada integrante às funcionalidades e aos respectivos arquivos de teste.
 - Concluir a associação e a execução integral dos CT11, CT12 e CT18–CT21, respeitando as verificações parciais já registradas.
-- Definir e vincular o caso específico do CA30 na tarefa de acompanhamento da rastreabilidade. Os CA28 e CA29 foram vinculados aos CT23 e CT24 na L03.
-
+- Registrar os casos específicos e as evidências dos CA28, CA29 e CA30: CT23/CT24 (L03) e CT22 (M09), respectivamente; as execuções da L03 constam em EV27/EV28 e a validação PostgreSQL de M09 nesta integração.
 A validação local após o merge e a execução da CI da D05 foram concluídas com 238 testes, sem falhas, erros ou testes ignorados, e aprovação do limite automático de 75% de cobertura de instruções. O relatório JaCoCo foi publicado na execução [44972713889](https://github.com/Miaunisul/Vigor/actions/runs/44972713889). Os resultados e links estão registrados em `evidencias.md`.

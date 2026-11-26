@@ -151,6 +151,18 @@ class TreinoServiceTest {
     }
 
     @Test
+    void rejeitaConsultaSemMembroOuComReferenciaNaoPositivaAntesDeAcessarRepositorios() {
+        assertThrows(IllegalArgumentException.class,
+                () -> treinoService.consultarPorMembro(null));
+        assertThrows(IllegalArgumentException.class,
+                () -> treinoService.consultarPorMembro(0L));
+        assertThrows(IllegalArgumentException.class,
+                () -> treinoService.consultarPorMembro(-1L));
+
+        verifyNoInteractions(membroRepository, treinoRepository);
+    }
+
+    @Test
     void listaTodosOsTreinos() {
         List<Treino> esperados = List.of(treinoValido());
         when(treinoRepository.findAll()).thenReturn(esperados);

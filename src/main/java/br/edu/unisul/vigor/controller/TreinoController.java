@@ -36,6 +36,10 @@ public class TreinoController {
 
     private static final String MENSAGEM_MEMBRO_OBRIGATORIO =
             "Selecione um membro cadastrado.";
+    private static final String MENSAGEM_SELECAO_CONSULTA_OBRIGATORIA =
+            "Selecione um membro para consultar os treinos.";
+    private static final String MENSAGEM_REFERENCIA_MEMBRO_INVALIDA =
+            "A referência do membro é inválida. Selecione um membro cadastrado.";
     private static final String MENSAGEM_MEMBRO_NAO_ENCONTRADO =
             "Membro não encontrado.";
     private static final String MENSAGEM_TREINO_NAO_ENCONTRADO =
@@ -124,7 +128,7 @@ public class TreinoController {
     public String tela(
             @RequestParam(required = false) String acao,
             @RequestParam(required = false) Long treinoId,
-            @RequestParam(required = false) Long membroId,
+            @RequestParam(required = false) String membroId,
             @RequestParam(required = false, name = "q") String busca,
             @RequestParam(defaultValue = "0") int page,
             Model model,
@@ -156,11 +160,11 @@ public class TreinoController {
 
         if ("novo".equals(visualizacao)) {
             model.addAttribute("visualizacao", visualizacao);
-            model.addAttribute("membroIdFormulario", membroId == null ? "" : membroId.toString());
+            model.addAttribute("membroIdFormulario", membroId == null ? "" : membroId);
             return "treinos/lista";
         }
 
-        return montarLista(model, busca, membroId, page, atributos);
+        return montarLista(model, busca, membroId, page);
     }
 
     @GetMapping("/novo")
@@ -238,27 +242,38 @@ public class TreinoController {
     private String montarLista(
             Model model,
             String busca,
-            Long membroId,
-            int paginaSolicitada,
-            RedirectAttributes atributos) {
-        if (membroId != null) {
-            try {
-                membroService.buscarPorId(membroId);
-            } catch (IllegalArgumentException e) {
-                if (!MENSAGEM_MEMBRO_NAO_ENCONTRADO.equals(e.getMessage())) {
-                    throw e;
-                }
-                atributos.addFlashAttribute("erro", e.getMessage());
-                return "redirect:/treinos";
+            String membroIdInformado,
+            int paginaSolicitada) {
+        if (membroIdInformado == null || membroIdInformado.isBlank()) {
+            return rejeitarConsulta(model, busca, membroIdInformado,
+                    MENSAGEM_SELECAO_CONSULTA_OBRIGATORIA, false);
+        }
+
+        long membroId;
+        try {
+            membroId = Long.parseLong(membroIdInformado.strip());
+            if (membroId <= 0) {
+                throw new NumberFormatException("ID deve ser positivo.");
             }
+        } catch (NumberFormatException e) {
+            return rejeitarConsulta(model, busca, membroIdInformado,
+                    MENSAGEM_REFERENCIA_MEMBRO_INVALIDA, false);
+        }
+
+        List<Treino> treinosDoMembro;
+        try {
+            treinosDoMembro = treinoService.consultarPorMembro(membroId);
+        } catch (IllegalArgumentException e) {
+            if (!MENSAGEM_MEMBRO_NAO_ENCONTRADO.equals(e.getMessage())) {
+                throw e;
+            }
+            return rejeitarConsulta(model, busca, membroIdInformado, e.getMessage(), true);
         }
 
         String termo = busca == null ? "" : busca.strip();
         String termoMinusculo = termo.toLowerCase(Locale.ROOT);
         String cpfTermo = termo.replaceAll("\\D", "");
-        List<Treino> filtrados = treinoService.listarTodos().stream()
-                .filter(treino -> membroId == null
-                        || treino.getMembro().getId().equals(membroId))
+        List<Treino> filtrados = treinosDoMembro.stream()
                 .filter(treino -> termo.isBlank()
                         || treino.getMembro().getNome().toLowerCase(Locale.ROOT)
                                 .contains(termoMinusculo)
@@ -276,6 +291,10 @@ public class TreinoController {
         model.addAttribute("visualizacao", "lista");
         model.addAttribute("busca", termo);
         model.addAttribute("membroSelecionadoId", membroId);
+        model.addAttribute("membroIdInformado", membroIdInformado);
+        model.addAttribute("referenciaMembroValida", true);
+        model.addAttribute("referenciaMembroEncontrada", true);
+        model.addAttribute("consultaExecutada", true);
         model.addAttribute("pagina", pagina);
         model.addAttribute("totalPaginas", totalPaginas);
         model.addAttribute("totalTreinos", total);
@@ -284,10 +303,37 @@ public class TreinoController {
         return "treinos/lista";
     }
 
-    private void prepararDadosBase(Model model, String busca, Long membroId) {
+    private String rejeitarConsulta(
+            Model model,
+            String busca,
+            String membroIdInformado,
+            String mensagem,
+            boolean referenciaMembroValida) {
+        model.addAttribute("erro", mensagem);
+        model.addAttribute("treinos", List.of());
+        model.addAttribute("visualizacao", "lista");
+        model.addAttribute("busca", busca == null ? "" : busca);
+        model.addAttribute("membroSelecionadoId", null);
+        model.addAttribute("membroIdInformado", membroIdInformado == null ? "" : membroIdInformado);
+        model.addAttribute("referenciaMembroValida", referenciaMembroValida);
+        model.addAttribute("referenciaMembroEncontrada", false);
+        model.addAttribute("consultaExecutada", false);
+        model.addAttribute("pagina", 0);
+        model.addAttribute("totalPaginas", 1);
+        model.addAttribute("totalTreinos", 0);
+        model.addAttribute("inicioLista", 0);
+        model.addAttribute("fimLista", 0);
+        return "treinos/lista";
+    }
+
+    private void prepararDadosBase(Model model, String busca, String membroId) {
         model.addAttribute("membros", membroService.listarTodos());
         model.addAttribute("busca", busca == null ? "" : busca);
-        model.addAttribute("membroSelecionadoId", membroId);
+        model.addAttribute("membroSelecionadoId", null);
+        model.addAttribute("membroIdInformado", membroId == null ? "" : membroId);
+        model.addAttribute("referenciaMembroValida", false);
+        model.addAttribute("referenciaMembroEncontrada", false);
+        model.addAttribute("consultaExecutada", false);
         model.addAttribute("visualizacao", "lista");
         model.addAttribute("moduloAtivo", "treinos");
     }

@@ -75,12 +75,7 @@ public class HistoricoAtividadeService {
 
     @Transactional(readOnly = true)
     public List<HistoricoAtividade> consultarPorMembro(Long membroId) {
-        if (membroId == null) {
-            throw new IllegalArgumentException("O membro é obrigatório.");
-        }
-        if (!membroRepository.existsById(membroId)) {
-            throw new IllegalArgumentException("Membro não encontrado.");
-        }
+        validarMembroParaConsulta(membroId);
         return historicoAtividadeRepository
                 .findByMembro_IdOrderByDataAtividadeDescIdDesc(membroId);
     }
@@ -88,9 +83,7 @@ public class HistoricoAtividadeService {
     @Transactional(readOnly = true)
     public List<HistoricoAtividade> consultar(
             Long membroId, String busca, LocalDate dataInicial, LocalDate dataFinal) {
-        if (membroId != null && (membroId <= 0 || !membroRepository.existsById(membroId))) {
-            throw new IllegalArgumentException("Membro não encontrado.");
-        }
+        validarMembroParaConsulta(membroId);
         if (dataInicial != null && dataFinal != null && dataInicial.isAfter(dataFinal)) {
             throw new IllegalArgumentException(
                     "A data inicial não pode ser posterior à data final.");
@@ -102,14 +95,8 @@ public class HistoricoAtividadeService {
         String termoMinusculo = termo.toLowerCase(Locale.ROOT);
         Specification<HistoricoAtividade> filtros = (root, query, construtor) -> {
             List<Predicate> predicados = new ArrayList<>();
-            Join<HistoricoAtividade, Membro> membro = null;
-            if (membroId != null || !termoMinusculo.isEmpty()) {
-                membro = root.join("membro", JoinType.INNER);
-            }
-
-            if (membroId != null) {
-                predicados.add(construtor.equal(membro.get("id"), membroId));
-            }
+            Join<HistoricoAtividade, Membro> membro = root.join("membro", JoinType.INNER);
+            predicados.add(construtor.equal(membro.get("id"), membroId));
             if (!termoMinusculo.isEmpty()) {
                 List<Predicate> correspondencias = new ArrayList<>();
                 correspondencias.add(construtor.like(
@@ -136,6 +123,18 @@ public class HistoricoAtividadeService {
             return construtor.and(predicados.toArray(Predicate[]::new));
         };
         return historicoAtividadeRepository.findAll(filtros);
+    }
+
+    private void validarMembroParaConsulta(Long membroId) {
+        if (membroId == null) {
+            throw new IllegalArgumentException("O membro é obrigatório.");
+        }
+        if (membroId <= 0) {
+            throw new IllegalArgumentException("Referência de membro inválida.");
+        }
+        if (!membroRepository.existsById(membroId)) {
+            throw new IllegalArgumentException("Membro não encontrado.");
+        }
     }
 
     @Transactional(readOnly = true)
