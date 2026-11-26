@@ -125,7 +125,9 @@ class AtividadeTemplateRenderingTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
                         "Selecione um membro para consultar o histórico de atividades.")))
                 .andExpect(content().string(org.hamcrest.Matchers.not(
-                        org.hamcrest.Matchers.containsString("aria-label=\"Histórico de atividades\""))));
+                        org.hamcrest.Matchers.containsString("aria-label=\"Histórico de atividades\""))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("Todos os membros"))));
 
         verifyNoInteractions(historicoService);
     }
@@ -137,6 +139,8 @@ class AtividadeTemplateRenderingTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
                         "A referência do membro é inválida.")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Referência inválida: abc")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"Ana\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"abc\"")));
 

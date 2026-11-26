@@ -36,7 +36,9 @@
                 <div class="campo campo-selecao">
                     <label for="membroId">Membro selecionado</label>
                     <select id="membroId" name="membroId">
-                        <option value="" th:selected="${membroSelecionadoId == null}">Selecione um membro</option>
+                        <option value="" th:selected="${membroSelecionadoId == null and #strings.isEmpty(membroIdInformado)}">
+                            Selecione um membro
+                        </option>
                         <option th:if="${!#strings.isEmpty(membroIdInformado) and !referenciaMembroEncontrada}"
                                 th:value="${membroIdInformado}" selected
                                 th:text="${referenciaMembroValida
