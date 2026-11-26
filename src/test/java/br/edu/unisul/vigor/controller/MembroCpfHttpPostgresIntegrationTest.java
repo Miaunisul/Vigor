@@ -107,7 +107,7 @@ class MembroCpfHttpPostgresIntegrationTest {
             throws IOException, InterruptedException {
         String cpf = cpfDisponivel();
         String cpfDuplicado = pontuado ? formatarCpf(cpf) : cpf;
-        assertRedirecionaParaMembros(cadastrar(nomeTeste, cpf));
+        assertRedirecionaParaMembros(cadastrar(nomeTeste, pontuado ? cpf : formatarCpf(cpf)));
 
         HttpResponse<String> resposta = cadastrar(nomeTeste + " duplicado", cpfDuplicado);
 
@@ -140,7 +140,7 @@ class MembroCpfHttpPostgresIntegrationTest {
                 Date.valueOf(dataCadastroOriginal), idOriginal);
 
         String cpfComPontuacao = formatarCpf(membro.getCpf());
-        String formulario = formulario("Nome após edição", cpfComPontuacao,
+        String formulario = formulario(nomeTeste + " após edição", cpfComPontuacao,
                 "(48) 99999-5678", "Rua Nova, 45")
                 + "&id=999999&dataCadastro=2000-01-01";
         HttpResponse<String> resposta = post(
@@ -154,13 +154,13 @@ class MembroCpfHttpPostgresIntegrationTest {
                         linha.getString("telefone"), linha.getString("endereco"),
                         linha.getDate("data_cadastro").toLocalDate()),
                 idOriginal);
-        assertEquals(new MembroPersistidoAtualizado(idOriginal, "Nome após edição",
+        assertEquals(new MembroPersistidoAtualizado(idOriginal, nomeTeste + " após edição",
                 membro.getCpf(), "(48) 99999-5678", "Rua Nova, 45", dataCadastroOriginal),
                 persistido);
 
         HttpResponse<String> lista = get("/membros");
         assertEquals(200, lista.statusCode(), lista::body);
-        assertTrue(lista.body().contains("Nome após edição"), lista::body);
+        assertTrue(lista.body().contains(nomeTeste + " após edição"), lista::body);
 
         HttpResponse<String> detalhes = get(
         "/membros?acao=detalhes&membroId=" + idOriginal);

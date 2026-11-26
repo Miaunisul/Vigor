@@ -1,0 +1,5 @@
+"rota","status","duracao_ms"
+"/membros","200","24,87"
+"/treinos?membroId=47","200","34"
+"/pagamentos?membroId=47","200","21,15"
+"/atividades?membroId=45","200","29,37"
