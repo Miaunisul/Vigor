@@ -200,6 +200,25 @@ class TreinoPostgresIntegrationTest {
     }
 
     @Test
+    void consultaPorMembroRejeitaReferenciasAusentesInvalidasEInexistentes() {
+        Membro cadastrado = criarMembroTransitorio();
+        Membro outro = criarMembroTransitorio();
+        Treino treinoDoOutro = treinoService.cadastrar(treinoValido(), outro.getId());
+        treinoRepository.flush();
+        entityManager.clear();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> treinoService.consultarPorMembro(null));
+        assertThrows(IllegalArgumentException.class,
+                () -> treinoService.consultarPorMembro(0L));
+        assertThrows(IllegalArgumentException.class,
+                () -> treinoService.consultarPorMembro(Long.MAX_VALUE));
+        assertEquals(Set.of(treinoDoOutro.getId()),
+                idsDosTreinos(treinoService.consultarPorMembro(outro.getId())));
+        assertTrue(treinoService.consultarPorMembro(cadastrado.getId()).isEmpty());
+    }
+
+    @Test
     void checkDoBancoRejeitaDescricaoVazia() {
         Membro membro = membroParaTeste();
 
