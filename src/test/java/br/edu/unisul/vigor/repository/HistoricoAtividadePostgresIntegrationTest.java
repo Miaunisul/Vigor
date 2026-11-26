@@ -221,6 +221,30 @@ class HistoricoAtividadePostgresIntegrationTest {
     }
 
     @Test
+    void consultaFiltradaRejeitaReferenciasAusentesInvalidasEInexistentes() {
+        Membro cadastrado = criarMembroTransitorio();
+        Membro outro = criarMembroTransitorio();
+        Funcionario funcionario = funcionarioParaTeste();
+        HistoricoAtividade atividadeDoOutro = historicoService.registrar(
+                atividadeValida(), outro.getId(), funcionario.getId());
+        historicoRepository.flush();
+        entityManager.clear();
+
+        assertThrows(IllegalArgumentException.class,
+                () -> historicoService.consultar(null, "", null, null));
+        assertThrows(IllegalArgumentException.class,
+                () -> historicoService.consultar(0L, "", null, null));
+        assertThrows(IllegalArgumentException.class,
+                () -> historicoService.consultar(Long.MAX_VALUE, "", null, null));
+
+        List<HistoricoAtividade> doOutro = historicoService.consultar(
+                outro.getId(), "", null, null);
+        assertEquals(Set.of(atividadeDoOutro.getId()), idsDasAtividades(doOutro));
+        assertTrue(doOutro.stream().allMatch(item -> item.getMembro().getId().equals(outro.getId())));
+        assertTrue(historicoService.consultar(cadastrado.getId(), "", null, null).isEmpty());
+    }
+
+    @Test
     void consultaAtividadePersistidaRetornaDescricaoDataETempoGravados() {
         Membro membro = criarMembroTransitorio();
         Funcionario funcionario = funcionarioParaTeste();
