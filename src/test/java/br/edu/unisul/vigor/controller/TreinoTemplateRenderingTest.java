@@ -75,9 +75,9 @@ class TreinoTemplateRenderingTest {
     void renderizaListaComSidebarBuscaFiltroEEstados() throws Exception {
         Treino treino = treinoValido();
         setTreinoId(treino, 1L);
-        when(treinoService.listarTodos()).thenReturn(List.of(treino));
+        when(treinoService.consultarPorMembro(42L)).thenReturn(List.of(treino));
 
-        mockMvc.perform(get("/treinos"))
+        mockMvc.perform(get("/treinos").param("membroId", "42"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("/css/treinos.css")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
@@ -89,9 +89,55 @@ class TreinoTemplateRenderingTest {
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("45 min")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("20/11/2026")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Buscar membro por nome ou CPF")))
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("Todos os membros")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Selecione um membro")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("Todos os membros"))))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Ver detalhes")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Excluir")));
+    }
+
+    @Test
+    void naoExibeTabelaNemConsultaTreinosSemMembroSelecionado() throws Exception {
+        mockMvc.perform(get("/treinos").param("q", "Ana"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Selecione um membro para consultar os treinos.")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("aria-label=\"Treinos cadastrados\""))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("Todos os membros"))));
+
+        verifyNoInteractions(treinoService);
+    }
+
+    @Test
+    void diferenciaReferenciaInvalidaDeMembroInexistente() throws Exception {
+        mockMvc.perform(get("/treinos").param("membroId", "abc").param("q", "Ana"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "A referência do membro é inválida.")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Referência inválida: abc")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"Ana\"")));
+
+        when(treinoService.consultarPorMembro(404L))
+                .thenThrow(new IllegalArgumentException("Membro não encontrado."));
+        mockMvc.perform(get("/treinos").param("membroId", "404"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Membro não encontrado.")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Membro não encontrado: 404")));
+    }
+
+    @Test
+    void mostraEstadoVazioParaMembroExistenteSemTreinos() throws Exception {
+        when(treinoService.consultarPorMembro(42L)).thenReturn(List.of());
+
+        mockMvc.perform(get("/treinos").param("membroId", "42"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Este membro ainda não possui treinos cadastrados.")));
     }
 
     @Test

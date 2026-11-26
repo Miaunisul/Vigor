@@ -47,7 +47,16 @@
                     <span class="visualmente-oculto">Filtrar treinos por membro</span>
                     <select id="membroId" name="membroId"
                             onchange="this.form.requestSubmit()">
-                        <option value="" th:selected="${membroSelecionadoId == null}">Todos os membros</option>
+                        <option value="" th:selected="${membroSelecionadoId == null and #strings.isEmpty(membroIdInformado)}">
+                            Selecione um membro
+                        </option>
+                        <option th:if="${!#strings.isEmpty(membroIdInformado) and !referenciaMembroEncontrada}"
+                                th:value="${membroIdInformado}" selected
+                                th:text="${referenciaMembroValida
+                                    ? 'Membro não encontrado: ' + membroIdInformado
+                                    : 'Referência inválida: ' + membroIdInformado}">
+                            Referência de membro inválida
+                        </option>
                         <option th:each="membro : ${membros}"
                                 th:value="${membro.id}"
                                 th:selected="${membro.id == membroSelecionadoId}"
@@ -65,7 +74,7 @@
             </section>
 
             <section class="painel painel-tabela"
-                     th:if="${!#lists.isEmpty(membros)}"
+                     th:if="${consultaExecutada}"
                      aria-label="Treinos cadastrados">
                 <div class="tabela-container">
                     <table class="tabela-treinos">

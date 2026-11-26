@@ -17,6 +17,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -51,7 +52,7 @@ class TreinoControllerTest {
         membro = membroComId(MEMBRO_ID, "Ana Beatriz Costa");
         membro.setCpf("52998224725");
         when(membroService.listarTodos()).thenReturn(List.of(membro));
-        when(treinoService.listarTodos()).thenReturn(List.of());
+        when(treinoService.consultarPorMembro(MEMBRO_ID)).thenReturn(List.of());
     }
 
     @AfterEach
@@ -60,17 +61,19 @@ class TreinoControllerTest {
     }
 
     @Test
-    void telaPrincipalCarregaListaCompletaEControles() throws Exception {
-        mockMvc.perform(get("/treinos"))
+    void telaPrincipalExigeMembroECarregaSomenteConsultaFiltrada() throws Exception {
+        mockMvc.perform(get("/treinos").param("membroId", MEMBRO_ID.toString()))
                 .andExpect(status().isOk())
                 .andExpect(view().name("treinos/lista"))
                 .andExpect(model().attribute("visualizacao", "lista"))
                 .andExpect(model().attribute("moduloAtivo", "treinos"))
                 .andExpect(model().attribute("membros", List.of(membro)))
                 .andExpect(model().attribute("treinos", List.of()))
+                .andExpect(model().attribute("consultaExecutada", true))
+                .andExpect(model().attribute("membroSelecionadoId", MEMBRO_ID))
                 .andExpect(model().attribute("totalTreinos", 0));
 
-        verify(treinoService).listarTodos();
+        verify(treinoService).consultarPorMembro(MEMBRO_ID);
     }
 
     @Test
@@ -80,9 +83,11 @@ class TreinoControllerTest {
         Treino treinoAna = treinoValido(membro);
         Treino treinoBruno = treinoValido(bruno);
         when(membroService.listarTodos()).thenReturn(List.of(membro, bruno));
-        when(treinoService.listarTodos()).thenReturn(List.of(treinoAna, treinoBruno));
+        when(treinoService.consultarPorMembro(MEMBRO_ID)).thenReturn(List.of(treinoAna));
+        when(treinoService.consultarPorMembro(84L)).thenReturn(List.of(treinoBruno));
 
-        mockMvc.perform(get("/treinos").param("q", "529.982"))
+        mockMvc.perform(get("/treinos").param("membroId", MEMBRO_ID.toString())
+                        .param("q", "529.982"))
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("treinos", List.of(treinoAna)))
                 .andExpect(model().attribute("totalTreinos", 1));
@@ -91,6 +96,44 @@ class TreinoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("treinos", List.of(treinoBruno)))
                 .andExpect(model().attribute("membroSelecionadoId", 84L));
+    }
+
+    @Test
+    void rejeitaConsultaSemMembroSemConsultarTodosOsTreinos() throws Exception {
+        mockMvc.perform(get("/treinos").param("q", "Ana"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("treinos/lista"))
+                .andExpect(model().attribute("consultaExecutada", false))
+                .andExpect(model().attribute("treinos", List.of()))
+                .andExpect(model().attribute("erro",
+                        "Selecione um membro para consultar os treinos."));
+
+        verifyNoInteractions(treinoService);
+    }
+
+    @Test
+    void rejeitaReferenciaInvalidaEInexistentePreservandoBusca() throws Exception {
+        mockMvc.perform(get("/treinos").param("membroId", "abc").param("q", "Ana"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("consultaExecutada", false))
+                .andExpect(model().attribute("referenciaMembroValida", false))
+                .andExpect(model().attribute("membroIdInformado", "abc"))
+                .andExpect(model().attribute("busca", "Ana"))
+                .andExpect(model().attribute("erro",
+                        "A referência do membro é inválida. Selecione um membro cadastrado."));
+
+        when(treinoService.consultarPorMembro(404L))
+                .thenThrow(new IllegalArgumentException("Membro não encontrado."));
+        mockMvc.perform(get("/treinos").param("membroId", "404").param("q", "Bruno"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("consultaExecutada", false))
+                .andExpect(model().attribute("referenciaMembroValida", true))
+                .andExpect(model().attribute("membroIdInformado", "404"))
+                .andExpect(model().attribute("busca", "Bruno"))
+                .andExpect(model().attribute("erro", "Membro não encontrado."));
+
+        verify(treinoService).consultarPorMembro(404L);
+        verify(treinoService, never()).listarTodos();
     }
 
     @Test

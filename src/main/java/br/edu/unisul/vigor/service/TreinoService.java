@@ -58,6 +58,9 @@ public class TreinoService {
         if (membroId == null) {
             throw new IllegalArgumentException("O membro é obrigatório.");
         }
+        if (membroId <= 0) {
+            throw new IllegalArgumentException("Referência de membro inválida.");
+        }
         if (!membroRepository.existsById(membroId)) {
             throw new IllegalArgumentException("Membro não encontrado.");
         }
