@@ -141,6 +141,24 @@ class TreinoTemplateRenderingTest {
     }
 
     @Test
+    void preservaMembroEBuscaNoLinkDePaginacao() throws Exception {
+        List<Treino> treinos = new java.util.ArrayList<>();
+        for (long id = 1; id <= 11; id++) {
+            Treino treino = treinoValido();
+            setTreinoId(treino, id);
+            treinos.add(treino);
+        }
+        when(treinoService.consultarPorMembro(42L)).thenReturn(treinos);
+
+        mockMvc.perform(get("/treinos").param("membroId", "42").param("q", "Ana"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "href=\"/treinos?q=Ana&amp;membroId=42&amp;page=1\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Mostrando 1–10 de 11 registros")));
+    }
+
+    @Test
     void renderizaCadastroComoEstadoDaTelaPrincipal() throws Exception {
         mockMvc.perform(get("/treinos").param("acao", "novo"))
                 .andExpect(status().isOk())
