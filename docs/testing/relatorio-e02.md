@@ -78,6 +78,12 @@ O `pom.xml` exige `INSTRUCTION / COVEREDRATIO >= 0.75` para o bundle em `verify`
 
 A CI da versão-base `0ed8b47` concluiu com sucesso. A [execução #101 do PR #58](https://github.com/Miaunisul/Vigor/actions/runs/45170884447), em 23/11/2026, avaliou o commit `9235847cb1557c659acc43b54b55059ddeede382` e aprovou 281 testes, com zero falhas, erros ou ignorados, incluindo os 24 cenários HTTP novos. O XML da CI confirmou os mesmos contadores da tabela local e o gate de 75% foi aprovado. O artefato foi publicado com retenção até 07/12/2026. O [resumo dos contadores da CI](e02/cobertura-ci.csv) está preservado neste PR. [Relatório HTML/XML da CI](https://github.com/Miaunisul/Vigor/actions/runs/45170884447/artifacts/14817580413) · [CI da versão-base](https://github.com/Miaunisul/Vigor/actions/runs/45075396121)
 
+### Devolutiva do PR em 26/11/2026
+
+O teste `referenciaInvalidaNaoExibeRegistrosNosPagamentosEHistorico` passou a confirmar o HTTP 302 e o destino do cadastro de pagamento, a quantidade e os dados persistidos de pagamento e atividade e a apresentação desses registros nas consultas válidas. Essas verificações antecedem as quatro variantes de referência inválida, impedindo que a ausência de dados de preparação produza um falso positivo.
+
+A [CI do commit 1e672d2](https://github.com/Miaunisul/Vigor/actions/runs/45171388048) também foi conferida e concluiu com 281 testes, zero falhas, erros ou ignorados, e gate JaCoCo aprovado. A execução local direcionada às quatro variantes do teste ajustado foi aprovada em 26/11/2026, sem falhas, erros ou ignorados. A execução da nova alteração pode ser conferida por commit nas [verificações do PR #58](https://github.com/Miaunisul/Vigor/pull/58/checks).
+
 ## Requisitos não funcionais
 
 | Verificação existente | Resultado desta revisão |

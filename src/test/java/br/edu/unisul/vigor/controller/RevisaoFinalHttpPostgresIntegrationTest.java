@@ -189,12 +189,35 @@ class RevisaoFinalHttpPostgresIntegrationTest {
     @ParameterizedTest
     @ValueSource(strings = {"abc", "0", "-1", "9223372036854775808"})
     void referenciaInvalidaNaoExibeRegistrosNosPagamentosEHistorico(String referencia) throws Exception {
-        cliente.post("/pagamentos", formularioPagamento("123.45", "2026-11-23"));
+        var cadastroPagamento = cliente.post(
+                "/pagamentos", formularioPagamento("123.45", "2026-11-23"));
+        assertEquals(302, cadastroPagamento.statusCode(), cadastroPagamento::body);
+        assertEquals("/pagamentos", URI.create(
+                cadastroPagamento.headers().firstValue("Location").orElseThrow()).getPath());
+        assertEquals(1, quantidadePagamentos());
+        assertEquals(1, jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM pagamentos WHERE membro_id = ? "
+                        + "AND valor = 123.45 AND data_pagamento = DATE '2026-11-23' AND status = 'PAGO'",
+                Integer.class, membro.getId()));
+
         String atividade = "Atividade E02 " + identificador;
-        jdbcTemplate.update("INSERT INTO historico_atividades "
+        int atividadesInseridas = jdbcTemplate.update("INSERT INTO historico_atividades "
                         + "(membro_id, funcionario_responsavel_id, atividade, data_atividade, tempo_execucao_minutos) "
                         + "VALUES (?, ?, ?, CURRENT_DATE, 30)",
                 membro.getId(), funcionario.getId(), atividade);
+        assertEquals(1, atividadesInseridas);
+        assertEquals(1, jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM historico_atividades WHERE membro_id = ? "
+                        + "AND funcionario_responsavel_id = ? AND atividade = ? "
+                        + "AND data_atividade = CURRENT_DATE AND tempo_execucao_minutos = 30",
+                Integer.class, membro.getId(), funcionario.getId(), atividade));
+
+        var pagamentosValidos = cliente.get("/pagamentos?membroId=" + membro.getId());
+        assertEquals(200, pagamentosValidos.statusCode(), pagamentosValidos::body);
+        assertTrue(HtmlEscape.unescapeHtml(pagamentosValidos.body()).contains("123,45"));
+        var historicoValido = cliente.get("/atividades?membroId=" + membro.getId());
+        assertEquals(200, historicoValido.statusCode(), historicoValido::body);
+        assertTrue(historicoValido.body().contains(atividade));
 
         var pagamentos = cliente.get("/pagamentos?membroId=" + referencia);
         assertEquals(200, pagamentos.statusCode());
