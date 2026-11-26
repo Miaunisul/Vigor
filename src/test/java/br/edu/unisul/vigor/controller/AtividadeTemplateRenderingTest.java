@@ -54,15 +54,14 @@ class AtividadeTemplateRenderingTest {
                 .setViewResolvers(viewResolver)
                 .build();
         when(membroService.listarTodos()).thenReturn(List.of(membro("Ana Beatriz Costa", 10L)));
-        when(historicoService.consultar(null, "", null, null)).thenReturn(List.of());
     }
 
     @Test
     void renderizaHistoricoComResponsavelFiltrosEAtividadesAtivoNaSidebar() throws Exception {
-        when(historicoService.consultar(null, "", null, null))
+        when(historicoService.consultar(10L, "", null, null))
                 .thenReturn(List.of(atividade("Esteira", "Ana Beatriz Costa")));
 
-        mockMvc.perform(get("/atividades"))
+        mockMvc.perform(get("/atividades").param("membroId", "10"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("/css/atividades.css")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("Consulte o histórico")))
@@ -80,6 +79,10 @@ class AtividadeTemplateRenderingTest {
 
     @Test
     void preservaFiltrosEExibeMensagemQuandoNaoHaAtividades() throws Exception {
+        when(historicoService.consultar(10L, "Ana", LocalDate.of(2026, 11, 1),
+                LocalDate.of(2026, 11, 30))).thenReturn(List.of());
+        when(historicoService.consultarPorMembro(10L)).thenReturn(List.of());
+
         mockMvc.perform(get("/atividades")
                         .param("membroId", "10")
                         .param("q", "Ana")
@@ -87,7 +90,7 @@ class AtividadeTemplateRenderingTest {
                         .param("dataFinal", "2026-11-30"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
-                        "Nenhuma atividade encontrada para os filtros informados.")))
+                        "Este membro ainda não possui atividades registradas.")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"Ana\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"2026-11-01\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"2026-11-30\"")));
@@ -99,18 +102,66 @@ class AtividadeTemplateRenderingTest {
     @Test
     void rejeitaIntervaloInvertidoEDataMalformadaSemConsultarHistorico() throws Exception {
         mockMvc.perform(get("/atividades")
+                        .param("membroId", "10")
                         .param("dataInicial", "2026-11-21")
                         .param("dataFinal", "2026-11-20"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
                         "A data inicial não pode ser posterior à data final.")));
 
-        mockMvc.perform(get("/atividades").param("dataInicial", "data-invalida"))
+        mockMvc.perform(get("/atividades").param("membroId", "10")
+                        .param("dataInicial", "data-invalida"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
-                        "Informe um membro e um período válidos.")));
+                        "Informe um período válido.")));
 
         verifyNoInteractions(historicoService);
+    }
+
+    @Test
+    void exigeMembroSemConsultarHistoricoESemExibirTabelaGeral() throws Exception {
+        mockMvc.perform(get("/atividades").param("q", "Ana"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Selecione um membro para consultar o histórico de atividades.")))
+                .andExpect(content().string(org.hamcrest.Matchers.not(
+                        org.hamcrest.Matchers.containsString("aria-label=\"Histórico de atividades\""))));
+
+        verifyNoInteractions(historicoService);
+    }
+
+    @Test
+    void rejeitaReferenciaInvalidaEInexistentePreservandoFiltros() throws Exception {
+        mockMvc.perform(get("/atividades").param("membroId", "abc")
+                        .param("q", "Ana").param("dataInicial", "2026-11-01"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "A referência do membro é inválida.")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"Ana\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"abc\"")));
+
+        when(historicoService.consultar(404L, "Bruno", null, null))
+                .thenThrow(new IllegalArgumentException("Membro não encontrado."));
+        mockMvc.perform(get("/atividades").param("membroId", "404").param("q", "Bruno"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Membro não encontrado.")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Membro não encontrado: 404")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"Bruno\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("value=\"404\"")));
+    }
+
+    @Test
+    void membroExistenteSemResultadosDosFiltrosMostraEstadoVazioEspecifico() throws Exception {
+        when(historicoService.consultar(10L, "corrida", null, null)).thenReturn(List.of());
+        when(historicoService.consultarPorMembro(10L))
+                .thenReturn(List.of(atividade("Esteira", "Ana Beatriz Costa")));
+
+        mockMvc.perform(get("/atividades").param("membroId", "10").param("q", "corrida"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(
+                        "Nenhuma atividade encontrada para este membro com os filtros informados.")));
     }
 
     private Membro membro(String nome, Long id) {
