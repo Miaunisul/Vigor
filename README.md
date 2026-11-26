@@ -28,7 +28,7 @@ As páginas internas exigem autenticação. GET /login e os recursos estáticos 
 - **Membros:** cadastro, listagem, busca por identificador, validação e normalização de CPF, prevenção de duplicidade e exclusão segura.
 - **Funcionários:** serviço que procura login normalizado e compara a senha com BCrypt. O hash não faz parte da identidade da sessão nem é enviado às páginas.
 - **Pagamentos:** serviço para registrar e consultar pagamentos associados a membro; o status aceito é PAGO.
-- **Histórico de atividades:** serviço para consultar por membro ou funcionário responsável, filtrar por membro, nome/CPF e período, e ordenar os resultados. O método técnico de registro existente permanece sem tela ou endpoint de cadastro manual nesta issue.
+- **Histórico de atividades:** serviço para consultar por membro ou funcionário responsável, filtrar por membro, nome/CPF e período, e ordenar os resultados. O método técnico de registro existente permanece sem tela ou endpoint de cadastro manual nesta issue. A carga técnica do histórico (L03, CA28 e CA29) é executada pelo perfil `carga-historico`, conforme [carga-tecnica-historico.md](docs/architecture/database/carga-tecnica-historico.md).
 
 Os cinco modelos JPA, seus repositórios e as migrations V1 a V5 estão presentes. A M08 reutiliza esses componentes e não acrescenta migrations.
 
@@ -326,7 +326,7 @@ Os resultados das verificações estão registrados em [Evidências de testes](d
 - [Plano de testes](docs/testing/plano-de-testes.md) e [evidências](docs/testing/evidencias.md)
 - [Matriz de rastreabilidade](docs/planning/matriz-de-rastreabilidade.md) e [plano de tasks](docs/planning/plano-de-tasks.md)
 - [Arquitetura geral](docs/architecture/arquitetura-geral.md), [decisões](docs/architecture/decisoes.md) e [índice de arquitetura](docs/architecture/README.md)
-- Banco de dados: [modelo de dados](docs/architecture/database/modelo-de-dados.md), [relacionamentos](docs/architecture/database/relacionamentos.md), [migrations](docs/architecture/database/migrations.md) e [ambientes](docs/architecture/database/ambientes.md)
+- Banco de dados: [modelo de dados](docs/architecture/database/modelo-de-dados.md), [relacionamentos](docs/architecture/database/relacionamentos.md), [migrations](docs/architecture/database/migrations.md), [ambientes](docs/architecture/database/ambientes.md) e [carga técnica do histórico](docs/architecture/database/carga-tecnica-historico.md)
 - [Protótipo](docs/design/prototipo.md) e [diagramas](docs/diagrams/)
 
 ## Licença

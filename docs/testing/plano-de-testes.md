@@ -246,6 +246,40 @@ Os casos descrevem procedimentos e resultados esperados. A situação de cada ca
 - **Resultado esperado:** O mesmo pagamento permanece disponível, com ID, vínculo, valor, data e status preservados.
 - **Limite:** Este caso não verifica persistência após reinício das demais entidades.
 
+### CT23 — Carga técnica válida do histórico
+
+- **Status:** Executado com sucesso pelos testes de integração com PostgreSQL — EV27.
+- **RF/CA:** RF09, como preparação dos dados; CA28. **RN:** RN14, RN15, RN16.
+- **Pré-condições:** PostgreSQL configurado; membro e funcionário existentes, criados no próprio teste, sem IDs fixos; uma atividade válida previamente registrada.
+- **Passos:** 1. Incluir pelo procedimento técnico de carga uma atividade com membro e funcionário existentes, nome preenchido, data válida e tempo inteiro positivo. 2. Contar os registros de `historico_atividades` antes e depois da inclusão. 3. Ler o registro gravado no PostgreSQL e conferir ID, membro, funcionário, nome, data e tempo. 4. Consultar o histórico do membro e localizar a atividade.
+- **Resultado esperado:** A atividade é persistida com identificador gerado automaticamente, vínculos corretos com o membro e o funcionário responsável e os dados informados. A atividade aparece na consulta do histórico do membro correspondente.
+- **Testes:** `CargaHistoricoAtividadePostgresIntegrationTest`: `cargaValidaPersisteAtividadeComIdGeradoEVinculosCorretos` e `cargaValidaFicaDisponivelNoHistoricoDoMembro`.
+- **Limite:** A execução válida pelo runner do perfil `carga-historico` não foi registrada no banco local, que não possuía membros nem funcionários. Procedimento descrito em [carga-tecnica-historico.md](../architecture/database/carga-tecnica-historico.md).
+
+### CT24 — Rejeição de dados inválidos na carga técnica do histórico
+
+- **Status:** Executado com sucesso pelos testes de integração com PostgreSQL — EV27; execução do procedimento com membro inexistente registrada em EV28.
+- **RF/CA:** RF09, como preparação dos dados; CA29. **RN:** RN14, RN15, RN16, RN21. **RNF:** RNF04.
+- **Pré-condições:** As mesmas do CT23, incluindo uma atividade válida existente.
+- **Passos:** Em tentativas separadas, mantendo os demais campos válidos, incluir pelo procedimento técnico de carga uma atividade:
+  1. sem membro;
+  2. com membro inexistente;
+  3. sem funcionário responsável;
+  4. com funcionário inexistente;
+  5. sem nome;
+  6. com nome vazio;
+  7. com nome somente com espaços;
+  8. sem data;
+  9. com data inválida;
+  10. sem tempo de execução;
+  11. com tempo não inteiro;
+  12. com tempo igual a zero;
+  13. com tempo negativo.
+
+  Antes e depois de cada tentativa, contar os registros e ler a atividade válida existente.
+- **Resultado esperado:** Cada tentativa é rejeitada com mensagem que identifica o problema. Nenhum registro é incluído, e a atividade válida existente permanece inalterada.
+- **Testes:** `CargaHistoricoAtividadePostgresIntegrationTest`, um teste por condição, de `rejeitaCargaSemMembro` a `rejeitaCargaComTempoNegativo`. A conversão de datas e tempos inválidos também é verificada em `CargaHistoricoAtividadeServiceTest`.
+
 ## 4. Verificações planejadas de requisitos não funcionais
 
 As verificações abaixo complementam os CT funcionais, sem receber identificadores CT na matriz. A situação individual distingue planejamento e verificação parcial. Seus resultados deverão ser registrados em `docs/testing/evidencias.md`.
@@ -275,10 +309,12 @@ As verificações abaixo complementam os CT funcionais, sem receber identificado
 | RNF01 a RNF06 | VN01 a VN06; CT15, CT16, CT17 e CT21 complementam conforme indicado |
 | RF10: CA31, CA32, CA33, CA34 | CT18, CT19, CT20 |
 | RF08, RF10 e RNF04 / CA25: pagamentos após reinício | CT21 |
-| RF09 / CA28, CA29: preparação técnica do histórico | Caso específico pendente de definição e vínculo. |
+| RF09 / CA28, CA29: preparação técnica do histórico | CT23, CT24 |
 | RF07 e RF09 / CA30: referência inválida na consulta | Caso específico pendente de definição e vínculo. |
 
 O CA13 permanece fora do escopo de registro pela interface. Os identificadores CT01 a CT21 estão definidos neste plano. CT13 e CT14 tratam das consultas do histórico; não comprovam integralmente os CA28–CA30. A definição dos casos específicos desses critérios permanece como acompanhamento da D04. A situação de cada CT deve seguir seus registros de execução e limitações.
+
+Na task L03, os casos específicos dos CA28 e CA29 foram definidos como CT23 e CT24 e executados conforme EV27 e EV28. O identificador CT22 está em uso na branch da M09, ainda não integrada à `develop`.
 
 ## 6. Tipos de teste
 
@@ -427,6 +463,6 @@ Este documento representa o planejamento dos cenários. A execução automatizad
 - Registrar as evidências ainda pendentes de testes funcionais, usabilidade e outras execuções de CI.
 - Relacionar cada integrante às funcionalidades e aos respectivos arquivos de teste.
 - Concluir a associação e a execução integral dos CT11, CT12 e CT18–CT21, respeitando as verificações parciais já registradas.
-- Definir e vincular os casos específicos dos CA28–CA30 na tarefa de acompanhamento da rastreabilidade.
+- Definir e vincular o caso específico do CA30 na tarefa de acompanhamento da rastreabilidade. Os CA28 e CA29 foram vinculados aos CT23 e CT24 na L03.
 
 A validação local após o merge e a execução da CI da D05 foram concluídas com 238 testes, sem falhas, erros ou testes ignorados, e aprovação do limite automático de 75% de cobertura de instruções. O relatório JaCoCo foi publicado na execução [44972713889](https://github.com/Miaunisul/Vigor/actions/runs/44972713889). Os resultados e links estão registrados em `evidencias.md`.

@@ -6,6 +6,8 @@ Relacionar os requisitos funcionais e não funcionais do VIGOR às regras de neg
 
 Os CT01 a CT21 e VN01 a VN06 possuem situações registradas no plano de testes. Os resultados globais não comprovam automaticamente a execução integral de cada cenário. A D05 possui verificações locais documentadas em EV21–EV24, incluindo testes automatizados e verificações manuais parciais. A aprovação integral de um CT depende da evidência correspondente a todos os seus passos e pré-condições.
 
+Na L03, os CA28 e CA29 foram associados aos CT23 e CT24, com execução registrada em EV27 e EV28. O procedimento técnico de carga está descrito em [carga-tecnica-historico.md](../architecture/database/carga-tecnica-historico.md).
+
 ## 2. Requisitos funcionais
 
 Os nomes dos requisitos abaixo reproduzem os definidos em `docs/requirements/requisitos.md`.
@@ -20,7 +22,7 @@ Os nomes dos requisitos abaixo reproduzem os definidos em `docs/requirements/req
 | RF06 — Cadastrar treinos | RN07 — Vínculo do treino; RN08 — Dados obrigatórios do treino; RN09 — Duração e data do treino; RN21 — Não persistência de dados inválidos | CA09 — Cadastro de treino; CA10 — Treino sem membro ou associado a membro inexistente; CA21 — Dados de treino inválidos | CT09 | Planejado |
 | RF07 — Consultar treinos | RN07 — Vínculo do treino (consistência da associação consultada) | CA20 — Consulta de treinos; CA30 — Consulta com referência de membro inválida | CT10; caso específico para CA30 pendente | Planejado |
 | RF08 — Registrar pagamentos | RN10, RN11, RN12, RN13, RN21 | CA11, CA12, CA27; CA25 quanto à persistência após reinício | CT11, CT12, CT21 | Parcialmente verificado — EV21–EV24; limites descritos no plano. |
-| RF09 — Consultar histórico de atividades | RN14, RN15, RN16, RN17, RN21 | CA14, CA22; CA28 e CA29 para preparação técnica; CA30 para referência inválida | CT13, CT14; casos específicos de CA28–CA30 pendentes | Planejado como fluxo completo; vínculos físicos definidos na V5. |
+| RF09 — Consultar histórico de atividades | RN14, RN15, RN16, RN17, RN21 | CA14, CA22; CA28 e CA29 para preparação técnica; CA30 para referência inválida | CT13, CT14; CT23 e CT24 para a carga técnica (CA28 e CA29); caso específico de CA30 pendente | Planejado como fluxo completo; vínculos físicos definidos na V5. Carga técnica verificada na L03 — EV27 e EV28. |
 | RF10 — Consultar pagamentos | RN10 quanto à associação dos registros consultados | CA31, CA32, CA33, CA34; CA25 quanto à persistência após reinício | CT18, CT19, CT20, CT21 | Parcialmente verificado — EV23 e EV24; limites descritos no plano. |
 
 ## 3. Requisitos não funcionais
@@ -71,8 +73,8 @@ Os nomes dos critérios reproduzem `docs/requirements/criterios-de-aceite.md`. A
 | CA25 — Persistência dos dados | RF02, RF04, RF08, RF10; RNF04 | Persistência após reinício | CT17 para membros; CT21 para pagamentos | CT21 parcialmente verificado em EV24; sem aprovação automática de CT17 ou das demais entidades. |
 | CA26 — Normalização e validação do CPF | RF02 — Cadastrar membros; RF04 — Atualizar membros | RN03, RN04, RN05, RN21 | CT03, CT04, CT07 | Planejado |
 | CA27 — Pagamento associado a membro inexistente | RF08 — Registrar pagamentos | RN10, RN21 | CT12 | Parcialmente verificado — EV23; limites em CT12. |
-| CA28 — Registro técnico válido de histórico | RF09, como preparação dos dados | RN14, RN15, RN16 | Caso específico pendente | Lacuna registrada; CT13 não comprova integralmente a carga. |
-| CA29 — Rejeição de dados inválidos do histórico | RF09, como preparação dos dados; RNF04 | RN14, RN15, RN16, RN21 | Caso específico pendente | Lacuna registrada. |
+| CA28 — Registro técnico válido de histórico | RF09, como preparação dos dados | RN14, RN15, RN16 | CT23 | Executado com sucesso pelos testes de integração com PostgreSQL — EV27. Execução válida pelo runner não registrada no banco local; limites em CT23. |
+| CA29 — Rejeição de dados inválidos do histórico | RF09, como preparação dos dados; RNF04 | RN14, RN15, RN16, RN21 | CT24 | Executado com sucesso — EV27, com as 13 condições testadas separadamente; execução do procedimento com membro inexistente em EV28. |
 | CA30 — Consulta com referência de membro inválida | RF07, RF09 | Validação da referência na consulta | Caso específico pendente | Lacuna registrada; CT10, CT13 e CT14 não cobrem integralmente esse cenário. |
 | CA31 — Listagem geral de pagamentos | RF10 | Sem regra específica de ordenação; comportamento definido no RF10 | CT18 | Parcialmente verificado — EV23 e EV24. |
 | CA32 — Consulta de pagamentos por membro | RF10 | RN10 quanto à associação consultada | CT19 | Parcialmente verificado — EV23 e EV24. |
@@ -98,24 +100,24 @@ Esta seção diferencia a existência de um CT da existência de um procedimento
 | RN11 — Dados obrigatórios do pagamento | RF08/CA11, CA12 | CT11, CT12 | Validação dos dados obrigatórios; status atribuído pela aplicação antes da persistência. Cobertura parcial relacionada em EV23. |
 | RN12 — Valor do pagamento | RF08/CA11, CA12 | CT11, CT12 | Valor positivo com até 10 dígitos inteiros e duas casas decimais; rejeição das demais entradas previstas. Cobertura parcial relacionada em EV23. |
 | RN13 — Status do pagamento | RF08/CA11, CA12 | CT11, CT12 | CT11 verifica atribuição automática de `PAGO` e que o cliente não a substitui. CT12 verifica status inválido na validação interna; ausência de status no formulário é permitida. Cobertura parcial relacionada em EV23. |
-| RN14 — Vínculos da atividade | RF09/CA14, CA28, CA29 | CT13; casos específicos de CA28 e CA29 pendentes | A V5 e a entidade definem vínculos obrigatórios com membro e funcionário. A existência do mapeamento não comprova execução da carga técnica ou de seus testes. |
-| RN15 — Dados obrigatórios da atividade | RF09/CA14, CA28, CA29 | CT13; casos específicos de CA28 e CA29 pendentes | Dados obrigatórios definidos no modelo e na V5. Verificação integral da carga técnica permanece pendente de procedimento e evidências. |
-| RN16 — Tempo de execução | RF09/CA14, CA28, CA29 | CT13; casos específicos de CA28 e CA29 pendentes | CT13 confere tempo inteiro positivo nos registros consultados. Cenários específicos de carga válida e rejeição de carga inválida permanecem pendentes. |
+| RN14 — Vínculos da atividade | RF09/CA14, CA28, CA29 | CT13, CT23, CT24 | A V5 e a entidade definem vínculos obrigatórios com membro e funcionário. CT23 confere os vínculos gravados pela carga técnica; CT24 verifica a rejeição de membro ou funcionário ausente ou inexistente — EV27. |
+| RN15 — Dados obrigatórios da atividade | RF09/CA14, CA28, CA29 | CT13, CT23, CT24 | Dados obrigatórios definidos no modelo e na V5. CT24 verifica nome ausente, vazio ou somente com espaços e data ausente ou inválida na carga técnica — EV27. |
+| RN16 — Tempo de execução | RF09/CA14, CA28, CA29 | CT13, CT23, CT24 | CT13 confere tempo inteiro positivo nos registros consultados. CT24 verifica tempo ausente, não inteiro, igual a zero e negativo na carga técnica — EV27. |
 | RN17 — Consulta do histórico | RF09/CA14, CA22 | CT13, CT14 | CT13 compara as atividades consultadas com os registros do membro; CT14 verifica a mensagem de ausência. Procedimento definido; execução pendente. |
 | RN18 — Dados obrigatórios do funcionário | RF01/CA15; RNF01 | CT15 | Entidade, configuração BCrypt e comparação por `matches` identificadas na D04. Provisionamento documentado e execução integrada do CT15 não estão comprovados por essa identificação. |
 | RN19 — Login único | RF01/CA15 | CT15 | Comparar logins com normalização equivalente a `lower(btrim(login))`. Índice único definido; execução específica do cenário deve ser registrada. |
 | RN20 — Validação das credenciais | RF01/CA15, CA16 | CT15, CT16 | CT15 verifica autenticação válida; CT16 verifica login inexistente, senha incorreta e acesso sem autenticação. Procedimento definido; execução integrada pendente de comprovação. |
-| RN21 — Não persistência de dados inválidos | RF02/CA02–CA04, CA26; RF04/CA17, CA26; RF05/CA19; RF06/CA10, CA21; RF08/CA12, CA27; RF09/CA29 | CT02–CT04, CT07–CT09, CT12; caso específico de CA29 pendente | Os CT verificam rejeição e não persistência ou preservação dos dados conforme a operação. Verificações de pagamentos parcialmente relacionadas em EV23; os demais cenários mantêm seus próprios estados. |
+| RN21 — Não persistência de dados inválidos | RF02/CA02–CA04, CA26; RF04/CA17, CA26; RF05/CA19; RF06/CA10, CA21; RF08/CA12, CA27; RF09/CA29 | CT02–CT04, CT07–CT09, CT12, CT24 | Os CT verificam rejeição e não persistência ou preservação dos dados conforme a operação. Verificações de pagamentos parcialmente relacionadas em EV23. CT24 compara o banco antes e depois de cada carga rejeitada — EV27 e EV28. Os demais cenários mantêm seus próprios estados. |
 
 ## 6. Lacunas, testes sem vínculo e divergências
 
-- **Requisitos sem caso planejado:** RF01–RF10 possuem casos relacionados. Os CA28–CA30 permanecem pendentes de definição ou associação de casos específicos. CA13 permanece futuro e sem teste por não integrar esta entrega.
+- **Requisitos sem caso planejado:** RF01–RF10 possuem casos relacionados. Os CA28 e CA29 foram associados aos CT23 e CT24 na L03. O CA30 permanece pendente de definição ou associação de caso específico. CA13 permanece futuro e sem teste por não integrar esta entrega.
 
 - **Regras com procedimento definido:** RN01–RN13, RN16–RN17 e RN19–RN21 têm passos e resultados esperados descritos nos CT correspondentes; RN14, RN15 e RN18 também têm verificações descritas, com dependências indicadas abaixo. A existência de procedimento não comprova execução. As verificações parciais de pagamentos estão relacionadas aos CT11, CT12 e CT18–CT21.
 
-- **Regras usadas somente como preparação:** nenhuma das RN14, RN15, RN16, RN18 ou RN19 permanece apenas como pré-condição. CT13 inspeciona os registros de atividades e seus vínculos/dados; CT15 verifica os dados dos funcionários, a unicidade dos logins e o procedimento de hash. A carga técnica continua sendo necessária para fornecer os registros de teste. Essas verificações não comprovam integralmente os cenários de carga dos CA28 e CA29.
+- **Regras usadas somente como preparação:** nenhuma das RN14, RN15, RN16, RN18 ou RN19 permanece apenas como pré-condição. CT13 inspeciona os registros de atividades e seus vínculos/dados; CT15 verifica os dados dos funcionários, a unicidade dos logins e o procedimento de hash. A carga técnica continua sendo necessária para fornecer os registros de teste. Essas verificações não comprovam integralmente os cenários de carga dos CA28 e CA29, que são verificados pelos CT23 e CT24 (L03).
 
-- **Cobertura parcial e dependências:** conforme a revisão D04, a representação física do funcionário responsável no histórico está definida na V5, e foram identificadas a entidade de funcionário, a configuração BCrypt e a autenticação no serviço. Permanecem pendentes de comprovação o provisionamento técnico documentado e o fluxo integrado de autenticação e proteção das rotas. RN19 depende da disponibilização dos registros de funcionários para sua verificação. Os casos específicos dos CA28–CA30 continuam pendentes de associação.
+- **Cobertura parcial e dependências:** conforme a revisão D04, a representação física do funcionário responsável no histórico está definida na V5, e foram identificadas a entidade de funcionário, a configuração BCrypt e a autenticação no serviço. Permanecem pendentes de comprovação o provisionamento técnico documentado e o fluxo integrado de autenticação e proteção das rotas. RN19 depende da disponibilização dos registros de funcionários para sua verificação. O caso específico do CA30 continua pendente de associação; os CA28 e CA29 estão associados aos CT23 e CT24.
 
 - **Execução e cobertura automatizadas:** a execução global de 10/11/2026 permanece registrada em `docs/testing/evidencias.md`, incluindo 37 testes aprovados e os resultados JaCoCo. Na D05, EV21–EV23 registram a execução local de 21/11/2026 com 238 testes sem falhas, erros ou ignorados, cobertura de 83% de instruções e 64% de branches e aprovação do limite de 75% de instruções. Esses resultados não equivalem à execução integral de cada CT/VN. CI da D05 verificada na execução 44972713889: 238 testes sem falhas, erros ou ignorados, limite JaCoCo aprovado e relatório publicado. Referência em evidencias.md.
 
@@ -123,7 +125,9 @@ Esta seção diferencia a existência de um CT da existência de um procedimento
 
 - **Complementação da D05:** CT11 e CT12 distinguem a atribuição automática de `PAGO` no fluxo web da validação interna do registro. CT18–CT20 contemplam listagem, consulta por membro, conjuntos vazios e referência inválida. CT21 trata da persistência de pagamentos após reinício. As verificações parciais estão registradas em EV23 e EV24; as etapas ainda não comprovadas mantêm as limitações descritas no plano.
 
-- **Testes sem requisito associado:** nenhum dos CT01–CT21 ou VN01–VN06 está sem vínculo documentado. Isso não elimina as lacunas dos CA28–CA30 nem comprova aprovação dos cenários.
+- **Complementação da L03:** o procedimento técnico de carga do histórico foi implementado e documentado em [carga-tecnica-historico.md](../architecture/database/carga-tecnica-historico.md). CT23 verifica a carga válida (CA28) e CT24 verifica as 13 condições inválidas do CA29, uma por teste, com leitura do banco antes e depois de cada tentativa. As execuções estão registradas em EV27 e EV28. O CT22 está em uso na branch da M09, ainda não integrada à `develop`.
+
+- **Testes sem requisito associado:** nenhum dos CT01–CT21, CT23, CT24 ou VN01–VN06 está sem vínculo documentado. Isso não elimina a lacuna do CA30 nem comprova aprovação dos cenários.
 
 ## 7. Acompanhamento
 
@@ -131,6 +135,6 @@ A situação de cada CT/VN deve acompanhar as evidências específicas. Uma veri
 
 Ao concluir uma execução, registrar data, ambiente, resultado, referência ao teste ou procedimento e limitações em `docs/testing/evidencias.md`, atualizando o plano e esta matriz.
 
-Os CA28–CA30 permanecem vinculados ao acompanhamento da rastreabilidade e da carga técnica do histórico. Sua inclusão nesta matriz não declara os procedimentos concluídos.
+O CA30 permanece vinculado ao acompanhamento da rastreabilidade. Os CA28 e CA29 estão vinculados aos CT23 e CT24, com execução registrada em EV27 e EV28, conforme os limites descritos no plano de testes.
 
 O CA13 permanece futuro e não exige uma interface de registro de atividades nesta entrega.
