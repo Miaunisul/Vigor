@@ -20,6 +20,7 @@ Em 21/11/2026, na branch `feat/d05-interface-pagamentos`, foi executado `./mvnw 
 
 Em 26/11/2026, na branch `feat/m09-validacao-referencias-membro`, a suíte focada de controller, serviço e renderização do M09 registrou 96 casos: 70 executados sem falhas ou erros e 26 ignorados. A execução local de `clean verify` com Maven 3.9.11 terminou com `BUILD SUCCESS`: 266 casos, 203 executados sem falhas ou erros e 63 ignorados. O JaCoCo mediu 83% de instruções (3.107/3.751), 66% de branches (249/378) e 83% de linhas (762/913); o gate de 75% de instruções passou. As classes de integração PostgreSQL, incluindo as duas classes do M09, foram ignoradas porque `DB_PASSWORD` não estava definida. Os resultados não comprovam os cenários no PostgreSQL.
 
+Em 26/11/2026, na task L03 (Issue #60), foi implementado o procedimento técnico de carga do histórico de atividades, documentado em [carga-tecnica-historico.md](../architecture/database/carga-tecnica-historico.md). Na branch `feat/l03-carga-tecnica-historico`, os 31 testes da carga e a suíte completa, com 312 testes, foram executados sem falhas, erros ou ignorados (EV27). A execução do procedimento pelo perfil `carga-historico`, com membro inexistente, foi rejeitada sem gravar registros (EV28). EV25 e EV26 registram a validação histórica da M09; EV27 e EV28 registram a L03. As duas séries permanecem identificadas separadamente nesta integração.
 ## 3. Evidências de execução
 
 | ID | Verificação | CT/VN e cenário a registrar | Evidência esperada | Situação |
@@ -50,7 +51,9 @@ Em 26/11/2026, na branch `feat/m09-validacao-referencias-membro`, a suíte focad
 | EV24 | Verificações manuais de pagamentos | Registro e listagem; filtro por membro; consulta após reiniciar a aplicação; uso do formulário com janela reduzida | Funcionamento confirmado pela responsável em ambiente local. Registro descritivo abaixo; não representa aprovação integral dos CT/VN nem avaliação completa de usabilidade. | Execução manual confirmada pela responsável |
 | EV25 | Testes focados de seleção e isolamento de membro (M09) | Execução local em 26/11/2026 com Java 21; `AtividadeTemplateRenderingTest`, `HistoricoAtividadeServiceTest`, `TreinoControllerTest`, `TreinoTemplateRenderingTest` e `TreinoServiceTest` | 96 casos: 70 executados; 0 falhas; 0 erros; 26 ignorados. `HistoricoAtividadePostgresIntegrationTest` (12) e `TreinoPostgresIntegrationTest` (14) foram ignorados pela ausência de `DB_PASSWORD`; esta execução não comprova os cenários no PostgreSQL nem a cobertura JaCoCo de `verify`. | Testes sem banco aprovados; validação PostgreSQL pendente |
 | EV26 | Build e suíte completa da branch M09 | Maven 3.9.11, Java 21, `clean verify`, 26/11/2026; usado o executável instalado porque `mvnw.cmd` falhou ao iniciar no PowerShell | `BUILD SUCCESS`; 266 casos, 203 executados, 0 falhas, 0 erros e 63 ignorados. JaCoCo: instruções 83% (3.107/3.751), branches 66% (249/378), linhas 83% (762/913), 26/26 classes; gate mínimo de 75% de instruções aprovado. Os testes que dependem de PostgreSQL foram ignorados por `DB_PASSWORD` ausente. | Build e gate aprovados; evidência PostgreSQL pendente |
-
+| EV27 | Carga técnica do histórico — testes automatizados (task L03) | CT23 e CT24; execuções locais de `.\mvnw.cmd test "-Dtest=CargaHistoricoAtividade*"` e `.\mvnw.cmd clean verify`, branch `feat/l03-carga-tecnica-historico`, 26/11/2026, Java 21 e PostgreSQL local | Testes da carga: 31 executados (13 em `CargaHistoricoAtividadeServiceTest`, 3 em `CargaHistoricoAtividadeRunnerTest` e 15 em `CargaHistoricoAtividadePostgresIntegrationTest`); 0 falhas; 0 erros; 0 ignorados. Suíte completa: 312 executados; 0 falhas; 0 erros; 0 ignorados; `BUILD SUCCESS`; `All coverage checks have been met.` JaCoCo: instruções 87% (3.222/3.696); branches 69% (264/380); linhas 793/910; métodos 187/201; classes 29/29. Detalhamento abaixo. | Executado com sucesso |
+| EV28 | Execução do procedimento de carga com rejeição (task L03) | CT24, cenário de membro inexistente; `.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=carga-historico"` no banco local, 26/11/2026 | Inicialização interrompida com `Application run failed` e `java.lang.IllegalArgumentException: Membro não encontrado.`; `historico_atividades` com 0 registros antes e depois da tentativa. A carga válida pelo runner não foi executada no banco local, que não possuía membros nem funcionários. | Executado com sucesso (rejeição) |
+| EV29 | Suíte completa após integração local M09 + L03 | Maven 3.9.11, Java 21, PostgreSQL 18.6 em localhost:5432, 26/11/2026; mvn clean verify com DB_PASSWORD no processo | 327 testes; 0 falhas; 0 erros; 0 ignorados. As 4 execuções parametrizadas de referenciaInvalidaNaoExibeRegistrosNosPagamentosEHistorico passaram. JaCoCo: instruções 89% (3.473/3.923), branches 71% (276/390), linhas 89% (850/959), 29/29 classes; All coverage checks have been met. | BUILD SUCCESS; gate JaCoCo aprovado |
 ### EV17 — Validação de CPF pelo fluxo HTTP
 
 Execução local em 16/11/2026 com Java 21 e PostgreSQL 18.3 em uma instância temporária. O comando `mvnw.cmd --batch-mode --no-transfer-progress clean verify` foi executado com `DB_PASSWORD` e `SPRING_DATASOURCE_URL` configuradas para essa instância. O teste inicializou a aplicação Spring Boot com Tomcat em porta aleatória, enviou formulários HTTP para `POST /membros` e consultou a tabela `membros` por JDBC após cada cenário.
@@ -210,6 +213,77 @@ O cenário de reinício evidencia a permanência do pagamento consultado; não d
 - Os testes descritos não comprovam autenticação nem proteção das rotas de pagamentos. Essa integração deve ser verificada com o módulo de login.
 - O vínculo detalhado com os CT/VN deve ser atualizado no plano de testes e na matriz de rastreabilidade, preservando os identificadores existentes.
 - As evidências anteriores foram preservadas. A D05 complementa testes existentes e não altera a autoria das contribuições anteriores.
+
+### EV27 e EV28 — Carga técnica do histórico (task L03)
+
+- **Responsável:** Luan Milian Martins
+- **Issue:** #60 — [19 - L03] Implementar e validar a carga técnica de dados do histórico (CA28 e CA29)
+- **Branch:** `feat/l03-carga-tecnica-historico`, criada a partir da `develop` no commit `4472016`
+- **Ambiente:** Windows, PowerShell, Java 21, Maven Wrapper e PostgreSQL local (banco `vigor`)
+- **Documentação do procedimento:** [carga-tecnica-historico.md](../architecture/database/carga-tecnica-historico.md)
+
+#### Implementação
+
+Foram criados `RegistroCargaHistorico`, `CargaHistoricoAtividadeService` e `CargaHistoricoAtividadeRunner`. O serviço de carga recebe os dados como texto e rejeita data inválida e tempo não inteiro antes da gravação. Em seguida, delega ao `HistoricoAtividadeService.registrar`, que confere membro e funcionário, aplica as validações da entidade e persiste por JPA. O runner executa a carga somente com o perfil `carga-historico`.
+
+Não foram alterados código de produção existente, migrations, tabelas ou o comportamento de consulta do histórico.
+
+#### Cenários e testes
+
+Testes da classe `CargaHistoricoAtividadePostgresIntegrationTest`, executados com PostgreSQL:
+
+| Critério | Cenário da issue | Teste | Resultado |
+|---|---|---|---|
+| CA28 | Atividade válida persistida, com ID gerado e vínculos com membro e funcionário corretos | `cargaValidaPersisteAtividadeComIdGeradoEVinculosCorretos` | Aprovado |
+| CA28 | Atividade disponível na consulta do histórico do membro | `cargaValidaFicaDisponivelNoHistoricoDoMembro` | Aprovado |
+| CA29 | 1. Sem membro | `rejeitaCargaSemMembro` | Aprovado |
+| CA29 | 2. Membro inexistente | `rejeitaCargaComMembroInexistente` | Aprovado |
+| CA29 | 3. Sem funcionário responsável | `rejeitaCargaSemFuncionarioResponsavel` | Aprovado |
+| CA29 | 4. Funcionário inexistente | `rejeitaCargaComFuncionarioInexistente` | Aprovado |
+| CA29 | 5. Sem nome | `rejeitaCargaSemNomeDaAtividade` | Aprovado |
+| CA29 | 6. Nome vazio | `rejeitaCargaComNomeDaAtividadeVazio` | Aprovado |
+| CA29 | 7. Nome somente com espaços | `rejeitaCargaComNomeDaAtividadeSomenteComEspacos` | Aprovado |
+| CA29 | 8. Sem data | `rejeitaCargaSemData` | Aprovado |
+| CA29 | 9. Data inválida (`2026-02-30`) | `rejeitaCargaComDataInvalida` | Aprovado |
+| CA29 | 10. Sem tempo de execução | `rejeitaCargaSemTempoDeExecucao` | Aprovado |
+| CA29 | 11. Tempo não inteiro (`30.5`) | `rejeitaCargaComTempoNaoInteiro` | Aprovado |
+| CA29 | 12. Tempo igual a zero | `rejeitaCargaComTempoIgualAZero` | Aprovado |
+| CA29 | 13. Tempo negativo (`-5`) | `rejeitaCargaComTempoNegativo` | Aprovado |
+
+Antes de cada teste, são criados um membro e um funcionário próprios, sem IDs fixos, e é registrada uma atividade válida. Em cada cenário do CA29, somente um campo é inválido. O teste lê o banco antes e depois da tentativa e verifica:
+
+- se a operação foi rejeitada com o tipo de exceção e a mensagem esperados;
+- se a quantidade total de registros e a quantidade de registros do membro não mudaram;
+- se a atividade válida existente permaneceu com os mesmos valores.
+
+Os testes unitários complementam a verificação da conversão:
+
+- `CargaHistoricoAtividadeServiceTest` rejeita `2026-02-30`, `2026-13-01`, `10/11/2026` e `amanhã` como datas. Também rejeita `30.5`, `30,5`, `trinta` e `1e2` como tempos.
+- `CargaHistoricoAtividadeRunnerTest` verifica a leitura das variáveis, a interrupção em caso de rejeição e a ativação somente no perfil `carga-historico`.
+
+#### Execuções
+
+| Execução | Conclusão — horário de Brasília | Resultado |
+|---|---|---|
+| `.\mvnw.cmd test "-Dtest=CargaHistoricoAtividade*"` | 26/11/2026 às 18h03min29s | 31 testes; 0 falhas; 0 erros; 0 ignorados; `BUILD SUCCESS` |
+| `.\mvnw.cmd clean verify` | 26/11/2026 às 18h06min10s | 312 testes; 0 falhas; 0 erros; 0 ignorados; `All coverage checks have been met.`; `BUILD SUCCESS` |
+| `.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=carga-historico"` com `CARGA_MEMBRO_ID=1` (inexistente) | 26/11/2026 às 18h11min54s | `Application run failed` com `java.lang.IllegalArgumentException: Membro não encontrado.`; `historico_atividades` com 0 registros antes e depois |
+
+O total de 312 testes corresponde aos 281 testes existentes na `develop` mais os 31 testes adicionados na L03.
+
+Cobertura das classes novas no relatório JaCoCo da suíte completa:
+
+| Classe | Instruções | Branches | Linhas |
+|---|---|---|---|
+| `CargaHistoricoAtividadeService` | 100% (106/106) | 100% (12/12) | 29/29 |
+| `CargaHistoricoAtividadeRunner` | 100% (48/48) | — | 16/16 |
+| `RegistroCargaHistorico` | 100% (18/18) | — | 1/1 |
+
+#### Limites e acompanhamento
+
+- A carga válida pelo runner não foi executada no banco local, que não possuía membros nem funcionários. O provisionamento de funcionários está fora do escopo da L03. A gravação válida foi comprovada pelos testes de integração com PostgreSQL, que executam o mesmo serviço de carga usado pelo runner.
+- A execução da CI desta branch deve ser registrada após a abertura do Pull Request.
+- Nenhuma senha, hash ou credencial foi registrada nesta evidência.
 
 ## 4. Validação de persistência PostgreSQL — Task L07
 
@@ -438,6 +512,8 @@ Na medição local de 18/11/2026 (EV19), a cobertura de instruções foi de 83% 
 
 Na medição local de 21/11/2026, após a implementação da D05 (EV22), o relatório apresentou 83% de cobertura de instruções e 64% de branches, considerando 21 classes de produção. O gate de instruções de 75% foi aprovado. Essa medição corresponde à suíte completa do projeto.
 
+Na medição local de 26/11/2026, na task L03 (EV27), a cobertura de instruções foi de 87% e a de branches foi de 69%, considerando 29 classes de produção. As três classes criadas para a carga técnica do histórico apresentaram 100% de cobertura de instruções.
+
 ## 8. Histórico
 
 | Data | Alteração | Responsável |
@@ -451,6 +527,7 @@ Na medição local de 21/11/2026, após a implementação da D05 (EV22), o relat
 | 18/11/2026 | Registro da validação de persistência dos módulos da task L02 (Issue #31): seis testes de integração com PostgreSQL, execuções locais com 145 testes e cobertura JaCoCo (EV18 e EV19) | Luan Milian Martins |
 | 20/11/2026 | Ajustes da revisão do PR #41: reorganização da tabela de evidências da seção 3, sem alteração do conteúdo das evidências; membro exclusivo no teste de status do pagamento; registro da execução #52 da CI (EV20) | Luan Milian Martins |
 | 21/11/2026 | Registro da D05: testes de controller e templates, complementação dos testes de serviço e PostgreSQL, suíte completa com 238 testes aprovados, cobertura de instruções de 83% e verificações manuais de pagamentos (EV21 a EV24). | Maria Eduarda Souza dos Santos Ferreira |
+| 26/11/2026 | Registro da carga técnica do histórico da task L03 (Issue #60): testes do CA28 e do CA29, suíte completa com 312 testes aprovados, cobertura JaCoCo e execução do procedimento com rejeição (EV27 e EV28) | Luan Milian Martins |
 
 Atualizar este histórico conforme novas evidências forem produzidas.
 
@@ -461,6 +538,8 @@ Os resultados do build, dos testes automatizados, da medição JaCoCo, da primei
 A EV18 registra a validação de persistência e consultas de treinos, pagamentos e histórico de atividades da task L02.
 
 A EV20 registra a execução da CI do PR #41, da task L02.
+
+As evidências EV27 e EV28 registram a carga técnica do histórico da task L03, associada aos CA28 e CA29 pelos CT23 e CT24.
 
 As evidências EV21 a EV24 registram a validação local da interface de pagamentos na D05, incluindo testes automatizados, cobertura e verificações manuais específicas. Essas verificações atualizam parcialmente as pendências funcionais mencionadas acima, sem declarar aprovação de todos os CT/VN ou da avaliação completa de usabilidade. A CI e a integração com autenticação desta entrega ainda precisam de evidências próprias.
 
